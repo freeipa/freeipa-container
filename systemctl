@@ -249,9 +249,19 @@ sub stop_pids {
 }
 
 if ($COMMAND eq 'stop') {
+	my $mainpid;
+	if (defined $data->{'Service.PIDFile'}) {
+		$mainpid = get_pid($data->{'Service.PIDFile'});
+	} else {
+		$mainpid = get_pid("$FULL_SERVICE.pid");
+	}
 	if (defined $data->{'Service.ExecStop'}) {
-		log_command("Running stop [$data->{'Service.ExecStop'}]\n");
-		system $data->{'Service.ExecStop'};
+		my $x = $data->{'Service.ExecStop'};
+		if (defined $mainpid) {
+			$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
+		}
+		log_command("Running stop [$x]\n");
+		system $x;
 		sleep 3;
 	}
 	my $ret = 0;
@@ -386,6 +396,11 @@ if ($COMMAND eq 'start') {
 		open(STDIN, '<', '/dev/null');
 		exec "$ENV@paths";
 	}
+	local * PIDFILE;
+	open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.pid";
+	print PIDFILE "$pid\n";
+	close PIDFILE;
+	log_command("Marked pid [$pid]\n");
 	sleep 1;
 	system $KILLALL, '-q', '-0', $first_path;
 	if ($? == 0) {
@@ -394,12 +409,6 @@ if ($COMMAND eq 'start') {
 		print PIDFILE "$first_path\n";
 		close PIDFILE;
 		log_command("Marked process name [$first_path]\n");
-	} else {
-		local * PIDFILE;
-		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.pid";
-		print PIDFILE "$pid\n";
-		close PIDFILE;
-		log_command("Marked pid [$pid]\n");
 	}
 	exit;
 }
