@@ -195,33 +195,71 @@ if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
 }
 
 sub exec_stop_pre {
-	my ($COMMAND, $data) = @_;
+	my ($data) = @_;
 	if (defined $data->{'Socket.ExecStopPre'}) {
-		log_command("Running [$data->{'Socket.ExecStopPre'}]\n");
+		log_command("Running stop pre [$data->{'Socket.ExecStopPre'}]\n");
 		system $data->{'Socket.ExecStopPre'};
 	}
 }
 sub exec_stop_post {
-	my ($COMMAND, $data) = @_;
+	my ($data) = @_;
 	if (defined $data->{'Service.ExecStopPost'}) {
-		log_command("Running [$data->{'Service.ExecStopPost'}]\n");
+		log_command("Running stop post [$data->{'Service.ExecStopPost'}]\n");
 		system $data->{'Service.ExecStopPost'};
 	}
-	exit 0 if $COMMAND eq 'stop';
 }
 
-if ($COMMAND eq 'stop' or $COMMAND eq 'restart') {
+if ($TYPE eq 'target' and not defined $data->{'Unit.Wanted'}) {
+	warn "No Unit.Wanted/.wants list for target [$SERVICE]\n";
+	exit 8;
+}
+
+if ($COMMAND eq 'restart') {
 	if ($TYPE eq 'target') {
-		if (not defined $data->{'Unit.Wanted'}) {
-			warn "No Unit.Wanted/.wants list for target [$SERVICE]\n";
-			exit 8;
-		}
 		for my $x (@{ $data->{'Unit.Wanted'} }) {
 			system $0, 'stop', $x;
 		}
-		if ($COMMAND eq 'stop') {
-			exit 0;
+		for my $x (reverse @{ $data->{'Unit.Wanted'} }) {
+			system $0, 'start', $x;
 		}
+	} else {
+		system $0, 'stop', $FULL_SERVICE;
+		system $0, 'start', $FULL_SERVICE;
+	}
+	exit;
+}
+
+sub stop_pids {
+	my @pids = @_;
+	kill -15, @pids;
+	sleep 1;
+	if (kill 0, @pids) {
+		kill -9, @pids;
+		sleep 3;
+		if (kill 0, @pids) {
+			log_command("Failed to kill [@pids] even with 9\n");
+			warn "Failed to kill [@pids].\n";
+			return 1;
+		}
+		log_command("Killed [@pids] with 9\n");
+	} else {
+		log_command("Killed [@pids] with 15\n");
+	}
+	return 0;
+}
+
+if ($COMMAND eq 'stop') {
+	if (defined $data->{'Service.ExecStop'}) {
+		log_command("Running stop [$data->{'Service.ExecStop'}]\n");
+		system $data->{'Service.ExecStop'};
+		sleep 3;
+	}
+	my $ret = 0;
+	if ($TYPE eq 'target') {
+		for my $x (@{ $data->{'Unit.Wanted'} }) {
+			system $0, 'stop', $x;
+		}
+		$ret = 0;
 	} elsif ($TYPE eq 'socket') {
 		my $pids = `/usr/sbin/fuser $data->{'Socket.ListenStream'} 2> /dev/null`;
 		if (defined $pids) {
@@ -229,39 +267,20 @@ if ($COMMAND eq 'stop' or $COMMAND eq 'restart') {
 			$pids =~ s/^\s+//;
 			my @pids = split /\s+/, $pids;
 			if (@pids) {
-				exec_stop_pre($COMMAND, $data);
-				kill -15, @pids;
-				sleep 1;
-				if (kill -9, @pids) {
-					sleep 3;
-				}
-				if (kill 0, @pids) {
-					warn "Failed to kill [@pids].\n";
-					exit 1;
-				}
+				exec_stop_pre($data);
+				$ret = stop_pids(@pids);
 			}
 		}
-		if ($COMMAND eq 'stop') {
-			exit 0;
-		}
-	} elsif (defined $data->{'Service.ExecStop'}) {
-		system $data->{'Service.ExecStop'};
 	} elsif (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
 		if (defined $pid) {
-			kill -15, $pid;
-			sleep 1;
-			if (kill -9, $pid) {
-				sleep 3;
-			}
-			if (kill 0, $pid) {
-				warn "Failed to kill [$pid].\n";
-				exit 1;
-			}
+			exec_stop_pre($data);
+			$ret = stop_pids($pid);
 		}
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
+			exec_stop_pre($data);
 			system $KILLALL, '-q', '-0', $path;
 			if ($? == 0) {
 				sleep 1;
@@ -276,28 +295,21 @@ if ($COMMAND eq 'stop' or $COMMAND eq 'restart') {
 				system $KILLALL, '-q', '-0', $path;
 				if ($? == 0) {
 					warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
-					exit 1;
+					$ret = 1;
 				}
 			}
 		} else {
 			my $pid = get_pid("$FULL_SERVICE.pid");
 			if (defined $pid) {
-				kill -15, $pid;
-				sleep 1;
-				if (kill -9, $pid) {
-					sleep 3;
-				}
-				if (kill 0, $pid) {
-					warn "Failed to kill [$pid].\n";
-					exit 1;
-				}
+				$ret = stop_pids($pid);
 			} else {
 				warn "No pid and no name for [$FULL_SERVICE].\n";
 			}
 		}
 	}
-	exec_stop_post($COMMAND, $data);
+	exec_stop_post($data);
 	unlink "$RUNNING_DIR/$FULL_SERVICE.pid", "$RUNNING_DIR/$FULL_SERVICE.name";
+	exit $ret;
 }
 
 sub add_runuser {
@@ -311,7 +323,7 @@ sub add_runuser {
 	}
 }
 
-if ($COMMAND eq 'start' or $COMMAND eq 'restart') {
+if ($COMMAND eq 'start') {
 	if (defined $data->{'Service.ExecStartPre'}) {
 		my @cmd = split /\s+/, $data->{'Service.ExecStartPre'};
 		add_runuser($data, \@cmd);
@@ -321,10 +333,6 @@ if ($COMMAND eq 'start' or $COMMAND eq 'restart') {
 	}
 	my @paths;
 	if ($TYPE eq 'target') {
-		if (not defined $data->{'Unit.Wanted'}) {
-			warn "No Unit.Wanted/.wants list for target [$SERVICE]\n";
-			exit 8;
-		}
 		for my $x (@{ $data->{'Unit.Wanted'} }) {
 			my @cmd = ($0, 'start', $x);
 			log_command("Running [@cmd]\n");
@@ -411,7 +419,10 @@ if ($COMMAND eq 'enable') {
 		mkdir $ENABLED_DIR;
 	}
 	utime undef, undef, "$ENABLED_DIR/$FULL_SERVICE";
+	exit;
 }
+
+die "Unknown command [$COMMAND].\n";
 
 1;
 
