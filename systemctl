@@ -8,6 +8,7 @@ use IO::Dir ();
 use IO::Socket::UNIX ();
 use Socket ();
 use Data::Dumper ();
+use POSIX ();
 
 sub log_command {
 	local * LOG;
@@ -394,6 +395,7 @@ if ($COMMAND eq 'start') {
 		open(STDOUT, '>>', '/var/log/systemctl.log');
 		open(STDERR, '>>', '/var/log/systemctl.log');
 		open(STDIN, '<', '/dev/null');
+		POSIX::setsid();
 		exec "$ENV@paths";
 	}
 	local * PIDFILE;
