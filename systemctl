@@ -51,16 +51,26 @@ my @PATHS = (
 	'/usr/lib/systemd/system',
 );
 
+my $FULL_SERVICE = $SERVICE;
+my $INSTANCE = undef;
+
 my $file = undef;
+if ($SERVICE =~ s/\@(.+)\.service$/\@.service/) {
+	$INSTANCE = $1;
+}
 for my $p (@PATHS) {
-	if (-f "$p/$SERVICE") {
+	if (-e "$p/$SERVICE") {
+		if (-l "$p/$SERVICE") {
+			my $new_service = readlink("$p/$SERVICE");
+			log_command("Service [$p/$SERVICE] is a symlink to [$new_service]\n");
+			$new_service =~ s!^.*/!!;
+			$SERVICE = $new_service;
+		}
 		$file = "$p/$SERVICE";
 		last;
 	}
 }
 
-my $FULL_SERVICE = $SERVICE;
-my $INSTANCE = undef;
 if ($SERVICE =~ s/\@(.+)\.service$/\@.service/) {
 	$INSTANCE = $1;
 	for my $p (@PATHS) {
@@ -166,7 +176,9 @@ sub get_pid {
 		}
 	}
 }
-if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
+
+sub is_running {
+	my $data = shift;
 	my $ret;
 	if (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
@@ -187,7 +199,10 @@ if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
 			}
 		}
 	}
-	if ($ret) {
+	return $ret;
+}
+if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
+	if (is_running($data)) {
 		print "active\n";
 		exit;
 	}
@@ -335,6 +350,15 @@ sub add_runuser {
 }
 
 if ($COMMAND eq 'start') {
+	if ($TYPE eq 'service' and is_running($data)) {
+		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
+		exit;
+	}
+	if (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'dbus') {
+		my @cmd = ($0, 'start', 'dbus.socket');
+		log_command("Running [@cmd]\n");
+		system @cmd;
+	}
 	if (defined $data->{'Service.ExecStartPre'}) {
 		my @cmd = split /\s+/, $data->{'Service.ExecStartPre'};
 		add_runuser($data, \@cmd);
@@ -352,8 +376,18 @@ if ($COMMAND eq 'start') {
 		exit;
 	} elsif ($TYPE eq 'socket') {
 		my $service = $SERVICE;
-		$service =~ s/\.socket$/\@.service/;
-		@paths = ( '/bin/systemctl-socket-daemon', $data->{'Socket.ListenStream'}, $data->{'Socket.SocketMode'}, $service );
+		if (defined $data->{'Socket.Accept'} and $data->{'Socket.Accept'} eq 'true') {
+			$service =~ s/\.socket$/\@.service/;
+			@paths = ( '/bin/systemctl-socket-daemon', $data->{'Socket.ListenStream'}, $data->{'Socket.SocketMode'} // '0666', $service );
+		} else {
+			$service =~ s/\.socket$/\.service/;
+			my $ret = system $0, 'is-active', $service;
+			if (($ret >> 8) == 0) {
+				log_command("Service [$service] is already running for [$SERVICE]\n");
+				exit;
+			}
+			@paths = ( $0, 'start', $service );
+		}
 	} else {
 		@paths = get_exec_start($data);
 	}
@@ -411,6 +445,17 @@ if ($COMMAND eq 'start') {
 		print PIDFILE "$first_path\n";
 		close PIDFILE;
 		log_command("Marked process name [$first_path]\n");
+	}
+	if (defined $data->{'Service.Type'}
+		and $data->{'Service.Type'} eq 'dbus'
+		and defined $data->{'Service.BusName'}) {
+		my $busname = $data->{'Service.BusName'};
+		my $objectpath = $busname;
+		$objectpath =~ s!^|\.!/!g;
+		for (0 .. 10) {
+			system "/usr/bin/dbus-send --system --type=method_call --print-reply --dest=$busname $objectpath org.freedesktop.DBus.Introspectable.Introspect > /dev/null";
+			last if ($? >> 8) == 0;
+		}
 	}
 	exit;
 }

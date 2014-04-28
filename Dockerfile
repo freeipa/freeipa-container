@@ -8,8 +8,9 @@ RUN mkdir -p /run/lock
 RUN yum install -y openssh-server strace lsof
 RUN echo 'root:jezek' | chpasswd
 RUN echo set -o vi >> /etc/bashrc
-RUN mkdir -p /var/run/dbus
-ADD messagebus.service /etc/systemd/system/messagebus.service
+
+ADD dbus.service /etc/systemd/system/dbus.service
+RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
 
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
 ADD systemctl /bin/systemctl

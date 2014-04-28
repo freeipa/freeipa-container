@@ -4,6 +4,8 @@ Requires=dbus.socket
 After=syslog.target
 
 [Service]
-ExecStart=/bin/dbus-daemon --system --nofork --nopidfile
+PIDFile=/var/run/messagebus.pid
+ExecStartPre=/bin/mkdir -p /var/run/dbus
+ExecStart=/bin/dbus-daemon --system --fork
 ExecReload=/bin/dbus-send --print-reply --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
 OOMScoreAdjust=-900
