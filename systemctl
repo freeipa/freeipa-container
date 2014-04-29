@@ -386,6 +386,13 @@ if ($COMMAND eq 'start') {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
 		exit;
 	}
+	if ($TYPE eq 'socket' and -S $data->{'Socket.ListenStream'}) {
+		my $out = `/usr/sbin/fuser $data->{'Socket.ListenStream'} 2> /dev/null`;
+		if (defined $out and $out ne '') {
+			log_command("Service [$FULL_SERVICE] already found active on socket [$data->{'Socket.ListenStream'}], not starting again.\n");
+			exit;
+		}
+	}
 	if (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'dbus') {
 		my @cmd = ($0, 'start', 'dbus.socket');
 		log_command("Running [@cmd]\n");
@@ -413,7 +420,7 @@ if ($COMMAND eq 'start') {
 			@paths = ( '/bin/systemctl-socket-daemon', $data->{'Socket.ListenStream'}, $data->{'Socket.SocketMode'} // '0666', $service );
 		} else {
 			$service =~ s/\.socket$/\.service/;
-			my $ret = system $0, 'is-active', $service;
+			my $ret = system "$0 is-active $service > /dev/null";
 			if (($ret >> 8) == 0) {
 				log_command("Service [$service] is already running for [$SERVICE]\n");
 				exit;
