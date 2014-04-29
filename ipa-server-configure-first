@@ -11,6 +11,8 @@ function usage () {
 
 systemctl stop dbus.service
 rm -f /var/run/messagebus.pid
+rm -f /etc/systemctl-lite/running/*
+
 systemctl start sshd.service
 
 if [ -f /etc/ipa/ca.crt ] ; then
