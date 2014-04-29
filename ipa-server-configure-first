@@ -9,31 +9,33 @@ function usage () {
 	exit 1
 }
 
-if [ -f /etc/ipa/ca.crt ] ; then
-	echo "FreeIPA server is already configured."
-	exit
-fi
-
+systemctl stop dbus.service
+rm -f /var/run/messagebus.pid
 systemctl start sshd.service
 
-HOSTNAME_FQDN=$( hostname -f )
-HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
-DOMAIN=${HOSTNAME_FQDN#*.}
-if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME_FQDN" ] ; then
-	usage
+if [ -f /etc/ipa/ca.crt ] ; then
+	echo "FreeIPA server is already configured, starting the services."
+	systemctl start-enabled
+else
+	HOSTNAME_FQDN=$( hostname -f )
+	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
+	DOMAIN=${HOSTNAME_FQDN#*.}
+	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME_FQDN" ] ; then
+		usage
+	fi
+
+	if [ -z "$PASSWORD" ] ; then
+		usage
+	fi
+
+	REALM=${DOMAIN^^}
+
+	DEBUG_OPT=
+	if [ -n "$DEBUG" ] ; then
+		DEBUG_OPT=-d
+	fi
+
+	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT < /dev/null
 fi
-
-if [ -z "$PASSWORD" ] ; then
-	usage
-fi
-
-REALM=${DOMAIN^^}
-
-DEBUG_OPT=
-if [ -n "$DEBUG" ] ; then
-	DEBUG_OPT=-d
-fi
-
-/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT < /dev/null
 
 /bin/bash

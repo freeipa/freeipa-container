@@ -24,9 +24,6 @@ if (@ARGV == 1 and $ARGV[0] eq 'daemon-reload') {
 if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 	exit 0;
 }
-if (@ARGV != 2) {
-	die "Usage: $0 (start|stop|status|...) (service|target|socket thing)\n";
-}
 
 for (keys %ENV) {
 	delete $ENV{$_};
@@ -39,6 +36,31 @@ if (not -d $BASE_DIR) {
 my $RUNNING_DIR = "$BASE_DIR/running";
 if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
+}
+my $ENABLED_DIR = "$BASE_DIR/enabled";
+if (@ARGV == 1 and $ARGV[0] eq 'start-enabled') {
+	if (-d $ENABLED_DIR) {
+		local * ENABLED;
+		opendir ENABLED, $ENABLED_DIR;
+		my %services;
+		while (defined(my $f = readdir ENABLED)) {
+			next if $f eq '.' or $f eq '..';
+			my $modified = (stat "$ENABLED_DIR/$f")[9];
+			if (defined $modified) {
+				$services{$f} = $modified;
+			}
+		}
+		close ENABLED;
+		for my $s (sort { $services{$a} <=> $services{$b} or $a cmp $b } keys %services) {
+			print "Starting [$s]\n";
+			system $0, 'start', $s;
+		}
+	}
+	exit;
+}
+
+if (@ARGV != 2) {
+	die "Usage: $0 (start|stop|status|...) (service|target|socket thing)\n";
 }
 
 my ($COMMAND, $SERVICE) = @ARGV;
@@ -464,7 +486,6 @@ if ($COMMAND eq 'start') {
 	exit;
 }
 
-my $ENABLED_DIR = "$BASE_DIR/enabled";
 if ($COMMAND eq 'is-enabled') {
 	if (-e "$ENABLED_DIR/$FULL_SERVICE") {
 		print "enabled\n";
@@ -478,7 +499,8 @@ if ($COMMAND eq 'enable') {
 	if (not -d $ENABLED_DIR) {
 		mkdir $ENABLED_DIR;
 	}
-	utime undef, undef, "$ENABLED_DIR/$FULL_SERVICE";
+	local * FILE;
+	open FILE, '>', "$ENABLED_DIR/$FULL_SERVICE";
 	exit;
 }
 
