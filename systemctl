@@ -212,7 +212,9 @@ sub get_pid {
 sub is_running {
 	my $data = shift;
 	my $ret;
-	if (defined $data->{'Service.PIDFile'}) {
+	if (-f "$RUNNING_DIR/$FULL_SERVICE.oneshot") {
+		return 1;
+	} elsif (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
 		if (defined $pid) {
 			$ret = kill 0, $pid;
@@ -366,7 +368,7 @@ if ($COMMAND eq 'stop') {
 		}
 	}
 	exec_stop_post($data);
-	unlink "$RUNNING_DIR/$FULL_SERVICE.pid", "$RUNNING_DIR/$FULL_SERVICE.name";
+	unlink "$RUNNING_DIR/$FULL_SERVICE.pid", "$RUNNING_DIR/$FULL_SERVICE.name", "$RUNNING_DIR/$FULL_SERVICE.oneshot";
 	exit $ret;
 }
 
@@ -462,6 +464,15 @@ if ($COMMAND eq 'start') {
 	}
 	add_runuser($data, \@paths);
 	log_command("Running [$ENV@paths]\n");
+	if (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'oneshot') {
+		system "$ENV@paths";
+		if (defined $data->{'Service.RemainAfterExit'} and $data->{'Service.RemainAfterExit'} eq 'yes') {
+			local * PIDFILE;
+			open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.oneshot";
+			close PIDFILE;
+		}
+		exit;
+	}
 	my $pid = fork();
 	die "Failed to fork for [@_]\n" if not defined $pid;
 	if ($pid == 0) {
