@@ -18,6 +18,12 @@ sub log_command {
 }
 log_command("[@ARGV]\n");
 
+for (my $i = 0; $i < @ARGV; $i++) {
+	if ($ARGV[$i] eq '--ignore-dependencies') {
+		splice @ARGV, $i, 1;
+		last;
+	}
+}
 if (@ARGV == 1 and $ARGV[0] eq 'daemon-reload') {
 	exit 0;
 }
