@@ -28,6 +28,10 @@ if (@ARGV != 2) {
 	die "Usage: $0 (start|stop|status|...) (service|target|socket thing)\n";
 }
 
+for (keys %ENV) {
+	delete $ENV{$_};
+}
+
 my $BASE_DIR = '/etc/systemctl-lite';
 if (not -d $BASE_DIR) {
 	mkdir $BASE_DIR;
