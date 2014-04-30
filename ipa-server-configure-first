@@ -18,6 +18,7 @@ systemctl start sshd.service
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
 	systemctl start-enabled
+	echo "FreeIPA server started."
 else
 	HOSTNAME_FQDN=$( hostname -f )
 	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
@@ -38,6 +39,14 @@ else
 	fi
 
 	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT < /dev/null
+	echo "FreeIPA server configured."
 fi
 
-/bin/bash
+if perl -e '( -t ) ? exit 0 : exit 1' ; then
+	echo 'Starting interactive shell.'
+	/bin/bash
+else
+	echo 'Go loop.'
+	while true ; do sleep 1000 ; done
+fi
+
