@@ -528,6 +528,11 @@ if ($COMMAND eq 'enable') {
 	exit;
 }
 
+if ($COMMAND eq 'disable') {
+	unlink "$ENABLED_DIR/$FULL_SERVICE";
+	exit;
+}
+
 die "Unknown command [$COMMAND].\n";
 
 1;
