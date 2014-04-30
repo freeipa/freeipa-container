@@ -4,11 +4,6 @@ FROM fedora:20
 RUN yum install -y freeipa-server
 RUN mkdir -p /run/lock
 
-# To be able to debug
-RUN yum install -y openssh-server strace lsof
-RUN echo 'root:jezek' | chpasswd
-RUN echo set -o vi >> /etc/bashrc
-
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
 
