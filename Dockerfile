@@ -13,7 +13,7 @@ ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
 
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
-ADD systemctl /bin/systemctl
-ADD systemctl-socket-daemon /bin/systemctl-socket-daemon
+ADD systemctl /usr/bin/systemctl
+ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 
 ENTRYPOINT /usr/sbin/ipa-server-configure-first
