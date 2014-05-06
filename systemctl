@@ -325,12 +325,18 @@ if ($COMMAND eq 'stop') {
 	}
 	if (defined $data->{'Service.ExecStop'}) {
 		my $x = $data->{'Service.ExecStop'};
+		my $runit = 1;
 		if (defined $mainpid) {
 			$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
+		} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
+			$runit = 0;
+			log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
 		}
-		log_command("Running stop [$x]\n");
-		system $x;
-		sleep 3;
+		if ($runit) {
+			log_command("Running stop [$x]\n");
+			system $x;
+			sleep 3;
+		}
 	}
 	my $ret = 0;
 	if ($TYPE eq 'target') {
