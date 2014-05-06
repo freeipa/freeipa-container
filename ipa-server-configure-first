@@ -9,6 +9,11 @@ function usage () {
 	exit 1
 }
 
+function stop_running () {
+	systemctl stop-running
+}
+trap stop_running TERM
+
 systemctl stop dbus.service
 rm -f /var/run/messagebus.pid
 rm -f /etc/systemctl-lite/running/*

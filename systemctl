@@ -44,8 +44,8 @@ if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
 }
 my $ENABLED_DIR = "$BASE_DIR/enabled";
-if (@ARGV == 1 and $ARGV[0] eq 'start-enabled') {
-	if (-d $ENABLED_DIR) {
+if (@ARGV == 1) {
+	if ($ARGV[0] eq 'start-enabled' and -d $ENABLED_DIR) {
 		local * ENABLED;
 		opendir ENABLED, $ENABLED_DIR;
 		my %services;
@@ -60,6 +60,24 @@ if (@ARGV == 1 and $ARGV[0] eq 'start-enabled') {
 		for my $s (sort { $services{$a} <=> $services{$b} or $a cmp $b } keys %services) {
 			print "Starting [$s]\n";
 			system $0, 'start', $s;
+		}
+	}
+	if ($ARGV[0] eq 'stop-running' and -d $RUNNING_DIR) {
+		local * RUNNING;
+		opendir RUNNING, $RUNNING_DIR;
+		my %services;
+		while (defined(my $f = readdir RUNNING)) {
+			next if $f eq '.' or $f eq '..';
+			my $modified = (stat "$RUNNING_DIR/$f")[9];
+			if (defined $modified) {
+				my $trimmed = $f;
+				$trimmed =~ s/\..+$//;
+				$services{$trimmed} = $modified;
+			}
+		}
+		close RUNNING;
+		for my $s (sort { $services{$b} <=> $services{$a} or $a cmp $b } keys %services) {
+			system $0, 'stop', $s;
 		}
 	}
 	exit;
