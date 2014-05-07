@@ -44,8 +44,8 @@ if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
 }
 my $ENABLED_DIR = "$BASE_DIR/enabled";
-if (@ARGV == 1 and $ARGV[0] eq 'start-enabled') {
-	if (-d $ENABLED_DIR) {
+if (@ARGV == 1) {
+	if ($ARGV[0] eq 'start-enabled' and -d $ENABLED_DIR) {
 		local * ENABLED;
 		opendir ENABLED, $ENABLED_DIR;
 		my %services;
@@ -60,6 +60,24 @@ if (@ARGV == 1 and $ARGV[0] eq 'start-enabled') {
 		for my $s (sort { $services{$a} <=> $services{$b} or $a cmp $b } keys %services) {
 			print "Starting [$s]\n";
 			system $0, 'start', $s;
+		}
+	}
+	if ($ARGV[0] eq 'stop-running' and -d $RUNNING_DIR) {
+		local * RUNNING;
+		opendir RUNNING, $RUNNING_DIR;
+		my %services;
+		while (defined(my $f = readdir RUNNING)) {
+			next if $f eq '.' or $f eq '..';
+			my $modified = (stat "$RUNNING_DIR/$f")[9];
+			if (defined $modified) {
+				my $trimmed = $f;
+				$trimmed =~ s/\..+$//;
+				$services{$trimmed} = $modified;
+			}
+		}
+		close RUNNING;
+		for my $s (sort { $services{$b} <=> $services{$a} or $a cmp $b } keys %services) {
+			system $0, 'stop', $s;
 		}
 	}
 	exit;
@@ -307,12 +325,18 @@ if ($COMMAND eq 'stop') {
 	}
 	if (defined $data->{'Service.ExecStop'}) {
 		my $x = $data->{'Service.ExecStop'};
+		my $runit = 1;
 		if (defined $mainpid) {
 			$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
+		} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
+			$runit = 0;
+			log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
 		}
-		log_command("Running stop [$x]\n");
-		system $x;
-		sleep 3;
+		if ($runit) {
+			log_command("Running stop [$x]\n");
+			system $x;
+			sleep 3;
+		}
 	}
 	my $ret = 0;
 	if ($TYPE eq 'target') {
@@ -525,6 +549,11 @@ if ($COMMAND eq 'enable') {
 	}
 	local * FILE;
 	open FILE, '>', "$ENABLED_DIR/$FULL_SERVICE";
+	exit;
+}
+
+if ($COMMAND eq 'disable') {
+	unlink "$ENABLED_DIR/$FULL_SERVICE";
 	exit;
 }
 
