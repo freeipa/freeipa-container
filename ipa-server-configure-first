@@ -18,10 +18,17 @@ systemctl stop dbus.service
 rm -f /var/run/messagebus.pid
 rm -f /etc/systemctl-lite/running/*
 
+cp -f /etc/resolv.conf /etc/resolv.conf.docker
+umount /etc/resolv.conf
+cp -f /etc/resolv.conf.docker /etc/resolv.conf
+
 systemctl start sshd.service
 
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
+	if [ -f /etc/resolv.conf.ipa ] ; then
+		cp -f /etc/resolv.conf.ipa /etc/resolv.conf
+	fi
 	systemctl start-enabled
 	echo "FreeIPA server started."
 else
@@ -43,7 +50,10 @@ else
 		DEBUG_OPT=-d
 	fi
 
-	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT < /dev/null
+	FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+
+	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns --forwarder=$FORWARDER < /dev/null
+	cp -f /etc/resolv.conf /etc/resolv.conf.ipa
 	echo "FreeIPA server configured."
 fi
 
