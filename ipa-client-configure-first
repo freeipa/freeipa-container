@@ -1,0 +1,59 @@
+#!/bin/bash
+
+function usage () {
+	if [ -n "$1" ] ; then
+		echo $1 >&2
+	else
+		echo "Start as docker run --link <FreeIPA-container>:ipa -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
+	fi
+	exit 1
+}
+
+function stop_running () {
+	systemctl stop-running
+}
+trap stop_running TERM
+
+systemctl stop dbus.service
+rm -f /var/run/messagebus.pid
+rm -f /etc/systemctl-lite/running/*
+
+cp -f /etc/hostname /etc/hostname.docker
+umount /etc/hostname
+if [ -f /etc/hostname.ipa-client ] ; then
+	cp -f /etc/hostname.ipa-client /etc/hostname
+else
+	cp -f /etc/hostname.docker /etc/hostname
+fi
+
+cp -f /etc/resolv.conf /etc/resolv.conf.docker
+umount /etc/resolv.conf
+
+echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
+
+if [ -f /etc/ipa/ca.crt ] ; then
+	echo "System is already FreeIPA-enrolled, starting the services."
+	systemctl start-enabled
+	echo "System is ready."
+else
+	if [ -z "$PASSWORD" ] ; then
+		usage
+	fi
+
+	IPA=$( curl -si http://$IPA_PORT_80_TCP_ADDR/ | perl -lne 'm!^Location:\shttps?://(.+?)/! and print $1' )
+	DOMAIN=${IPA#*.}
+	HOSTNAME_FQDN=$( hostname ).$DOMAIN
+
+	/usr/sbin/ipa-client-install --hostname=$HOSTNAME_FQDN -p admin -w "$PASSWORD" -U < /dev/null
+	cp -f /etc/hostname /etc/hostname.ipa-client
+	echo "FreeIPA-enrolled."
+fi
+
+if perl -e '( -t ) ? exit 0 : exit 1' ; then
+	echo 'Starting interactive shell.'
+	/bin/bash
+else
+	echo 'Go loop.'
+	while true ; do sleep 1000 ; done
+fi
+
