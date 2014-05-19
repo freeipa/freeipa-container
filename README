@@ -1,0 +1,65 @@
+# FreeIPA server in Docker
+
+This repository contains the Dockerfile and associated assets for
+building a freeipa-server Docker image from the official yum repo.
+
+Install docker (v0.9 or v0.11; avoid v0.10)
+
+    yum install -y docker-io
+
+Start the service:
+
+    systemctl start docker
+
+To build the image, run in the root of the repository:
+
+    docker build -t freeipa-server .
+
+To run the container:
+
+    docker run --privileged --name freeipa-server-container -ti -h ipa.example.test -e PASSWORD=Secret123 freeipa-server
+
+The `--privileged` option gives the container extended privileges,
+which is needed to access dbus.  `--name` assigns the container a
+name that can be used later with `docker start`, `docker stop` and
+other commands.  `ipa-server-install` is invoked non-interactively
+the first the container is run, and the `PASSWORD` environment
+variable specifies the admin password.
+
+`-ti` is optional and is used to start a shell (useful for
+experimenting in the container.)
+
+The container can the be started and stopped:
+
+    docker start freeipa-server-container
+    docker stop freeipa-server-container
+
+
+# IPA-enrolled client in Docker
+
+Checkout the `fedora-20-client` or `rhel-7-beta-client` branch,
+according to your needs.  In the root of the repository, run:
+
+    docker build -t freeipa-client .
+
+To run the client, link it to the freeipa-server container:
+
+    docker run --privileged --link freeipa-server-container:ipa -e PASSWORD=Secret123 -ti freeipa-client
+
+The first time this container runs, it invokes `ipa-client-install`
+with the given admin password.  Sample output:
+
+    Unable to discover domain, not provided on command line
+    Installation failed. Rolling back changes.
+    IPA client is not configured on this system.
+    FreeIPA-enrolled.
+    Starting interactive shell.
+    bash-4.2#
+
+`--link` is used to set up a private network connection between the
+referenced container and the new container.  The referenced
+container must be running.  The linked container's environment is
+populated with variables indicating the port mapping.  The
+`ipa-client-configure-first` entrypoint uses these environment
+variables to connect to the server container when configuring the
+client.
