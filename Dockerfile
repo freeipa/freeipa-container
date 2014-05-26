@@ -12,6 +12,9 @@ ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
 
+RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first
+RUN yum clean all
+
 EXPOSE 53/udp 80 443 389 636 88 464 88/udp 464/udp 123/udp
 
 ENTRYPOINT /usr/sbin/ipa-server-configure-first
