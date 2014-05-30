@@ -7,6 +7,8 @@ RUN mkdir -p /run/lock
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
 
+RUN ln -sf jettison/jettison.jar /usr/share/java/jettison.jar
+
 ADD systemctl /usr/bin/systemctl
 ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 
