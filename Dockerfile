@@ -1,5 +1,5 @@
 # Clone from the Fedora rawhide image
-FROM lsm5/fedora:rawhide
+FROM fedora:rawhide
 # Install FreeIPA server
 RUN yum install -y freeipa-server bind bind-dyndb-ldap perl
 RUN mkdir -p /run/lock
