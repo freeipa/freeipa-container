@@ -2,7 +2,7 @@
 FROM fedora:20
 
 # Install FreeIPA client
-RUN yum install -y freeipa-client perl 'perl(Data::Dumper)' ; yum clean all
+RUN yum install -y freeipa-client perl 'perl(Data::Dumper)' && yum clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
