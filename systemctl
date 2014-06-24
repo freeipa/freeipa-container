@@ -529,6 +529,7 @@ if ($COMMAND eq 'start') {
 		for (0 .. 10) {
 			system "/usr/bin/dbus-send --system --type=method_call --print-reply --dest=$busname $objectpath org.freedesktop.DBus.Introspectable.Introspect > /dev/null";
 			last if ($? >> 8) == 0;
+			sleep 1;
 		}
 	}
 	exit;
