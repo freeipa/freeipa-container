@@ -15,7 +15,7 @@ function stop_running () {
 trap stop_running TERM
 
 systemctl stop dbus.service
-rm -f /var/run/messagebus.pid
+rm -rf /var/run/*.pid
 rm -f /etc/systemctl-lite/running/*
 
 cp -f /etc/hostname /etc/hostname.docker
