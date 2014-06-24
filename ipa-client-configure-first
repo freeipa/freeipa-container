@@ -44,7 +44,7 @@ else
 	DOMAIN=${IPA#*.}
 	HOSTNAME_FQDN=$( hostname ).$DOMAIN
 
-	/usr/sbin/ipa-client-install --hostname=$HOSTNAME_FQDN -p admin -w "$PASSWORD" -U < /dev/null
+	/usr/sbin/ipa-client-install --hostname=$HOSTNAME_FQDN -p admin -w "$PASSWORD" -U --enable-dns-updates < /dev/null
 	cp -f /etc/hostname /etc/hostname.ipa-client
 	echo "FreeIPA-enrolled."
 fi
