@@ -27,7 +27,7 @@ systemctl start sshd.service
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
 	if [ -f /etc/resolv.conf.ipa ] ; then
-		cp -f /etc/resolv.conf.ipa /etc/resolv.conf
+		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
 	fi
 	systemctl start-enabled
 	echo "FreeIPA server started."
