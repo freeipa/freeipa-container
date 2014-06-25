@@ -15,7 +15,7 @@ function stop_running () {
 trap stop_running TERM
 
 systemctl stop dbus.service
-rm -f /var/run/messagebus.pid
+rm -f /var/run/*.pid
 rm -f /etc/systemctl-lite/running/*
 
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
@@ -25,9 +25,20 @@ cp -f /etc/resolv.conf.docker /etc/resolv.conf
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
 	if [ -f /etc/resolv.conf.ipa ] ; then
-		cp -f /etc/resolv.conf.ipa /etc/resolv.conf
+		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
 	fi
 	systemctl start-enabled
+	kdestroy -A
+	kinit -k
+	(
+		echo "server 127.0.0.1"
+		echo "update delete $( hostname -f ) A"
+		MY_IP=$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )
+		echo "update add $( hostname -f ) 180 A $MY_IP"
+		echo "send"
+		echo "quit"
+	) | nsupdate -g
+	kdestroy -A
 	echo "FreeIPA server started."
 else
 	HOSTNAME_FQDN=$( hostname -f )
