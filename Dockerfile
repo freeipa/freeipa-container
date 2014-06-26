@@ -1,10 +1,12 @@
-# Clone from the Fedora 20 image
-FROM fedora:20
+# Clone from the RHEL 7
+FROM rhel7:0
 
 MAINTAINER Jan Pazdziora
 
+RUN yum swap -y -- remove fakesystemd -- install systemd systemd-libs && yum clean all
+
 # Install FreeIPA server
-RUN yum install -y freeipa-server bind bind-dyndb-ldap perl && yum clean all
+RUN yum install -y ipa-server bind bind-dyndb-ldap perl && yum clean all
 RUN mkdir -p /run/lock
 
 ADD dbus.service /etc/systemd/system/dbus.service
