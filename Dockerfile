@@ -1,6 +1,8 @@
 # Clone from the Fedora 20 image
 FROM fedora:20
 
+MAINTAINER Jan Pazdziora
+
 # Install FreeIPA client
 RUN yum install -y freeipa-client perl 'perl(Data::Dumper)' && yum clean all
 
