@@ -212,7 +212,18 @@ if ($COMMAND eq 'show') {
 	exit;
 }
 
-my $KILLALL = '/bin/killall';
+sub killall {
+	my ($signal, $command) = @_;
+	my $pids = `/usr/sbin/pidof $command`;
+	chomp $pids;
+	if ($pids eq '') {
+		return 0;
+	} elsif ($signal == 0) {
+		return 1;
+	} else {
+		return kill $signal, split /\s+/, $pids;
+	}
+}
 
 sub get_exec_start {
 	my $data = shift;
@@ -254,8 +265,7 @@ sub is_running {
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			system $KILLALL, '-q', '-0', $path;
-			if ($? == 0) {
+			if (killall(0, $path)) {
 				$ret = 1;
 			}
 		} else {
@@ -379,21 +389,17 @@ if ($COMMAND eq 'stop') {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
 			exec_stop_pre($data);
-			system $KILLALL, '-q', '-0', $path;
-			if ($? == 0) {
+			if (killall(0, $path)) {
 				sleep 1;
-				system $KILLALL, '-q', '-15', $path;
-			}
-			if ($? == 0) {
-				sleep 3;
-				system $KILLALL, '-q', '-9', $path;
-			}
-			if ($? == 0) {
-				sleep 1;
-				system $KILLALL, '-q', '-0', $path;
-				if ($? == 0) {
-					warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
-					$ret = 1;
+				if (killall(15, $path)) {
+					sleep 3;
+					if (killall(9, $path)) {
+						sleep 1;
+						if (killall(0, $path)) {
+							warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
+							$ret = 1;
+						}
+					}
 				}
 			}
 		} else {
@@ -526,8 +532,7 @@ if ($COMMAND eq 'start') {
 	close PIDFILE;
 	log_command("Marked pid [$pid]\n");
 	sleep 1;
-	system $KILLALL, '-q', '-0', $first_path;
-	if ($? == 0) {
+	if (killall(0, $first_path)) {
 		local * PIDFILE;
 		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.name";
 		print PIDFILE "$first_path\n";
