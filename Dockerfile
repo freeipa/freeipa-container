@@ -1,5 +1,5 @@
 # Clone from the RHEL 7
-FROM rhel7:0
+FROM rhel7
 
 MAINTAINER Jan Pazdziora
 
