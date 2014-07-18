@@ -428,7 +428,7 @@ sub add_runuser {
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
 		}
-		unshift @$cmd, '/usr/sbin/runuser';
+		unshift @$cmd, '/usr/sbin/runuser-pp';
 	}
 }
 
