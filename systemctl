@@ -424,7 +424,7 @@ if ($COMMAND eq 'stop') {
 sub add_runuser {
 	my ($data, $cmd) = @_;
 	if (defined $data->{'Service.User'}) {
-		unshift @$cmd, '-u', $data->{'Service.User'};
+		unshift @$cmd, '-u', $data->{'Service.User'}, '--';
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
 		}
