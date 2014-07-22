@@ -80,11 +80,17 @@ else
 	fi
 
 	FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+	if [ "$FORWARDER" == '127.0.0.1' ] ; then
+		FORWARDER=--no-forwarders
+	else
+		FORWARDER=--forwarder=$FORWARDER
+	fi
+
 	if [ ! -w /etc/resolv.conf ] ; then
 		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
 	fi
 
-	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns --forwarder=$FORWARDER < /dev/null
+	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null
 	cp -f /etc/resolv.conf /etc/resolv.conf.ipa
 	echo "FreeIPA server configured."
 fi
