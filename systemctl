@@ -190,6 +190,8 @@ sub parse_file {
 			} else {
 				push @{ $data->{"$section.$key"} }, $value;
 			}
+		} elsif ($key =~ /^(ExecStart(Pre|Post)|ExecReload|ExecStop(Pre|Post)?)$/) {
+			push @{ $data->{"$section.$key"} }, $value;
 		} else {
 			$data->{"$section.$key"} = $value;
 		}
@@ -289,15 +291,19 @@ if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
 sub exec_stop_pre {
 	my ($data) = @_;
 	if (defined $data->{'Socket.ExecStopPre'}) {
-		log_command("Running stop pre [$data->{'Socket.ExecStopPre'}]\n");
-		system $data->{'Socket.ExecStopPre'};
+		for my $x (@{ $data->{'Socket.ExecStopPre'} }) {
+			log_command("Running stop pre [$x]\n");
+			system $x;
+		}
 	}
 }
 sub exec_stop_post {
 	my ($data) = @_;
 	if (defined $data->{'Service.ExecStopPost'}) {
-		log_command("Running stop post [$data->{'Service.ExecStopPost'}]\n");
-		system $data->{'Service.ExecStopPost'};
+		for my $x (@{ $data->{'Service.ExecStopPost'} }) {
+			log_command("Running stop post [$x]\n");
+			system $x;
+		}
 	}
 }
 
@@ -348,18 +354,19 @@ if ($COMMAND eq 'stop') {
 		$mainpid = get_pid("$FULL_SERVICE.pid");
 	}
 	if (defined $data->{'Service.ExecStop'}) {
-		my $x = $data->{'Service.ExecStop'};
-		my $runit = 1;
-		if (defined $mainpid) {
-			$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
-		} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
-			$runit = 0;
-			log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
-		}
-		if ($runit) {
-			log_command("Running stop [$x]\n");
-			system $x;
-			sleep 3;
+		for my $x (@{ $data->{'Service.ExecStop'} }) {
+			my $runit = 1;
+			if (defined $mainpid) {
+				$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
+			} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
+				$runit = 0;
+				log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
+			}
+			if ($runit) {
+				log_command("Running stop [$x]\n");
+				system $x;
+				sleep 3;
+			}
 		}
 	}
 	my $ret = 0;
@@ -443,11 +450,19 @@ if ($COMMAND eq 'start') {
 		system @cmd;
 	}
 	if (defined $data->{'Service.ExecStartPre'}) {
-		my @cmd = split /\s+/, $data->{'Service.ExecStartPre'};
-		add_runuser($data, \@cmd);
-		no warnings 'uninitialized';
-		log_command("Running start pre [@cmd]\n");
-		system @cmd;
+		for my $x (@{ $data->{'Service.ExecStartPre'} }) {
+			my $can_fail = 0;
+			if ($x =~ s/^-//) {
+				$can_fail = 1;
+			}
+			my @cmd = split /\s+/, $x;
+			add_runuser($data, \@cmd);
+			no warnings 'uninitialized';
+			log_command("Running start pre [@cmd]\n");
+			if (system @cmd and not $can_fail) {
+				exit 1;
+			}
+		}
 	}
 	my @paths;
 	if ($TYPE eq 'target') {
