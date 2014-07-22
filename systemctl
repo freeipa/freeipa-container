@@ -382,13 +382,11 @@ if ($COMMAND eq 'stop') {
 	} elsif (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
 		if (defined $pid) {
-			exec_stop_pre($data);
 			$ret = stop_pids($pid);
 		}
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			exec_stop_pre($data);
 			if (killall(0, $path)) {
 				sleep 1;
 				if (killall(15, $path)) {
