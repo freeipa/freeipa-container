@@ -13,3 +13,4 @@ ExecStopPost=/bin/rm -f /var/run/messagebus.pid
 OOMScoreAdjust=-900
 User=dbus
 Group=root
+PermissionsStartOnly=true

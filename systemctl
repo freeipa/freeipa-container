@@ -456,7 +456,9 @@ if ($COMMAND eq 'start') {
 				$can_fail = 1;
 			}
 			my @cmd = split /\s+/, $x;
-			add_runuser($data, \@cmd);
+			if (not $data->{'Service.PermissionsStartOnly'} or $data->{'Service.PermissionsStartOnly'} =~ /^(false|0)$/i) {
+				add_runuser($data, \@cmd);
+			}
 			no warnings 'uninitialized';
 			log_command("Running start pre [@cmd]\n");
 			if (system @cmd and not $can_fail) {
