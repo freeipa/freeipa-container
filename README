@@ -18,14 +18,26 @@ To build the image, run in the root of the repository:
 
 To run the container:
 
+    docker run --dns 127.0.0.1 --name freeipa-server-container -ti -h ipa.example.test -e PASSWORD=Secret123 freeipa-server
+
+or
+
     docker run --privileged --name freeipa-server-container -ti -h ipa.example.test -e PASSWORD=Secret123 freeipa-server
 
-The `--privileged` option gives the container extended privileges,
-which is needed to access dbus.  `--name` assigns the container a
-name that can be used later with `docker start`, `docker stop` and
-other commands.  `ipa-server-install` is invoked non-interactively
-the first the container is run, and the `PASSWORD` environment
-variable specifies the admin password.
+Since FreeIPA server includes DNS server, it makes sense to point
+its own resolv.conf to itself with the `--dns` option. In that case
+however, FreeIPA will not configure forwarder to DNS server
+configured on the host because it does not know its IP address.
+The `--privileged` option gives the container extended privileges
+which is needed to modify resolv.conf. Use the privileged option
+if being able to resolve DNS records outside of FreeIPA's domain
+is important for your use case.
+
+The option `--name` assigns the container a name that can be used
+later with `docker start`, `docker stop` and other commands.
+Command `ipa-server-install` is invoked non-interactively the first
+the container is run, and the `PASSWORD` environment variable
+specifies the admin password.
 
 The `-ti` parameters are optional and are used for get a terminal
 (useful for experimenting in the container).

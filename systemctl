@@ -190,6 +190,8 @@ sub parse_file {
 			} else {
 				push @{ $data->{"$section.$key"} }, $value;
 			}
+		} elsif ($key =~ /^(ExecStart(Pre|Post)|ExecReload|ExecStop(Pre|Post)?)$/) {
+			push @{ $data->{"$section.$key"} }, $value;
 		} else {
 			$data->{"$section.$key"} = $value;
 		}
@@ -212,7 +214,18 @@ if ($COMMAND eq 'show') {
 	exit;
 }
 
-my $KILLALL = '/bin/killall';
+sub killall {
+	my ($signal, $command) = @_;
+	my $pids = `/usr/sbin/pidof $command`;
+	chomp $pids;
+	if ($pids eq '') {
+		return 0;
+	} elsif ($signal == 0) {
+		return 1;
+	} else {
+		return kill $signal, split /\s+/, $pids;
+	}
+}
 
 sub get_exec_start {
 	my $data = shift;
@@ -254,8 +267,7 @@ sub is_running {
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			system $KILLALL, '-q', '-0', $path;
-			if ($? == 0) {
+			if (killall(0, $path)) {
 				$ret = 1;
 			}
 		} else {
@@ -279,15 +291,19 @@ if ($COMMAND eq 'is-active' or $COMMAND eq 'status') {
 sub exec_stop_pre {
 	my ($data) = @_;
 	if (defined $data->{'Socket.ExecStopPre'}) {
-		log_command("Running stop pre [$data->{'Socket.ExecStopPre'}]\n");
-		system $data->{'Socket.ExecStopPre'};
+		for my $x (@{ $data->{'Socket.ExecStopPre'} }) {
+			log_command("Running stop pre [$x]\n");
+			system $x;
+		}
 	}
 }
 sub exec_stop_post {
 	my ($data) = @_;
 	if (defined $data->{'Service.ExecStopPost'}) {
-		log_command("Running stop post [$data->{'Service.ExecStopPost'}]\n");
-		system $data->{'Service.ExecStopPost'};
+		for my $x (@{ $data->{'Service.ExecStopPost'} }) {
+			log_command("Running stop post [$x]\n");
+			system $x;
+		}
 	}
 }
 
@@ -338,18 +354,19 @@ if ($COMMAND eq 'stop') {
 		$mainpid = get_pid("$FULL_SERVICE.pid");
 	}
 	if (defined $data->{'Service.ExecStop'}) {
-		my $x = $data->{'Service.ExecStop'};
-		my $runit = 1;
-		if (defined $mainpid) {
-			$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
-		} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
-			$runit = 0;
-			log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
-		}
-		if ($runit) {
-			log_command("Running stop [$x]\n");
-			system $x;
-			sleep 3;
+		for my $x (@{ $data->{'Service.ExecStop'} }) {
+			my $runit = 1;
+			if (defined $mainpid) {
+				$x =~ s!\$MAINPID\b|\$\{MAINPID\}!$mainpid!g;
+			} elsif ($x =~ /\$MAINPID\b|\$\{MAINPID\}/) {
+				$runit = 0;
+				log_command("Service [$FULL_SERVICE] would like to stop via ExecStop [$x] but we have no pid file, skipping.\n");
+			}
+			if ($runit) {
+				log_command("Running stop [$x]\n");
+				system $x;
+				sleep 3;
+			}
 		}
 	}
 	my $ret = 0;
@@ -372,28 +389,22 @@ if ($COMMAND eq 'stop') {
 	} elsif (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
 		if (defined $pid) {
-			exec_stop_pre($data);
 			$ret = stop_pids($pid);
 		}
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			exec_stop_pre($data);
-			system $KILLALL, '-q', '-0', $path;
-			if ($? == 0) {
+			if (killall(0, $path)) {
 				sleep 1;
-				system $KILLALL, '-q', '-15', $path;
-			}
-			if ($? == 0) {
-				sleep 3;
-				system $KILLALL, '-q', '-9', $path;
-			}
-			if ($? == 0) {
-				sleep 1;
-				system $KILLALL, '-q', '-0', $path;
-				if ($? == 0) {
-					warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
-					$ret = 1;
+				if (killall(15, $path)) {
+					sleep 3;
+					if (killall(9, $path)) {
+						sleep 1;
+						if (killall(0, $path)) {
+							warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
+							$ret = 1;
+						}
+					}
 				}
 			}
 		} else {
@@ -413,11 +424,11 @@ if ($COMMAND eq 'stop') {
 sub add_runuser {
 	my ($data, $cmd) = @_;
 	if (defined $data->{'Service.User'}) {
-		unshift @$cmd, '-u', $data->{'Service.User'};
+		unshift @$cmd, '-u', $data->{'Service.User'}, '--';
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
 		}
-		unshift @$cmd, '/usr/sbin/runuser';
+		unshift @$cmd, '/usr/sbin/runuser-pp';
 	}
 }
 
@@ -439,11 +450,21 @@ if ($COMMAND eq 'start') {
 		system @cmd;
 	}
 	if (defined $data->{'Service.ExecStartPre'}) {
-		my @cmd = split /\s+/, $data->{'Service.ExecStartPre'};
-		add_runuser($data, \@cmd);
-		no warnings 'uninitialized';
-		log_command("Running start pre [@cmd]\n");
-		system @cmd;
+		for my $x (@{ $data->{'Service.ExecStartPre'} }) {
+			my $can_fail = 0;
+			if ($x =~ s/^-//) {
+				$can_fail = 1;
+			}
+			my @cmd = split /\s+/, $x;
+			if (not $data->{'Service.PermissionsStartOnly'} or $data->{'Service.PermissionsStartOnly'} =~ /^(false|0)$/i) {
+				add_runuser($data, \@cmd);
+			}
+			no warnings 'uninitialized';
+			log_command("Running start pre [@cmd]\n");
+			if (system @cmd and not $can_fail) {
+				exit 1;
+			}
+		}
 	}
 	my @paths;
 	if ($TYPE eq 'target') {
@@ -526,8 +547,7 @@ if ($COMMAND eq 'start') {
 	close PIDFILE;
 	log_command("Marked pid [$pid]\n");
 	sleep 1;
-	system $KILLALL, '-q', '-0', $first_path;
-	if ($? == 0) {
+	if (killall(0, $first_path)) {
 		local * PIDFILE;
 		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.name";
 		print PIDFILE "$first_path\n";
