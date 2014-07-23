@@ -33,13 +33,17 @@ rm -f /var/run/*.pid
 rm -f /etc/systemctl-lite/running/*
 
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
-umount /etc/resolv.conf
-cp -f /etc/resolv.conf.docker /etc/resolv.conf
+if [ -w /etc/resolv.conf ] ; then
+	umount /etc/resolv.conf
+	cp -f /etc/resolv.conf.docker /etc/resolv.conf
+fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
-	if [ -f /etc/resolv.conf.ipa ] ; then
-		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
+	if [ -w /etc/resolv.conf ] ; then
+		if [ -f /etc/resolv.conf.ipa ] ; then
+			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
+		fi
 	fi
 	systemctl start-enabled
 	kdestroy -A
@@ -74,8 +78,17 @@ else
 	fi
 
 	FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+	if [ "$FORWARDER" == '127.0.0.1' ] ; then
+		FORWARDER=--no-forwarders
+	else
+		FORWARDER=--forwarder=$FORWARDER
+	fi
 
-	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns --forwarder=$FORWARDER < /dev/null
+	if [ ! -w /etc/resolv.conf ] ; then
+		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
+	fi
+
+	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -P $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null
 	cp -f /etc/resolv.conf /etc/resolv.conf.ipa
 	echo "FreeIPA server configured."
 fi
