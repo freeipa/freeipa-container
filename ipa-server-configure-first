@@ -79,7 +79,9 @@ else
 		DEBUG_OPT=-d
 	fi
 
-	FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+	if [ -z "$FORWARDER" ] ; then
+		FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+	fi
 	if [ "$FORWARDER" == '127.0.0.1' ] ; then
 		FORWARDER=--no-forwarders
 	else
