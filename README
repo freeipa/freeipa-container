@@ -27,11 +27,17 @@ or
 Since FreeIPA server includes DNS server, it makes sense to point
 its own resolv.conf to itself with the `--dns` option. In that case
 however, FreeIPA will not configure forwarder to DNS server
-configured on the host because it does not know its IP address.
+configured on the host because it does not know its IP address, unless
+you use environment variable `FORWARDER` to tell the container --
+use `-e FORWARDER=10.11.12.13` option to `docker run` to set the
+forwarder value.
+
 The `--privileged` option gives the container extended privileges
-which is needed to modify resolv.conf. Use the privileged option
-if being able to resolve DNS records outside of FreeIPA's domain
-is important for your use case.
+which is needed to modify resolv.conf. With `--privileged`, you do not
+need to set `--dns 127.0.0.1` because the setup will be able to set
+it for you from inside of the container, while using the original
+nameserver value from resolv.conf as forwarder IP address. You can
+of course also use `-e FORWARDER=...` explicitly.
 
 The option `--name` assigns the container a name that can be used
 later with `docker start`, `docker stop` and other commands.
