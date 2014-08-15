@@ -28,19 +28,20 @@ function stop_running () {
 }
 trap stop_running TERM
 
-systemctl stop dbus.service
-rm -f /var/run/*.pid
+systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers'
+
 rm -f /etc/systemctl-lite/running/*
 
+CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
-if [ -w /etc/resolv.conf ] ; then
-	umount /etc/resolv.conf
+if umount /etc/resolv.conf 2> /dev/null ; then
+	CAN_EDIT_RESOLV_CONF=1
 	cp -f /etc/resolv.conf.docker /etc/resolv.conf
 fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
-	if [ -w /etc/resolv.conf ] ; then
+	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
 		if [ -f /etc/resolv.conf.ipa ] ; then
 			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
@@ -86,7 +87,7 @@ else
 		FORWARDER=--forwarder=$FORWARDER
 	fi
 
-	if [ ! -w /etc/resolv.conf ] ; then
+	if [ "$CAN_EDIT_RESOLV_CONF" == "0" ] ; then
 		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
 	fi
 
