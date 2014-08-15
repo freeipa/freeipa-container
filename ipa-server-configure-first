@@ -28,8 +28,8 @@ function stop_running () {
 }
 trap stop_running TERM
 
-systemctl stop dbus.service
-rm -f /var/run/*.pid
+systemd-tmpfiles --remove --create
+
 rm -f /etc/systemctl-lite/running/*
 
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
