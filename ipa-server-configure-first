@@ -28,7 +28,7 @@ function stop_running () {
 }
 trap stop_running TERM
 
-systemd-tmpfiles --remove --create
+systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers'
 
 rm -f /etc/systemctl-lite/running/*
 
