@@ -67,7 +67,23 @@ else
 		usage
 	fi
 
+	if [ -z "$PASSWORD" ] && [ -e password ] ; then
+		PASSWORD="$( cat password | tr -d [:space:] )"
+	fi
+
 	if [ -z "$PASSWORD" ] ; then
+		if [ -z "$DS_PASSWORD" ] && [ -e ds_password ] ; then
+			DS_PASSWORD="$( cat ds_password | tr -d [:space:] )"
+		fi
+		if [ -z "$ADMIN_PASSWORD" ] && [ -e admin_password ] ; then
+			ADMIN_PASSWORD="$( cat admin_password | tr -d [:space:] )"
+		fi
+	else
+		DS_PASSWORD="$PASSWORD"
+		ADMIN_PASSWORD="$PASSWORD"
+	fi
+
+	if [ -z "$DS_PASSWORD" ] || [ -z "$ADMIN_PASSWORD" ] ; then
 		usage
 	fi
 
@@ -91,7 +107,7 @@ else
 		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
 	fi
 
-	/usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null
+	/usr/sbin/ipa-server-install -r $REALM -p $DS_PASSWORD -a $ADMIN_PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null
 	cp -f /etc/resolv.conf /etc/resolv.conf.ipa
 	echo "FreeIPA server configured."
 fi
@@ -103,4 +119,3 @@ else
 	echo 'Go loop.'
 	while true ; do sleep 1000 ; done
 fi
-
