@@ -18,6 +18,6 @@ ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
 
 RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first /usr/sbin/runuser-pp
 
-EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp
+EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
 ENTRYPOINT /usr/sbin/ipa-server-configure-first
