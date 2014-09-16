@@ -1,5 +1,5 @@
-# Clone from the RHEL 7
-FROM rhel7
+# Clone from the CentOS 7
+FROM centos:centos7
 
 MAINTAINER Jan Pazdziora
 
