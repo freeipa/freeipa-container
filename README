@@ -16,9 +16,23 @@ To build the image, run in the root of the repository:
 
     docker build -t freeipa-server .
 
+Create directory which will hold the server data:
+
+    mkdir /var/lib/ipa-data
+
 To run the container:
 
-    docker run --name freeipa-server-container -ti -h ipa.example.test -e PASSWORD=Secret123 freeipa-server
+    docker run --name freeipa-server-container -ti \
+       -h ipa.example.test -e PASSWORD=Secret123 \
+       -v /var/lib/ipa-data:/data:Z:rw freeipa-server
+
+If the above fails with error about invalid value for flag -v
+and bad format for volumes, run
+
+    chcon -t svirt_sandbox_file_t /var/lib/ipa-data
+
+or use semanage fcontext and restorecon, and use -v option
+without the :Z:rw part.
 
 The option `--name` assigns the container a name that can be used
 later with `docker start`, `docker stop` and other commands.
@@ -61,7 +75,8 @@ repository, run:
 
 To run the client, link it to the freeipa-server container:
 
-    docker run --privileged --link freeipa-server-container:ipa -e PASSWORD=Secret123 -ti freeipa-client
+    docker run --privileged --link freeipa-server-container:ipa \
+        -e PASSWORD=Secret123 -ti freeipa-client
 
 The first time this container runs, it invokes `ipa-client-install`
 with the given admin password.
