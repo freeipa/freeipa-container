@@ -20,7 +20,24 @@ Create directory which will hold the server data:
 
     mkdir /var/lib/ipa-data
 
-To run the container:
+You can optionally put into this directory a file
+
+    ipa-server-install-options
+
+with command line parameters to ipa-server-install command, one
+parameter per line. You probably want at least
+
+    --ds-password=The-directory-server-password
+    --admin-password=The-admin-password
+
+You then run the container with
+
+    docker run --name freeipa-server-container -ti \
+       -h ipa.example.test \
+       -v /var/lib/ipa-data:/data:Z:rw freeipa-server
+
+If you do not specify the passwords in the ipa-server-install-options
+file, use `PASSWORD` environment variable via the `-e` option:
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test -e PASSWORD=Secret123 \
@@ -37,8 +54,7 @@ without the :Z:rw part.
 The option `--name` assigns the container a name that can be used
 later with `docker start`, `docker stop` and other commands.
 Command `ipa-server-install` is invoked non-interactively the first
-the container is run, and the `PASSWORD` environment variable
-specifies the admin password.
+time the container is run.
 
 You can pass environment variable IPA_SERVER_INSTALL_OPTS with
 additional options that will be passed to ipa-server-install.
