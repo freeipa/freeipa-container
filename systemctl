@@ -49,15 +49,11 @@ for (keys %ENV) {
 	delete $ENV{$_};
 }
 
-my $BASE_DIR = '/etc/systemctl-lite';
-if (not -d $BASE_DIR) {
-	mkdir $BASE_DIR;
-}
-my $RUNNING_DIR = "$BASE_DIR/running";
+my $RUNNING_DIR = '/run/systemctl-lite-running';
 if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
 }
-my $ENABLED_DIR = "$BASE_DIR/enabled";
+my $ENABLED_DIR = '/etc/systemctl-lite-enabled';
 if (@ARGV == 1) {
 	if ($ARGV[0] eq 'start-enabled' and -d $ENABLED_DIR) {
 		local * ENABLED;

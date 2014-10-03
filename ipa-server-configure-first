@@ -30,7 +30,7 @@ trap stop_running TERM
 
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers'
 
-rm -f /etc/systemctl-lite/running/*
+rm -f /run/systemctl-lite-running/*
 
 CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
