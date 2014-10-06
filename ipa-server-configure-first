@@ -39,6 +39,8 @@ if echo '# test access' >> /etc/resolv.conf || umount /etc/resolv.conf 2> /dev/n
 	cp -f /etc/resolv.conf.docker /etc/resolv.conf
 fi
 
+systemctl start sshd.service
+
 if [ -f /etc/ipa/ca.crt ] ; then
 	echo "FreeIPA server is already configured, starting the services."
 	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
