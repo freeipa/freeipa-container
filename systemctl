@@ -46,7 +46,7 @@ if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 }
 
 for (keys %ENV) {
-	delete $ENV{$_};
+	delete $ENV{$_} unless $_ eq '_SYSTEMCTL_LITE_STARTING';
 }
 
 my $RUNNING_DIR = '/run/systemctl-lite-running';
@@ -70,6 +70,7 @@ if (@ARGV == 1) {
 		for my $s (sort { $services{$a} <=> $services{$b} or $a cmp $b } keys %services) {
 			print "Starting [$s]\n";
 			system $0, 'start', $s;
+			exit ($? >> 8) if ($? >> 8);
 		}
 	}
 	if ($ARGV[0] eq 'stop-running' and -d $RUNNING_DIR) {
@@ -439,12 +440,25 @@ sub add_runuser {
 }
 
 if ($COMMAND eq 'start') {
+	my (@starting_stack, %starting_stack);
+	if (defined $ENV{_SYSTEMCTL_LITE_STARTING}) {
+		@starting_stack = split /:/, $ENV{_SYSTEMCTL_LITE_STARTING};
+		@starting_stack{@starting_stack} = ();
+		$ENV{_SYSTEMCTL_LITE_STARTING} .= ":$FULL_SERVICE";
+	} else {
+		$ENV{_SYSTEMCTL_LITE_STARTING} = $FULL_SERVICE;
+	}
+
 	if ($TYPE eq 'service' and is_running($data)) {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
 		exit;
 	}
 	if (defined $data->{'Unit.Wants'}) {
 		for my $x (@{ $data->{'Unit.Wants'} }) {
+			if (exists $starting_stack{$x}) {
+				log_command("Skipping start of [$x], we are already in the process of starting it.\n");
+				next;
+			}
 			my @cmd = ($0, 'start', $x);
 			log_command("Running [@cmd]\n");
 			system @cmd;
@@ -452,6 +466,10 @@ if ($COMMAND eq 'start') {
 	}
 	if (defined $data->{'Unit.Requires'}) {
 		for my $x (@{ $data->{'Unit.Requires'} }) {
+			if (exists $starting_stack{$x}) {
+				log_command("Skipping start of [$x], we are already in the process of starting it.\n");
+				next;
+			}
 			my @cmd = ($0, 'start', $x);
 			log_command("Running [@cmd]\n");
 			if (system @cmd) {
@@ -581,9 +599,10 @@ if ($COMMAND eq 'start') {
 		$objectpath =~ s!^|\.!/!g;
 		for (0 .. 10) {
 			system "/usr/bin/dbus-send --system --type=method_call --print-reply --dest=$busname $objectpath org.freedesktop.DBus.Introspectable.Introspect > /dev/null";
-			last if ($? >> 8) == 0;
+			exit if ($? >> 8) == 0;
 			sleep 1;
 		}
+		exit 9;
 	}
 	exit;
 }
