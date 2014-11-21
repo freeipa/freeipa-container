@@ -18,9 +18,16 @@ function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
 	else
-		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
+		echo "Start as docker run -h \$FQDN_HOSTNAME -e UPDATE_SYSTEM=0 -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
 	fi
 	exit 1
+}
+
+function update_system() {
+	if [ -n "$UPDATE_SYSTEM" ] ; then
+		echo "Updating container to latest packages."
+		yum -y update && yum clean all
+	fi
 }
 
 function stop_running () {
@@ -40,6 +47,8 @@ if echo '# test access' >> /etc/resolv.conf || umount /etc/resolv.conf 2> /dev/n
 fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
+	update_system
+
 	echo "FreeIPA server is already configured, starting the services."
 	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
 		if [ -f /etc/resolv.conf.ipa ] ; then
@@ -70,6 +79,8 @@ else
 	if [ -z "$PASSWORD" ] ; then
 		usage
 	fi
+
+	update_system
 
 	REALM=${DOMAIN^^}
 
