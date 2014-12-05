@@ -9,8 +9,6 @@ RUN mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
 
-RUN ln -sf jettison/jettison.jar /usr/share/java/jettison.jar
-
 ADD runuser-pp /usr/sbin/runuser-pp
 ADD systemctl /usr/bin/systemctl
 ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
