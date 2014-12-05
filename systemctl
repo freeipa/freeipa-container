@@ -46,18 +46,14 @@ if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 }
 
 for (keys %ENV) {
-	delete $ENV{$_};
+	delete $ENV{$_} unless $_ eq '_SYSTEMCTL_LITE_STARTING';
 }
 
-my $BASE_DIR = '/etc/systemctl-lite';
-if (not -d $BASE_DIR) {
-	mkdir $BASE_DIR;
-}
-my $RUNNING_DIR = "$BASE_DIR/running";
+my $RUNNING_DIR = '/run/systemctl-lite-running';
 if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
 }
-my $ENABLED_DIR = "$BASE_DIR/enabled";
+my $ENABLED_DIR = '/etc/systemctl-lite-enabled';
 if (@ARGV == 1) {
 	if ($ARGV[0] eq 'start-enabled' and -d $ENABLED_DIR) {
 		local * ENABLED;
@@ -74,6 +70,7 @@ if (@ARGV == 1) {
 		for my $s (sort { $services{$a} <=> $services{$b} or $a cmp $b } keys %services) {
 			print "Starting [$s]\n";
 			system $0, 'start', $s;
+			exit ($? >> 8) if ($? >> 8);
 		}
 	}
 	if ($ARGV[0] eq 'stop-running' and -d $RUNNING_DIR) {
@@ -159,10 +156,18 @@ if (not defined $file) {
 sub parse_file {
 	my ($file, $data) = @_;
 	if (-d $file) {
+		my $op;
+		if ($file =~ /\.requires$/) {
+			$op = 'Unit.Requires';
+		} elsif ($file =~ /\.wants$/) {
+			$op = 'Unit.Wants';
+		} else {
+			die "Unknown directory [$file].\n";
+		}
 		my $dh = new IO::Dir($file);
 		while (defined(my $de = $dh->read)) {
 			next if $de eq '.' or $de eq '..';
-			push @{$data->{'Unit.Wanted'}}, $de;
+			push @{$data->{$op}}, $de unless $de =~ /\.target$/;
 		}
 		$dh->close;
 		return;
@@ -190,6 +195,8 @@ sub parse_file {
 			} else {
 				push @{ $data->{"$section.$key"} }, $value;
 			}
+		} elsif ($key =~ /^(Wants|Requires)$/) {
+			push @{ $data->{"$section.$key"} }, $value unless $value =~ /\.target$/;
 		} elsif ($key =~ /^(ExecStart(Pre|Post)|ExecReload|ExecStop(Pre|Post)?)$/) {
 			push @{ $data->{"$section.$key"} }, $value;
 		} else {
@@ -307,23 +314,14 @@ sub exec_stop_post {
 	}
 }
 
-if ($TYPE eq 'target' and not defined $data->{'Unit.Wanted'}) {
-	warn "No Unit.Wanted/.wants list for target [$SERVICE]\n";
+if ($TYPE eq 'target' and not defined $data->{'Unit.Wants'} and not defined $data->{'Unit.Requires'}) {
+	warn "No Unit.Wants/.wants/Unit.Requires/.requires list for target [$SERVICE]\n";
 	exit 8;
 }
 
 if ($COMMAND eq 'restart') {
-	if ($TYPE eq 'target') {
-		for my $x (@{ $data->{'Unit.Wanted'} }) {
-			system $0, 'stop', $x;
-		}
-		for my $x (reverse @{ $data->{'Unit.Wanted'} }) {
-			system $0, 'start', $x;
-		}
-	} else {
-		system $0, 'stop', $FULL_SERVICE;
-		system $0, 'start', $FULL_SERVICE;
-	}
+	system $0, 'stop', $FULL_SERVICE;
+	system $0, 'start', $FULL_SERVICE;
 	exit;
 }
 
@@ -371,10 +369,9 @@ if ($COMMAND eq 'stop') {
 	}
 	my $ret = 0;
 	if ($TYPE eq 'target') {
-		for my $x (@{ $data->{'Unit.Wanted'} }) {
-			system $0, 'stop', $x;
-		}
-		$ret = 0;
+		# noop
+	} elsif (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'oneshot') {
+		# noop
 	} elsif ($TYPE eq 'socket') {
 		my $pids = `/usr/sbin/fuser $data->{'Socket.ListenStream'} 2> /dev/null`;
 		if (defined $pids) {
@@ -418,6 +415,16 @@ if ($COMMAND eq 'stop') {
 	}
 	exec_stop_post($data);
 	unlink "$RUNNING_DIR/$FULL_SERVICE.pid", "$RUNNING_DIR/$FULL_SERVICE.name", "$RUNNING_DIR/$FULL_SERVICE.oneshot";
+	if (defined $data->{'Unit.Wants'}) {
+		for my $x (@{ $data->{'Unit.Wants'} }) {
+			system $0, 'stop', $x;
+		}
+	}
+	if (defined $data->{'Unit.Requires'}) {
+		for my $x (@{ $data->{'Unit.Requires'} }) {
+			system $0, 'stop', $x;
+		}
+	}
 	exit $ret;
 }
 
@@ -433,8 +440,45 @@ sub add_runuser {
 }
 
 if ($COMMAND eq 'start') {
+	my (@starting_stack, %starting_stack);
+	if (defined $ENV{_SYSTEMCTL_LITE_STARTING}) {
+		@starting_stack = split /:/, $ENV{_SYSTEMCTL_LITE_STARTING};
+		@starting_stack{@starting_stack} = ();
+		$ENV{_SYSTEMCTL_LITE_STARTING} .= ":$FULL_SERVICE";
+	} else {
+		$ENV{_SYSTEMCTL_LITE_STARTING} = $FULL_SERVICE;
+	}
+
 	if ($TYPE eq 'service' and is_running($data)) {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
+		exit;
+	}
+	if (defined $data->{'Unit.Wants'}) {
+		for my $x (@{ $data->{'Unit.Wants'} }) {
+			if (exists $starting_stack{$x}) {
+				log_command("Skipping start of [$x], we are already in the process of starting it.\n");
+				next;
+			}
+			my @cmd = ($0, 'start', $x);
+			log_command("Running [@cmd]\n");
+			system @cmd;
+		}
+	}
+	if (defined $data->{'Unit.Requires'}) {
+		for my $x (@{ $data->{'Unit.Requires'} }) {
+			if (exists $starting_stack{$x}) {
+				log_command("Skipping start of [$x], we are already in the process of starting it.\n");
+				next;
+			}
+			my @cmd = ($0, 'start', $x);
+			log_command("Running [@cmd]\n");
+			if (system @cmd) {
+				log_command("Failed to start [$x], aborting start\n");
+				exit 1;
+			}
+		}
+	}
+	if ($TYPE eq 'target') {
 		exit;
 	}
 	if ($TYPE eq 'socket' and -S $data->{'Socket.ListenStream'}) {
@@ -467,14 +511,7 @@ if ($COMMAND eq 'start') {
 		}
 	}
 	my @paths;
-	if ($TYPE eq 'target') {
-		for my $x (@{ $data->{'Unit.Wanted'} }) {
-			my @cmd = ($0, 'start', $x);
-			log_command("Running [@cmd]\n");
-			system @cmd;
-		}
-		exit;
-	} elsif ($TYPE eq 'socket') {
+	if ($TYPE eq 'socket') {
 		my $service = $SERVICE;
 		if (defined $data->{'Socket.Accept'} and $data->{'Socket.Accept'} eq 'true') {
 			$service =~ s/\.socket$/\@.service/;
@@ -562,9 +599,10 @@ if ($COMMAND eq 'start') {
 		$objectpath =~ s!^|\.!/!g;
 		for (0 .. 10) {
 			system "/usr/bin/dbus-send --system --type=method_call --print-reply --dest=$busname $objectpath org.freedesktop.DBus.Introspectable.Introspect > /dev/null";
-			last if ($? >> 8) == 0;
+			exit if ($? >> 8) == 0;
 			sleep 1;
 		}
+		exit 9;
 	}
 	exit;
 }
