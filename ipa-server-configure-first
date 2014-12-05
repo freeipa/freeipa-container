@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
@@ -28,9 +30,9 @@ function stop_running () {
 }
 trap stop_running TERM
 
-systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers'
+systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
-rm -f /etc/systemctl-lite/running/*
+rm -f /var/run/*.pid /run/systemctl-lite-running/*
 
 CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
@@ -47,17 +49,22 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		fi
 	fi
 	systemctl start-enabled
+	HOSTNAME_FQDN=$( hostname -f )
+	while ! host $HOSTNAME_FQDN > /dev/null ; do
+		sleep 5
+	done
 	kdestroy -A
 	kinit -k
 	(
 		echo "server 127.0.0.1"
-		echo "update delete $( hostname -f ) A"
+		echo "update delete $HOSTNAME_FQDN A"
 		MY_IP=$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )
-		echo "update add $( hostname -f ) 180 A $MY_IP"
+		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
 	kdestroy -A
+	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
 	HOSTNAME_FQDN=$( hostname -f )
@@ -92,6 +99,7 @@ else
 	fi
 
 	if /usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null ; then
+		sed -i 's/default_ccache_name/# default_ccache_name/' /etc/krb5.conf
 		cp -f /etc/resolv.conf /etc/resolv.conf.ipa
 		echo "FreeIPA server configured."
 	else
