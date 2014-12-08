@@ -58,7 +58,7 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	(
 		echo "server 127.0.0.1"
 		echo "update delete $HOSTNAME_FQDN A"
-		MY_IP=$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )
+		MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
 		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
 		echo "send"
 		echo "quit"
