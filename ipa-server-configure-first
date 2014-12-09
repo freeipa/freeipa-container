@@ -30,6 +30,20 @@ function stop_running () {
 }
 trap stop_running TERM
 
+function update_server_ip_address () {
+	kdestroy -A
+	kinit -k
+	(
+		echo "server 127.0.0.1"
+		echo "update delete $HOSTNAME_FQDN A"
+		MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
+		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
+		echo "send"
+		echo "quit"
+	) | nsupdate -g
+	kdestroy -A
+}
+
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
 rm -f /var/run/*.pid /run/systemctl-lite-running/*
@@ -53,17 +67,7 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	while ! host $HOSTNAME_FQDN > /dev/null ; do
 		sleep 5
 	done
-	kdestroy -A
-	kinit -k
-	(
-		echo "server 127.0.0.1"
-		echo "update delete $HOSTNAME_FQDN A"
-		MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
-		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
-		echo "send"
-		echo "quit"
-	) | nsupdate -g
-	kdestroy -A
+	update_server_ip_address
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
@@ -101,6 +105,7 @@ else
 	if /usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER < /dev/null ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /etc/krb5.conf
 		cp -f /etc/resolv.conf /etc/resolv.conf.ipa
+		update_server_ip_address
 		echo "FreeIPA server configured."
 	else
 		ret=$?
