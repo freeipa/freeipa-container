@@ -118,7 +118,7 @@ else
 	fi
 fi
 
-if perl -e '( -t ) ? exit 0 : exit 1' ; then
+if [ -t 0 ] ; then
 	echo 'Starting interactive shell.'
 	/bin/bash
 else
