@@ -42,26 +42,13 @@ externally. You will then likely want to also specify the
 define what IP address should the server put to DNS as its
 address. Starting the server would then be
 
-    docker run -e IPA_SERVER_IP=10.12.0.98 -p 53:53/udp -p 53:53 \
-        -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 \
-	-p 88:88/udp -p 464:464/udp -p 123:123/udp -p 7389:7389 \
-	-p 9443:9443 -p 9444:9444 -p 9445:9445 ...
+    docker run -e IPA_SERVER_IP=10.12.0.98 -e ROOTPASS=password \
+        -v /host/path:/opt/ipa \
+        -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 -p 389:389 \
+        -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp \
+        -p 123:123/udp -p 7389:7389 -p 9443:9443 -p 9444:9444 \
+        -p 9445:9445 ...
 
-
-# IPA-enrolled client in Docker
-
-Checkout the `fedora-20-client`, `fedora-rawhide-client`, or
-`rhel-7-client` branch, according to your needs.  In the root of the
-repository, run:
-
-    docker build -t freeipa-client .
-
-To run the client, link it to the freeipa-server container:
-
-    docker run --privileged --link freeipa-server-container:ipa -e PASSWORD=Secret123 -ti freeipa-client
-
-The first time this container runs, it invokes `ipa-client-install`
-with the given admin password.
 
 # Copyright 2014 Jan Pazdziora
 
