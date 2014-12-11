@@ -73,6 +73,83 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
+
+###########################################################################################################
+
+    export prefix="/opt/ipa"
+    [[ ! -d $prefix ]] && mkdir $prefix
+
+    function linkdir() {
+      [[ ! -d $1 ]] && mkdir -p ${prefix}${1}
+      [[ ! -d $(basename $1) ]] && mkdir -p $(basename $1)
+      ln -sf ${prefix}${1} $(basename $1)
+    }
+    function linkfile() {
+      [[ ! -d "${prefix}$(basename $1)" ]] && mkdir "${prefix}$(basename $1)"
+      [[ -f $1 ]] && cp $1 ${prefix}${1} || touch ${prefix}${1}
+      ln -sf ${prefix}${1} $(basename $1)
+    }
+
+    # Setting up links directories
+    linkdir /etc/dirsrv
+    linkdir /etc/httpd
+    linkdir /etc/ipa
+    linkdir /etc/openldap
+    linkdir /etc/pki
+    linkdir /etc/pki-ca
+    linkdir /etc/ssh
+    linkdir /etc/sssd
+    linkdir /usr/share/ipa/html
+    linkdir /usr/lib64/dirsrv/
+    linkdir /var/named/data
+    linkdir /var/run/dirsrv
+    linkdir /var/lock/dirsrv
+    linkdir /var/lib/dirsrv
+    linkdir /var/lib/pki-ca
+    linkdir /var/lib/ipa-client/sysrestore
+    linkdir /var/lib/sss/pubconf/krb5.include.d
+    linkdir /var/lib/authconfig/last
+    linkdir /var/lib/certmonger
+    linkdir /var/lib/ipa
+    linkdir /var/log
+    linkdir /var/kerberos/krb5kdc
+    linkdir /etc/sysconfig/pki
+
+    # Setting up link files
+    linkfiles /etc/passwd
+    linkfiles /etc/group
+    linkfiles /etc/nsswitch.conf
+    linkfiles /etc/krb5.conf
+    linkfiles /etc/krb5.keytab
+    linkfiles /etc/named.conf
+    linkfiles /etc/named.keytab
+    linkfiles /etc/ntp.conf
+    linkfiles /etc/resolv.conf
+    linkfiles /etc/security/limits.conf
+    linkfiles /root/ca-agent.p12
+    linkfiles /root/cacert.p12
+    linkfiles /etc/sysconfig/authconfig
+    linkfiles /etc/sysconfig/dirsrv
+    linkfiles /etc/sysconfig/dirsrv-PKI-IPA
+    linkfiles /etc/sysconfig/dirsrv-REALM
+    linkfiles /etc/sysconfig/krb5kdc
+    linkfiles /etc/sysconfig/ntpd,pki-ca
+    linkfiles /etc/sysconfig/pki/ca/pki-ca
+
+    # Install FreeIPA server
+    echo "Updating system..."
+    yum -y install deltarpm
+    yum -y update
+
+    echo "Installing freeipa"
+    mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl bind-utils && yum clean all
+
+    # To be able to debug
+    yum install -y openssh-server strace lsof wget && yum clean all
+    echo "root:$ROOTPASS" | chpasswd
+
+###########################################################################################################
+
 	systemctl start sshd.service
 
 	HOSTNAME_FQDN=$( hostname -f )

@@ -1,15 +1,10 @@
 # Clone from the Fedora 20 image
 FROM fedora:20
 
-MAINTAINER Jan Pazdziora
+MAINTAINER  Bau Mesa <jbmesar@comvive.com>
 
-# Install FreeIPA server
-RUN mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl && yum clean all
-
-# To be able to debug
-RUN yum install -y openssh-server strace lsof && yum clean all
-RUN echo 'root:jezek' | chpasswd
-RUN echo set -o vi >> /etc/bashrc
+# Password
+ENV ROOTPASS qwerty
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
@@ -21,6 +16,8 @@ ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
 
 RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first /usr/sbin/runuser-pp
+
+VOLUME /opt/ipa
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
