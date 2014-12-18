@@ -27,8 +27,10 @@ function usage () {
 
 function stop_running () {
 	systemctl stop-running
+	exit
 }
-trap stop_running TERM
+trap exit TERM
+trap stop_running EXIT
 
 function update_server_ip_address () {
 	kdestroy -A
