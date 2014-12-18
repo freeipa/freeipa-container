@@ -125,6 +125,6 @@ if [ -t 0 ] ; then
 	/bin/bash
 else
 	echo 'Go loop.'
-	while true ; do sleep 1000 ; done
+	while true ; do sleep 1000 & wait $! ; done
 fi
 
