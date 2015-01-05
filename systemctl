@@ -205,6 +205,13 @@ sub parse_file {
 		}
 	}
 	$fh->close;
+	if (defined $data->{'Service.ExecStart'} and not defined $data->{'Service.PIDFile'}) {
+		my ($pidfile) = grep /^\/.+\.pid$/, split /\s+/, $data->{'Service.ExecStart'};
+		if (defined $pidfile) {
+			$data->{'Service.PIDFile'} = $pidfile;
+			log_command("Guessing pid file [$data->{'Service.PIDFile'}] from ExecStart [$data->{'Service.ExecStart'}]\n");
+		}
+	}
 }
 
 my $data = {};
