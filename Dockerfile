@@ -13,6 +13,7 @@ RUN echo set -o vi >> /etc/bashrc
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
+ADD httpd.service /etc/systemd/system/httpd.service
 
 ADD runuser-pp /usr/sbin/runuser-pp
 ADD systemctl /usr/bin/systemctl
