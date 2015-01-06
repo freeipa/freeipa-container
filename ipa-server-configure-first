@@ -27,8 +27,10 @@ function usage () {
 
 function stop_running () {
 	systemctl stop-running
+	exit
 }
-trap stop_running TERM
+trap exit TERM
+trap stop_running EXIT
 
 function update_server_ip_address () {
 	kdestroy -A
@@ -114,11 +116,11 @@ else
 	fi
 fi
 
-if perl -e '( -t ) ? exit 0 : exit 1' ; then
+if [ -t 0 ] ; then
 	echo 'Starting interactive shell.'
 	/bin/bash
 else
 	echo 'Go loop.'
-	while true ; do sleep 1000 ; done
+	while true ; do sleep 1000 & wait $! ; done
 fi
 

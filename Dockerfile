@@ -8,6 +8,7 @@ RUN mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
+ADD httpd.service /etc/systemd/system/httpd.service
 
 ADD runuser-pp /usr/sbin/runuser-pp
 ADD systemctl /usr/bin/systemctl

@@ -23,6 +23,7 @@ use IO::Socket::UNIX ();
 use Socket ();
 use Data::Dumper ();
 use POSIX ();
+use Time::HiRes qw(sleep time);
 
 sub log_command {
 	local * LOG;
@@ -204,6 +205,13 @@ sub parse_file {
 		}
 	}
 	$fh->close;
+	if (defined $data->{'Service.ExecStart'} and not defined $data->{'Service.PIDFile'}) {
+		my ($pidfile) = grep /^\/.+\.pid$/, split /\s+/, $data->{'Service.ExecStart'};
+		if (defined $pidfile) {
+			$data->{'Service.PIDFile'} = $pidfile;
+			log_command("Guessing pid file [$data->{'Service.PIDFile'}] from ExecStart [$data->{'Service.ExecStart'}]\n");
+		}
+	}
 }
 
 my $data = {};
@@ -221,17 +229,14 @@ if ($COMMAND eq 'show') {
 	exit;
 }
 
-sub killall {
-	my ($signal, $command) = @_;
+sub pidof {
+	my $command = shift;
 	my $pids = `/usr/sbin/pidof $command`;
 	chomp $pids;
-	if ($pids eq '') {
-		return 0;
-	} elsif ($signal == 0) {
-		return 1;
-	} else {
-		return kill $signal, split /\s+/, $pids;
+	if ($pids ne '') {
+		return split /\s+/, $pids;
 	}
+	return;
 }
 
 sub get_exec_start {
@@ -274,7 +279,7 @@ sub is_running {
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			if (killall(0, $path)) {
+			if (pidof($path)) {
 				$ret = 1;
 			}
 		} else {
@@ -320,19 +325,33 @@ if ($TYPE eq 'target' and not defined $data->{'Unit.Wants'} and not defined $dat
 }
 
 if ($COMMAND eq 'restart') {
-	system $0, 'stop', $FULL_SERVICE;
+	if ($TYPE ne 'service' or is_running($data)) {
+		system $0, 'stop', $FULL_SERVICE;
+	}
 	system $0, 'start', $FULL_SERVICE;
 	exit;
 }
 
+sub pids_went_away_timeout {
+	my $timeout = shift;
+	my $start = time;
+	while (kill 0, @_) {
+		if (time - $start > $timeout) {
+			log_command(sprintf(" ** pid(s) [%s] not killed within %d s\n", join(', ', @_), $timeout));
+			return 0;
+		}
+		sleep 0.1;
+	}
+	log_command(sprintf(" ** pid(s) [%s] got killed after %.2f s\n", join(', ', @_), time - $start));
+	return 1;
+}
+
 sub stop_pids {
 	my @pids = @_;
-	kill -15, @pids;
-	sleep 1;
-	if (kill 0, @pids) {
-		kill -9, @pids;
-		sleep 3;
-		if (kill 0, @pids) {
+	kill 15, @pids;
+	if (not pids_went_away_timeout(5, @pids)) {
+		kill 9, @pids;
+		if (not pids_went_away_timeout(5, @pids)) {
 			log_command("Failed to kill [@pids] even with 9\n");
 			warn "Failed to kill [@pids].\n";
 			return 1;
@@ -363,11 +382,11 @@ if ($COMMAND eq 'stop') {
 			if ($runit) {
 				log_command("Running stop [$x]\n");
 				system $x;
-				sleep 3;
+				sleep 1;
 			}
 		}
 	}
-	my $ret = 0;
+	my $ret = undef;
 	if ($TYPE eq 'target') {
 		# noop
 	} elsif (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'oneshot') {
@@ -380,33 +399,29 @@ if ($COMMAND eq 'stop') {
 			my @pids = split /\s+/, $pids;
 			if (@pids) {
 				exec_stop_pre($data);
+				log_command("Will kill [@pids] as fuser [$data->{'Socket.ListenStream'}] of [$FULL_SERVICE]\n");
 				$ret = stop_pids(@pids);
 			}
 		}
 	} elsif (defined $data->{'Service.PIDFile'}) {
 		my $pid = get_pid($data->{'Service.PIDFile'});
 		if (defined $pid) {
+			log_command("Will kill [$pid] found in Service.PIDFile of [$FULL_SERVICE]\n");
 			$ret = stop_pids($pid);
 		}
 	} else {
 		my $path = get_pid("$FULL_SERVICE.name");
 		if (defined $path) {
-			if (killall(0, $path)) {
-				sleep 1;
-				if (killall(15, $path)) {
-					sleep 3;
-					if (killall(9, $path)) {
-						sleep 1;
-						if (killall(0, $path)) {
-							warn "Failed to kill [$FULL_SERVICE] via killall [$path].\n";
-							$ret = 1;
-						}
-					}
-				}
+			if (my @pids = pidof($path)) {
+				log_command("Will kill [@pids] as pidof [$path] found in [$FULL_SERVICE.name]\n");
+				$ret = stop_pids(@pids);
+			} else {
+				warn "No pidof for [$path] found in [$FULL_SERVICE.name].\n";
 			}
 		} else {
 			my $pid = get_pid("$FULL_SERVICE.pid");
 			if (defined $pid) {
+				log_command("Will kill [$pid] found in [$FULL_SERVICE.pid]\n");
 				$ret = stop_pids($pid);
 			} else {
 				warn "No pid and no name for [$FULL_SERVICE].\n";
@@ -425,7 +440,7 @@ if ($COMMAND eq 'stop') {
 			system $0, 'stop', $x;
 		}
 	}
-	exit $ret;
+	exit ( defined $ret ? $ret : 0 );
 }
 
 sub add_runuser {
@@ -453,6 +468,10 @@ if ($COMMAND eq 'start') {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
 		exit;
 	}
+	if (defined $data->{'Service.PIDFile'}) {
+		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}], unlinking it before start\n");
+		unlink $data->{'Service.PIDFile'};
+	}
 	if (defined $data->{'Unit.Wants'}) {
 		for my $x (@{ $data->{'Unit.Wants'} }) {
 			if (exists $starting_stack{$x}) {
@@ -460,7 +479,7 @@ if ($COMMAND eq 'start') {
 				next;
 			}
 			my @cmd = ($0, 'start', $x);
-			log_command("Running [@cmd]\n");
+			log_command("Running [@cmd] for Unit.Wants of [$FULL_SERVICE]\n");
 			system @cmd;
 		}
 	}
@@ -471,13 +490,18 @@ if ($COMMAND eq 'start') {
 				next;
 			}
 			my @cmd = ($0, 'start', $x);
-			log_command("Running [@cmd]\n");
+			log_command("Running [@cmd] for Unit.Requires of [$FULL_SERVICE]\n");
 			if (system @cmd) {
 				log_command("Failed to start [$x], aborting start\n");
 				exit 1;
 			}
 		}
 	}
+	if (defined $data->{'Service.PIDFile'} and is_running($data)) {
+		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}] and it seems to have already started, not starting again.\n");
+		exit;
+	}
+
 	if ($TYPE eq 'target') {
 		exit;
 	}
@@ -490,7 +514,7 @@ if ($COMMAND eq 'start') {
 	}
 	if (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'dbus') {
 		my @cmd = ($0, 'start', 'dbus.socket');
-		log_command("Running [@cmd]\n");
+		log_command("Running [@cmd] for Service.Type dbus\n");
 		system @cmd;
 	}
 	if (defined $data->{'Service.ExecStartPre'}) {
@@ -578,18 +602,37 @@ if ($COMMAND eq 'start') {
 		POSIX::setsid();
 		exec "$ENV@paths";
 	}
-	local * PIDFILE;
-	open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.pid";
-	print PIDFILE "$pid\n";
-	close PIDFILE;
-	log_command("Marked pid [$pid]\n");
-	sleep 1;
-	if (killall(0, $first_path)) {
+	if (defined $data->{'Service.PIDFile'}) {
+		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}], not marking pid\n");
+		unlink "$RUNNING_DIR/$FULL_SERVICE.pid";
+		my $i = 0;
+		while (not -f $data->{'Service.PIDFile'}) {
+			sleep 0.2;
+			$i++;
+			if ($i > 50) {
+				log_command("Starting [$FULL_SERVICE] did not create PIDFile [$data->{'Service.PIDFile'}]\n");
+				exit 10;
+			}
+		}
+		my $pid = get_pid($data->{'Service.PIDFile'});
+		if (not defined $pid or not kill 0, $pid) {
+			log_command("Starting [$FULL_SERVICE] created PIDFile [$data->{'Service.PIDFile'}] but the process is not running\n");
+			exit 11;
+		}
+	} else {
 		local * PIDFILE;
-		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.name";
-		print PIDFILE "$first_path\n";
+		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.pid";
+		print PIDFILE "$pid\n";
 		close PIDFILE;
-		log_command("Marked process name [$first_path]\n");
+		log_command("Marked pid [$pid] for [$FULL_SERVICE]\n");
+		sleep 1;
+		if (defined $data->{'Service.Type'} and $data->{'Service.Type'} ne 'simple' and $data->{'Service.Type'} ne 'notify' and pidof($first_path)) {
+			local * PIDFILE;
+			open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.name";
+			print PIDFILE "$first_path\n";
+			close PIDFILE;
+			log_command("Marked process name [$first_path] for [$FULL_SERVICE]\n");
+		}
 	}
 	if (defined $data->{'Service.Type'}
 		and $data->{'Service.Type'} eq 'dbus'
