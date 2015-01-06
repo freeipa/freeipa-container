@@ -325,7 +325,9 @@ if ($TYPE eq 'target' and not defined $data->{'Unit.Wants'} and not defined $dat
 }
 
 if ($COMMAND eq 'restart') {
-	system $0, 'stop', $FULL_SERVICE;
+	if ($TYPE ne 'service' or is_running($data)) {
+		system $0, 'stop', $FULL_SERVICE;
+	}
 	system $0, 'start', $FULL_SERVICE;
 	exit;
 }
