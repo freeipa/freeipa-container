@@ -466,6 +466,10 @@ if ($COMMAND eq 'start') {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
 		exit;
 	}
+	if (defined $data->{'Service.PIDFile'}) {
+		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}], unlinking it before start\n");
+		unlink $data->{'Service.PIDFile'};
+	}
 	if (defined $data->{'Unit.Wants'}) {
 		for my $x (@{ $data->{'Unit.Wants'} }) {
 			if (exists $starting_stack{$x}) {
@@ -491,6 +495,11 @@ if ($COMMAND eq 'start') {
 			}
 		}
 	}
+	if (defined $data->{'Service.PIDFile'} and is_running($data)) {
+		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}] and it seems to have already started, not starting again.\n");
+		exit;
+	}
+
 	if ($TYPE eq 'target') {
 		exit;
 	}
@@ -542,11 +551,6 @@ if ($COMMAND eq 'start') {
 		@paths = get_exec_start($data);
 	}
 	my $first_path = $paths[0];
-
-	if (defined $data->{'Service.PIDFile'}) {
-		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}], unlinking it before start\n");
-		unlink $data->{'Service.PIDFile'};
-	}
 
 	my $ENV = '';
 	if (exists $data->{'Service.EnvironmentFile'}) {
