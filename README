@@ -10,7 +10,16 @@ To build the image, run in the root of the repository:
 
 To run the client, link it to the freeipa-server container:
 
+    docker run -h web.example.com --link freeipa-server-container:ipa -e PASSWORD=Secret123 -ti freeipa-client
+
+or
+
     docker run --privileged --link freeipa-server-container:ipa -e PASSWORD=Secret123 -ti freeipa-client
+
+Since IPA-enrollment requires fully-qualified hostname and by
+default docker run does not set FQDN, either specify it with
+the `-h` options or run the container as privileged when it will
+be allowed to change its own hostname, using IPA server's domain.
 
 The first time this container runs, it invokes `ipa-client-install`
 with the given admin password and configures itself against
@@ -38,7 +47,7 @@ repo.
 From fedora-* branches in https://github.com/adelton/docker-freeipa,
 images are automatically built into https://hub.docker.com/u/adelton/.
 
-# Copyright 2014 Jan Pazdziora
+# Copyright 2014--2015 Jan Pazdziora
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
