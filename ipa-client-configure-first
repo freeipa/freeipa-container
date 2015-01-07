@@ -30,7 +30,7 @@ trap stop_running TERM
 
 systemctl stop dbus.service
 rm -rf /var/run/*.pid
-rm -f /etc/systemctl-lite/running/*
+rm -f /run/systemctl-lite-running/*
 
 cp -f /etc/hostname /etc/hostname.docker
 umount /etc/hostname
