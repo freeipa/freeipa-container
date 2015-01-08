@@ -21,7 +21,7 @@ function usage () {
 		echo $1 >&2
 	else
 		echo "Start as docker run -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
-		echo "    with -h <the-FQDN-hostname> and --link <FreeIPA-container>:ipa" >&2
+		echo "    with -h <the-FQDN-hostname> and possibly --link <FreeIPA-container>:ipa" >&2
 	fi
 	exit 1
 }
@@ -35,7 +35,9 @@ systemctl stop dbus.service
 rm -rf /var/run/*.pid
 rm -f /run/systemctl-lite-running/*
 
-echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
+if [ -n "$IPA_PORT_53_UDP_ADDR" ] ; then
+	echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
+fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
 	HOSTNAME_IPA=$(cat /etc/hostname.ipa-client)
@@ -56,6 +58,10 @@ else
 	fi
 
 	if [ "$(hostname -f)" == "$(hostname -s)" ] ; then
+		if [ -z "$IPA_PORT_80_TCP_ADDR" ] ; then
+			echo "Hostname [$(hostname -f)] is not FQDN and no --link to IPA server specified." >&2
+			exit 2
+		fi
 		IPA=$( curl -si http://$IPA_PORT_80_TCP_ADDR/ | perl -lne 'm!^Location:\shttps?://(.+?)/! and print $1' )
 		DOMAIN=${IPA#*.}
 		HOSTNAME_FQDN=$( hostname ).$DOMAIN
