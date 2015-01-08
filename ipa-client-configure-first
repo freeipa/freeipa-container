@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014 Jan Pazdziora
+# Copyright 2014--2015 Jan Pazdziora
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
 	else
-		echo "Start as docker run --link <FreeIPA-container>:ipa -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
+		echo "Start as docker run -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
+		echo "    with -h <the-FQDN-hostname> and possibly --link <FreeIPA-container>:ipa" >&2
 	fi
 	exit 1
 }
@@ -30,22 +33,22 @@ trap stop_running TERM
 
 systemctl stop dbus.service
 rm -rf /var/run/*.pid
-rm -f /etc/systemctl-lite/running/*
+rm -f /run/systemctl-lite-running/*
 
-cp -f /etc/hostname /etc/hostname.docker
-umount /etc/hostname
-if [ -f /etc/hostname.ipa-client ] ; then
-	cp -f /etc/hostname.ipa-client /etc/hostname
-else
-	cp -f /etc/hostname.docker /etc/hostname
+if [ -n "$IPA_PORT_53_UDP_ADDR" ] ; then
+	echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
 fi
 
-cp -f /etc/resolv.conf /etc/resolv.conf.docker
-umount /etc/resolv.conf
-
-echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
-
 if [ -f /etc/ipa/ca.crt ] ; then
+	HOSTNAME_IPA=$(cat /etc/hostname.ipa-client)
+	if [ ! "$HOSTNAME_IPA" == "$(hostname -f)" ] ; then
+		if hostname $HOSTNAME_IPA ; then
+			echo "Hostname set to $HOSTNAME_IPA"
+		else
+			echo "The container hostname is $(hostname -f) and cannot set $HOSTNAME_IPA; run with -h." >&2
+			exit 1
+		fi
+	fi
 	echo "System is already FreeIPA-enrolled, starting the services."
 	systemctl start-enabled
 	echo "System is ready."
@@ -54,20 +57,31 @@ else
 		usage
 	fi
 
-	IPA=$( curl -si http://$IPA_PORT_80_TCP_ADDR/ | perl -lne 'm!^Location:\shttps?://(.+?)/! and print $1' )
-	DOMAIN=${IPA#*.}
-	HOSTNAME_FQDN=$( hostname ).$DOMAIN
+	if [ "$(hostname -f)" == "$(hostname -s)" ] ; then
+		if [ -z "$IPA_PORT_80_TCP_ADDR" ] ; then
+			echo "Hostname [$(hostname -f)] is not FQDN and no --link to IPA server specified." >&2
+			exit 2
+		fi
+		IPA=$( curl -si http://$IPA_PORT_80_TCP_ADDR/ | perl -lne 'm!^Location:\shttps?://(.+?)/! and print $1' )
+		DOMAIN=${IPA#*.}
+		HOSTNAME_FQDN=$( hostname ).$DOMAIN
+		HOSTNAME_OPTS=--hostname=$HOSTNAME_FQDN
+		if ! hostname $HOSTNAME_FQDN ; then
+			echo "Failed to set hostname to [$HOSTNAME_FQDN]" >&2
+			exit 1
+		fi
+	fi
 
-	/usr/sbin/ipa-client-install --hostname=$HOSTNAME_FQDN -p admin -w "$PASSWORD" -U --enable-dns-updates < /dev/null
+	/usr/sbin/ipa-client-install $HOSTNAME_OPTS -p admin -w "$PASSWORD" -U --enable-dns-updates < /dev/null
 	cp -f /etc/hostname /etc/hostname.ipa-client
 	echo "FreeIPA-enrolled."
 fi
 
-if perl -e '( -t ) ? exit 0 : exit 1' ; then
+if [ -t 0 ] ; then
 	echo 'Starting interactive shell.'
 	/bin/bash
 else
 	echo 'Go loop.'
-	while true ; do sleep 1000 ; done
+	while true ; do sleep 1000 & wait $! ; done
 fi
 
