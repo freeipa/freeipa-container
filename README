@@ -41,6 +41,9 @@ The first time this container runs, it invokes `ipa-client-install`
 with the given admin password and configures itself against
 the IPA server.
 
+You can pass environment variable IPA_CLIENT_INSTALL_OPTS with
+additional options that will be passed to ipa-client-install.
+
 The `-ti` parameters are optional and are used for get a terminal
 (useful for experimenting in the container).
 
