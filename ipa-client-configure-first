@@ -77,11 +77,13 @@ else
 	echo "FreeIPA-enrolled."
 fi
 
-if [ -t 0 ] ; then
-	echo 'Starting interactive shell.'
-	/bin/bash
-else
-	echo 'Go loop.'
-	while true ; do sleep 1000 & wait $! ; done
+if [ -z "$1" -o "$1" != "-s" ] ; then
+	if [ -t 0 ] ; then
+		echo 'Starting interactive shell.'
+		/bin/bash
+	else
+		echo 'Go loop.'
+		while true ; do sleep 1000 & wait $! ; done
+	fi
 fi
 
