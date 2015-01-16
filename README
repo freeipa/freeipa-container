@@ -26,6 +26,9 @@ Command `ipa-server-install` is invoked non-interactively the first
 the container is run, and the `PASSWORD` environment variable
 specifies the admin password.
 
+You can pass environment variable IPA_SERVER_INSTALL_OPTS with
+additional options that will be passed to ipa-server-install.
+
 The `-ti` parameters are optional and are used for get a terminal
 (useful for experimenting in the container).
 
