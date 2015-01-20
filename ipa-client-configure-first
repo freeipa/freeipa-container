@@ -72,16 +72,18 @@ else
 		fi
 	fi
 
-	/usr/sbin/ipa-client-install $IPA_CLIENT_INSTALL $HOSTNAME_OPTS -p admin -w "$PASSWORD" -U --enable-dns-updates --no-nisdomain < /dev/null
+	/usr/sbin/ipa-client-install $IPA_CLIENT_INSTALL_OPTS $HOSTNAME_OPTS -p admin -w "$PASSWORD" -U --enable-dns-updates --no-nisdomain < /dev/null
 	cp -f /etc/hostname /etc/hostname.ipa-client
 	echo "FreeIPA-enrolled."
 fi
 
-if [ -t 0 ] ; then
-	echo 'Starting interactive shell.'
-	/bin/bash
-else
-	echo 'Go loop.'
-	while true ; do sleep 1000 & wait $! ; done
+if [ -z "$1" -o "$1" != "-s" ] ; then
+	if [ -t 0 ] ; then
+		echo 'Starting interactive shell.'
+		/bin/bash
+	else
+		echo 'Go loop.'
+		while true ; do sleep 1000 & wait $! ; done
+	fi
 fi
 
