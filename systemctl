@@ -450,7 +450,7 @@ sub add_runuser {
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
 		}
-		unshift @$cmd, '/usr/sbin/runuser-pp';
+		unshift @$cmd, '/usr/sbin/runuser';
 	}
 }
 
@@ -609,7 +609,7 @@ if ($COMMAND eq 'start') {
 		while (not -f $data->{'Service.PIDFile'}) {
 			sleep 0.2;
 			$i++;
-			if ($i > 50) {
+			if ($i > 250) {
 				log_command("Starting [$FULL_SERVICE] did not create PIDFile [$data->{'Service.PIDFile'}]\n");
 				exit 10;
 			}
