@@ -189,8 +189,10 @@ else
 		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i
-			mv $i /data$i
-			ln -sf /data$i $i
+			if [ -e $i ] ; then
+				mv $i /data$i
+				ln -sf /data$i $i
+			fi
 		done
 		cp /etc/volume-version /data/volume-version
 		update_server_ip_address
