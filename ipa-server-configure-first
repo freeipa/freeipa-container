@@ -58,8 +58,6 @@ if echo '# test access' >> /etc/resolv.conf || umount /etc/resolv.conf 2> /dev/n
 fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
-	systemctl start sshd.service
-
 	echo "FreeIPA server is already configured, starting the services."
 	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
 		if [ -f /etc/resolv.conf.ipa ] ; then
@@ -75,8 +73,6 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
-	systemctl start sshd.service
-
 	HOSTNAME_FQDN=$( hostname -f )
 	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
 	DOMAIN=${HOSTNAME_FQDN#*.}
