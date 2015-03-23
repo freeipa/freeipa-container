@@ -81,6 +81,7 @@ if [ -f /etc/ipa/ca.crt ] ; then
 			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
 	fi
+	( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
 	upgrade_server
 	systemctl start-enabled
 	HOSTNAME_FQDN=$( hostname -f )
