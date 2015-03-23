@@ -57,6 +57,8 @@ function upgrade_server () {
 	done
 	ipa-ldap-updater -u -q -y /data/ds-master-password
 	ipa-upgradeconfig
+	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
+	cp -f /data-template/build-id /data/build-id
 }
 
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
@@ -75,14 +77,18 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		echo "The /data volume was created using incompatible image."
 		exit 2
 	fi
-	echo "FreeIPA server is already configured, starting the services."
 	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
 		if [ -f /data/etc/resolv.conf.ipa ] ; then
 			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
 	fi
-	( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
-	upgrade_server
+	if diff -q /data/build-id /data-template/build-id ; then
+		echo "FreeIPA server is already configured, starting the services."
+	else
+		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
+		upgrade_server
+	fi
 	systemctl start-enabled
 	HOSTNAME_FQDN=$( hostname -f )
 	while ! host $HOSTNAME_FQDN > /dev/null ; do
