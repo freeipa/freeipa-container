@@ -20,7 +20,7 @@ function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
 	else
-		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD image" >&2
+		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z:rw image" >&2
 	fi
 	exit 1
 }
@@ -46,6 +46,21 @@ function update_server_ip_address () {
 	kdestroy -A
 }
 
+function upgrade_server () {
+	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
+	for i in 389-ds-base pki-server ; do
+		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > /tmp/$i.script
+		if [ -s "/tmp/$i.script" ] ; then
+			chmod a+x /tmp/$i.script
+			/tmp/$i.script 2
+		fi
+	done
+	ipa-ldap-updater -u -q -y /data/ds-master-password
+	ipa-upgradeconfig
+	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
+	cp -f /data-template/build-id /data/build-id
+}
+
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
 rm -f /var/run/*.pid /run/systemctl-lite-running/*
@@ -58,11 +73,21 @@ if echo '# test access' >> /etc/resolv.conf || umount /etc/resolv.conf 2> /dev/n
 fi
 
 if [ -f /etc/ipa/ca.crt ] ; then
-	echo "FreeIPA server is already configured, starting the services."
+	if ! diff /data/volume-version /etc/volume-version ; then
+		echo "The /data volume was created using incompatible image."
+		exit 2
+	fi
 	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
-		if [ -f /etc/resolv.conf.ipa ] ; then
-			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /etc/resolv.conf.ipa > /etc/resolv.conf
+		if [ -f /data/etc/resolv.conf.ipa ] ; then
+			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
+	fi
+	if diff -q /data/build-id /data-template/build-id ; then
+		echo "FreeIPA server is already configured, starting the services."
+	else
+		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
+		upgrade_server
 	fi
 	systemctl start-enabled
 	HOSTNAME_FQDN=$( hostname -f )
@@ -73,6 +98,15 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
+	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
+	(
+		cd /data
+		grep '/$' /etc/volume-data-list | sed 's!^!.!' | xargs mkdir -p
+		grep -v '/$' /etc/volume-data-list | xargs dirname | sed 's!^!.!' | xargs mkdir -p
+		grep -v '/$' /etc/volume-data-list | sed 's!^!.!' | xargs touch
+	)
+	xargs rm -f < /etc/volume-data-mv-list
+
 	HOSTNAME_FQDN=$( hostname -f )
 	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
 	DOMAIN=${HOSTNAME_FQDN#*.}
@@ -80,16 +114,11 @@ else
 		usage
 	fi
 
-	if [ -z "$PASSWORD" ] ; then
+	if [ ! -f /data/ipa-server-install-options ] && [ -z "$PASSWORD" ] ; then
 		usage
 	fi
 
 	REALM=${DOMAIN^^}
-
-	DEBUG_OPT=
-	if [ -n "$DEBUG" ] ; then
-		DEBUG_OPT=-d
-	fi
 
 	if [ -z "$FORWARDER" ] ; then
 		FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
@@ -104,9 +133,31 @@ else
 		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
 	fi
 
-	if /usr/sbin/ipa-server-install -r $REALM -p $PASSWORD -a $PASSWORD -U $DEBUG_OPT --setup-dns $FORWARDER $IPA_SERVER_INSTALL_OPTS < /dev/null ; then
-		sed -i 's/default_ccache_name/# default_ccache_name/' /etc/krb5.conf
-		cp -f /etc/resolv.conf /etc/resolv.conf.ipa
+	touch /data/ds-master-password
+	chmod 600 /data/ds-master-password
+	if ( if [ -n "$PASSWORD" ] ; then
+			echo "--ds-password=$PASSWORD"
+			echo "--admin-password=$PASSWORD"
+			echo "$PASSWORD" > /data/ds-master-password
+		fi
+		if [ -n "$DEBUG" ] ; then
+			echo "--debug"
+		fi
+		if [ -f /data/ipa-server-install-options ] ; then
+			cat /data/ipa-server-install-options
+			if grep -q '^--ds-password=' /data/ipa-server-install-options ; then
+				grep '^--ds-password=' /data/ipa-server-install-options | xargs echo -- | sed 's/^-- --ds-password=//' > /data/ds-master-password
+			fi
+		fi
+		) | xargs /usr/sbin/ipa-server-install -r $REALM -U --setup-dns $FORWARDER $IPA_SERVER_INSTALL_OPTS ; then
+		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
+		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
+		cat /etc/volume-data-mv-list | while read i ; do
+			rm -rf /data$i
+			mv $i /data$i
+			ln -sf /data$i $i
+		done
+		cp /etc/volume-version /data/volume-version
 		update_server_ip_address
 		echo "FreeIPA server configured."
 	else
