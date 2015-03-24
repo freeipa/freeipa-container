@@ -3,7 +3,7 @@ FROM centos:centos7
 
 MAINTAINER Jan Pazdziora
 
-RUN yum swap -y -- remove fakesystemd -- install systemd systemd-libs && yum clean all
+RUN yum swap -y -- remove systemd-container-libs -- install systemd systemd-libs && yum clean all
 
 RUN curl -o /etc/yum.repos.d/mkosek-freeipa-epel-7.repo https://copr.fedoraproject.org/coprs/mkosek/freeipa/repo/epel-7/mkosek-freeipa-epel-7.repo
 
