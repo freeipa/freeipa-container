@@ -83,13 +83,15 @@ address. Starting the server would then be
 
 # IPA-enrolled client in Docker
 
-Checkout the `fedora-20-client`, `fedora-rawhide-client`, or
-`rhel-7-client` branch, according to your needs.  In the root of the
+There are multiple `*-client` branches named after OS they are
+based on. Check out the branch you prefer and in the root of the
 repository, run:
 
     docker build -t freeipa-client .
 
-To run the client, link it to the freeipa-server container:
+To run the client container, run it with correctly set DNS
+and hostname in the IPA domain, or you can link it to the
+freeipa-server container directly:
 
     docker run --privileged --link freeipa-server-container:ipa \
         -e PASSWORD=Secret123 -ti freeipa-client
@@ -97,7 +99,7 @@ To run the client, link it to the freeipa-server container:
 The first time this container runs, it invokes `ipa-client-install`
 with the given admin password.
 
-# Copyright 2014 Jan Pazdziora
+# Copyright 2014--2015 Jan Pazdziora
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
