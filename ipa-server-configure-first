@@ -82,6 +82,8 @@ if [ -f /etc/ipa/ca.crt ] ; then
 			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
 	fi
+	# Removing kdcinfo.* which is likely to hold old IP address
+	rm -rf /var/lib/sss/pubconf/kdcinfo.*
 	if diff -q /data/build-id /data-template/build-id ; then
 		echo "FreeIPA server is already configured, starting the services."
 	else
