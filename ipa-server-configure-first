@@ -95,6 +95,9 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		sleep 5
 	done
 	update_server_ip_address
+	while ! host $HOSTNAME_FQDN > /dev/null ; do
+		sleep 5
+	done
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
