@@ -30,6 +30,18 @@ parameter per line. You probably want at least
     --ds-password=The-directory-server-password
     --admin-password=The-admin-password
 
+If you want to create a replica instead of master, put the GPG-encrypted
+replica information file to this directory, plus file
+
+    ipa-replica-install-options
+
+to instruct the container to create a replica. That file should contain
+command line parameters to the ipa-replica-install command, possibly at
+least
+
+    --password=The-directory-server-password
+    --admin-password=The-admin-password
+
 You then run the container with
 
     docker run --name freeipa-server-container -ti \
