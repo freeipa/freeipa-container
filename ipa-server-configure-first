@@ -82,6 +82,8 @@ if [ -f /etc/ipa/ca.crt ] ; then
 			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		fi
 	fi
+	# Removing kdcinfo.* which is likely to hold old IP address
+	rm -rf /var/lib/sss/pubconf/kdcinfo.*
 	if diff -q /data/build-id /data-template/build-id ; then
 		echo "FreeIPA server is already configured, starting the services."
 	else
@@ -95,9 +97,32 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		sleep 5
 	done
 	update_server_ip_address
+	while ! host $HOSTNAME_FQDN > /dev/null ; do
+		sleep 5
+	done
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
+	REPLICA=false
+	if [ -f /data/ipa-replica-install-options ] ; then
+		if [ -f /data/ipa-server-install-options ] ; then
+			usage "Too many install options files."
+		fi
+		REPLICA=true
+		if [ $(ls /data/ | grep  \\.gpg$ | wc -l) -gt 1 ] ; then
+			usage "Too many .gpg files"
+		fi
+		if [ ! -f /data/*.gpg ] ; then
+			usage "Cannot create an IPA replica without .gpg file"
+		fi
+		RUN_CMD="/usr/sbin/ipa-replica-install /data/*.gpg"
+	else
+		if [ ! -f /data/ipa-server-install-options ] && [ -z "$PASSWORD" ] ; then
+			usage
+		fi
+		RUN_CMD="/usr/sbin/ipa-server-install"
+	fi
+
 	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
 	(
 		cd /data
@@ -111,10 +136,6 @@ else
 	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
 	DOMAIN=${HOSTNAME_FQDN#*.}
 	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME_FQDN" ] ; then
-		usage
-	fi
-
-	if [ ! -f /data/ipa-server-install-options ] && [ -z "$PASSWORD" ] ; then
 		usage
 	fi
 
@@ -136,26 +157,42 @@ else
 	touch /data/ds-master-password
 	chmod 600 /data/ds-master-password
 	if ( if [ -n "$PASSWORD" ] ; then
-			echo "--ds-password=$PASSWORD"
+			if $REPLICA ; then
+				echo "--password=$PASSWORD"
+			else
+				echo "--ds-password=$PASSWORD"
+			fi
 			echo "--admin-password=$PASSWORD"
 			echo "$PASSWORD" > /data/ds-master-password
 		fi
 		if [ -n "$DEBUG" ] ; then
 			echo "--debug"
 		fi
-		if [ -f /data/ipa-server-install-options ] ; then
-			cat /data/ipa-server-install-options
-			if grep -q '^--ds-password=' /data/ipa-server-install-options ; then
-				grep '^--ds-password=' /data/ipa-server-install-options | xargs echo -- | sed 's/^-- --ds-password=//' > /data/ds-master-password
+		if $REPLICA ; then
+			cat /data/ipa-replica-install-options
+			echo "--skip-conncheck"
+			if grep -q '^--password=' /data/ipa-replica-install-options ; then
+				grep '^--password=' /data/ipa-replica-install-options | xargs echo -- | sed 's/^-- --password=//' > /data/ds-master-password
 			fi
+		else
+			if [ -f /data/ipa-server-install-options ] ; then
+				cat /data/ipa-server-install-options
+				if grep -q '^--ds-password=' /data/ipa-server-install-options ; then
+					grep '^--ds-password=' /data/ipa-server-install-options | xargs echo -- | sed 's/^-- --ds-password=//' > /data/ds-master-password
+				fi
+			fi
+			echo "-r $REALM"
 		fi
-		) | xargs /usr/sbin/ipa-server-install -r $REALM -U --setup-dns $FORWARDER $IPA_SERVER_INSTALL_OPTS ; then
+		echo "--setup-dns $FORWARDER"
+		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i
-			mv $i /data$i
-			ln -sf /data$i $i
+			if [ -e $i ] ; then
+				mv $i /data$i
+				ln -sf /data$i $i
+			fi
 		done
 		cp /etc/volume-version /data/volume-version
 		update_server_ip_address
