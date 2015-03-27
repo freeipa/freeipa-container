@@ -1,3 +1,4 @@
 /etc/krb5.keytab
 /etc/named.keytab
 /etc/pki/pki-tomcat
+/usr/share/ipa/html/kerberosauth.xpi
