@@ -61,6 +61,9 @@ function upgrade_server () {
 	cp -f /data-template/build-id /data/build-id
 }
 
+if ! [ -f /etc/ipa/ca.crt ] ; then
+	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
+fi
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
 rm -f /var/run/*.pid /run/systemctl-lite-running/*
@@ -123,7 +126,6 @@ else
 		RUN_CMD="/usr/sbin/ipa-server-install"
 	fi
 
-	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
 	(
 		cd /data
 		grep '/$' /etc/volume-data-list | sed 's!^!.!' | xargs mkdir -p
