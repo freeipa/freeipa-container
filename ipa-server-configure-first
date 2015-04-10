@@ -91,6 +91,9 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		echo "FreeIPA server is already configured, starting the services."
 	else
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		for d in /usr/share/java/resteasy* ; do
+			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
+		done
 		( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
 		cat /etc/volume-data-list | while read i ; do
 			if [ -e /data-template$i -a -e /data$i ] ; then
