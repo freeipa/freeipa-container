@@ -58,6 +58,16 @@ function upgrade_server () {
 	ipa-ldap-updater -u -q -y /data/ds-master-password
 	systemctl start certmonger.service
 	ipa-upgradeconfig
+	for c in /etc/systemctl-lite-enabled/*-domainname.service ; do
+		base_c=$(basename $c)
+		for i in /usr/lib/systemd/system/*-domainname.service ; do
+			base_i=$(basename $i)
+			if [ -e "$c" ] && [ -e "$i" ] && [ "$base_c" != "$base_i" ] ; then
+				echo "Renaming $c to $base_i"
+				mv $c "$(dirname $c)/$base_i"
+			fi
+		done
+	done
 	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
 	cp -f /data-template/build-id /data/build-id
 }
