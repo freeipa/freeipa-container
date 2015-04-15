@@ -16,6 +16,8 @@
 
 set -e
 
+cd /
+
 function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
