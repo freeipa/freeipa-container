@@ -56,11 +56,25 @@ function upgrade_server () {
 		fi
 	done
 	ipa-ldap-updater -u -q -y /data/ds-master-password
+	systemctl start certmonger.service
 	ipa-upgradeconfig
+	for c in /etc/systemctl-lite-enabled/*-domainname.service ; do
+		base_c=$(basename $c)
+		for i in /usr/lib/systemd/system/*-domainname.service ; do
+			base_i=$(basename $i)
+			if [ -e "$c" ] && [ -e "$i" ] && [ "$base_c" != "$base_i" ] ; then
+				echo "Renaming $c to $base_i"
+				mv $c "$(dirname $c)/$base_i"
+			fi
+		done
+	done
 	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
 	cp -f /data-template/build-id /data/build-id
 }
 
+if ! [ -f /etc/ipa/ca.crt ] ; then
+	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
+fi
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
 rm -f /var/run/*.pid /run/systemctl-lite-running/*
@@ -88,7 +102,16 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		echo "FreeIPA server is already configured, starting the services."
 	else
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		for d in /usr/share/java/resteasy* ; do
+			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
+		done
 		( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
+		cat /etc/volume-data-list | while read i ; do
+			if [ -e /data-template$i -a -e /data$i ] ; then
+				chown --reference=/data-template$i /data$i
+				chmod --reference=/data-template$i /data$i
+			fi
+		done
 		upgrade_server
 	fi
 	systemctl start-enabled
@@ -123,7 +146,6 @@ else
 		RUN_CMD="/usr/sbin/ipa-server-install"
 	fi
 
-	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
 	(
 		cd /data
 		grep '/$' /etc/volume-data-list | sed 's!^!.!' | xargs mkdir -p
