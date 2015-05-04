@@ -16,11 +16,13 @@
 
 set -e
 
+cd /
+
 function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
 	else
-		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z:rw image" >&2
+		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z image" >&2
 	fi
 	exit 1
 }
@@ -105,7 +107,16 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		for d in /usr/share/java/resteasy* ; do
 			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
 		done
-		( cd /data-template && find * | while read f ; do if ! [ -e /data/$f ] ; then tar cf - $f | ( cd /data && tar xf - ) ; fi ; done )
+		( cd /data-template && find * | while read f ; do
+			if [ -d "/data-template/$f" ] && [ -f "/data/$f" ] ; then
+				echo "Removing file /data/$f, replacing with directory from /data-template."
+				rm -f "/data/$f"
+			fi
+			if ! [ -e /data/$f ] ; then
+				tar cf - $f | ( cd /data && tar xf - )
+			fi
+			done
+		)
 		cat /etc/volume-data-list | while read i ; do
 			if [ -e /data-template$i -a -e /data$i ] ; then
 				chown --reference=/data-template$i /data$i
