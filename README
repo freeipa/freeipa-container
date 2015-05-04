@@ -46,14 +46,14 @@ You then run the container with
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test \
-       -v /var/lib/ipa-data:/data:Z:rw freeipa-server
+       -v /var/lib/ipa-data:/data:Z freeipa-server
 
 If you do not specify the passwords in the ipa-server-install-options
 file, use `PASSWORD` environment variable via the `-e` option:
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test -e PASSWORD=Secret123 \
-       -v /var/lib/ipa-data:/data:Z:rw freeipa-server
+       -v /var/lib/ipa-data:/data:Z freeipa-server
 
 If the above fails with error about invalid value for flag -v
 and bad format for volumes, run
@@ -61,7 +61,7 @@ and bad format for volumes, run
     chcon -t svirt_sandbox_file_t /var/lib/ipa-data
 
 or use semanage fcontext and restorecon, and use -v option
-without the :Z:rw part.
+without the :Z part.
 
 The option `--name` assigns the container a name that can be used
 later with `docker start`, `docker stop` and other commands.
