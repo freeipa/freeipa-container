@@ -4,7 +4,7 @@ FROM fedora:21
 MAINTAINER Jan Pazdziora
 
 # Install FreeIPA server
-RUN mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl && yum clean all
+RUN mkdir -p /run/lock ;yum update -y && yum install -y freeipa-server bind bind-dyndb-ldap perl && yum clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
