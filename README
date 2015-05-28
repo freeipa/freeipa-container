@@ -3,7 +3,7 @@
 This repository contains the Dockerfile and associated assets for
 building a FreeIPA server Docker image from the official yum repo.
 
-Install docker 1.2+:
+Install docker 1.6+:
 
     yum install -y docker-io	# on Fedoras
     yum install -y docker	# on RHEL 7
