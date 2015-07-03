@@ -6,7 +6,7 @@ MAINTAINER Jan Pazdziora
 RUN yum swap -y -- remove fakesystemd -- install systemd systemd-libs && yum clean all
 
 # Install FreeIPA client
-RUN yum install -y ipa-client perl 'perl(Data::Dumper)' 'perl(Time::HiRes)' && yum clean all
+RUN yum install -y ipa-client dbus-python perl 'perl(Data::Dumper)' 'perl(Time::HiRes)' && yum clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
