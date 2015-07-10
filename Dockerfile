@@ -3,6 +3,8 @@ FROM fedora:22
 
 MAINTAINER Jan Pazdziora
 
+RUN curl -o /etc/yum.repos.d/mkosek-freeipa-4.2-fedora-22.repo https://copr.fedoraproject.org/coprs/mkosek/freeipa-4.2/repo/fedora-22/mkosek-freeipa-4.2-fedora-22.repo
+
 # Install FreeIPA server
 RUN mkdir -p /run/lock ; dnf install -y freeipa-server bind bind-dyndb-ldap perl && dnf clean all
 
