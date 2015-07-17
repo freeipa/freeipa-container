@@ -451,6 +451,9 @@ sub add_runuser {
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
 		}
+		if (defined $data->{'Service.SupplementaryGroups'}) {
+			unshift @$cmd, '-G', $data->{'Service.SupplementaryGroups'};
+		}
 		unshift @$cmd, '/usr/sbin/runuser';
 	}
 }
