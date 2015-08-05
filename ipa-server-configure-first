@@ -57,9 +57,8 @@ function upgrade_server () {
 			/tmp/$i.script 2
 		fi
 	done
-	ipa-ldap-updater -u -q -y /data/ds-master-password
 	systemctl start certmonger.service
-	ipa-upgradeconfig
+	ipa-server-upgrade
 	for c in /etc/systemctl-lite-enabled/*-domainname.service ; do
 		base_c=$(basename $c)
 		for i in /usr/lib/systemd/system/*-domainname.service ; do
