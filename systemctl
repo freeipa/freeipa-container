@@ -349,13 +349,31 @@ sub pids_went_away_timeout {
 
 sub stop_pids {
 	my @pids = @_;
+	my @all_pids = ();
+	for my $p (@pids) {
+		push @all_pids, $p;
+		my $g = getpgrp $p;
+		local * PGREP;
+		open PGREP, "pgrep --pgroup $g |";
+		while (<PGREP>) {
+			chomp;
+			push @all_pids, $_;
+		}
+		close PGREP;
+	}
 	kill 15, @pids;
-	if (not pids_went_away_timeout(5, @pids)) {
-		kill 9, @pids;
-		if (not pids_went_away_timeout(5, @pids)) {
-			log_command("Failed to kill [@pids] even with 9\n");
-			warn "Failed to kill [@pids].\n";
-			return 1;
+	if (not pids_went_away_timeout(5, @all_pids)) {
+		kill 15, @all_pids;
+		if (not pids_went_away_timeout(5, @all_pids)) {
+			kill 9, @pids;
+			if (not pids_went_away_timeout(5, @all_pids)) {
+				kill 9, @all_pids;
+				if (not pids_went_away_timeout(5, @all_pids)) {
+					log_command("Failed to kill [@pids] even with 9\n");
+					warn "Failed to kill [@pids].\n";
+					return 1;
+				}
+			}
 		}
 		log_command("Killed [@pids] with 9\n");
 	} else {
@@ -450,6 +468,9 @@ sub add_runuser {
 		unshift @$cmd, '-u', $data->{'Service.User'}, '--';
 		if (defined $data->{'Service.Group'}) {
 			unshift @$cmd, '-g', $data->{'Service.Group'};
+		}
+		if (defined $data->{'Service.SupplementaryGroups'}) {
+			unshift @$cmd, '-G', $data->{'Service.SupplementaryGroups'};
 		}
 		unshift @$cmd, '/usr/sbin/runuser';
 	}
@@ -600,6 +621,7 @@ if ($COMMAND eq 'start') {
 		open(STDOUT, '>>', '/var/log/systemctl.log');
 		open(STDERR, '>>', '/var/log/systemctl.log');
 		open(STDIN, '<', '/dev/null');
+		setpgrp();
 		POSIX::setsid();
 		exec "$ENV@paths";
 	}
