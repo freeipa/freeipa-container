@@ -79,7 +79,8 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 fi
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
-rm -f /var/run/*.pid /run/systemctl-lite-running/*
+find /run ! -type d | xargs rm -f
+rm -rf /tmp/*
 
 CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
