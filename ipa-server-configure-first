@@ -79,7 +79,8 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 fi
 systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
 
-rm -f /var/run/*.pid /run/systemctl-lite-running/*
+find /run ! -type d | xargs rm -f
+rm -rf /tmp/*
 
 CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
@@ -117,6 +118,11 @@ if [ -f /etc/ipa/ca.crt ] ; then
 			fi
 			done
 		)
+		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
+			| while read f ; do
+				rm -f "/data/$f"
+				( cd /data-template && tar cf - "./$f" ) | ( cd /data && tar xvf - )
+			done
 		cat /etc/volume-data-list | while read i ; do
 			if [ -e /data-template$i -a -e /data$i ] ; then
 				chown --reference=/data-template$i /data$i
