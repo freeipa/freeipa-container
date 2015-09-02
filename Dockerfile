@@ -4,7 +4,7 @@ FROM fedora:rawhide
 MAINTAINER Jan Pazdziora
 
 # Install FreeIPA server
-RUN mkdir -p /run/lock ; yum install -y freeipa-server bind bind-dyndb-ldap perl && yum clean all
+RUN mkdir -p /run/lock ; dnf install -y freeipa-server bind bind-dyndb-ldap perl && dnf clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
@@ -22,7 +22,9 @@ RUN groupadd -g 17 pkiuser ; useradd -u 17 -g 17 -c 'CA System User' -d '/var/li
 
 ADD volume-data-list /etc/volume-data-list
 ADD volume-data-mv-list /etc/volume-data-mv-list
-RUN cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; fi ; mkdir -p $( dirname $i ) ; rm -rf $i ; ln -sf /data${i%/} ${i%/} ; done
+RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do echo $i ; if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; fi ; mkdir -p $( dirname $i ) ; if [ "$i" == /var/log/ ] ; then mv /var/log /var/log-removed ; else rm -rf $i ; fi ; ln -sf /data${i%/} ${i%/} ; done
+ADD volume-data-autoupdate /etc/volume-data-autoupdate
+RUN rm -rf /var/log-removed
 RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /data-template/etc/dirsrv/schema
 RUN echo 0.5 > /etc/volume-version
 RUN uuidgen > /data-template/build-id
