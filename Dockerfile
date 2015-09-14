@@ -20,7 +20,6 @@ ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
 RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first
 
 RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
-RUN groupadd -g 17 pkiuser ; useradd -u 17 -g 17 -c 'CA System User' -d '/var/lib' --no-create-home -s '/sbin/nologin' pkiuser
 
 ADD volume-data-list /etc/volume-data-list
 ADD volume-data-mv-list /etc/volume-data-mv-list
