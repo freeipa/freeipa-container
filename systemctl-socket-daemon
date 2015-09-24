@@ -33,7 +33,7 @@ sub daemonize {
 
 my ($socket_path, $socket_mode, $service) = @ARGV;
 if (not defined $socket_path or not defined $service) {
-	die "Usage: $0 /path/to/unix/socket service-to-run\n";
+	die "Usage: $0 /path/to/unix/socket mode service-to-run\n";
 }
 if (-e $socket_path) {
 	warn "Path [$socket_path] already exists, removing\n";
