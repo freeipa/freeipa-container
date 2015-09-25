@@ -618,9 +618,13 @@ if ($COMMAND eq 'start') {
 	my $pid = fork();
 	die "Failed to fork for [@_]\n" if not defined $pid;
 	if ($pid == 0) {
-		open(STDOUT, '>>', '/var/log/systemctl.log');
+		if (not $data->{'Service.StandardOutput'} or $data->{'Service.StandardOutput'} ne 'socket') {
+			open(STDOUT, '>>', '/var/log/systemctl.log');
+		}
 		open(STDERR, '>>', '/var/log/systemctl.log');
-		open(STDIN, '<', '/dev/null');
+		if (not $data->{'Service.StandardInput'} or $data->{'Service.StandardInput'} ne 'socket') {
+			open(STDIN, '<', '/dev/null');
+		}
 		setpgrp();
 		POSIX::setsid();
 		exec "$ENV@paths";
