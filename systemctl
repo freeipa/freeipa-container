@@ -592,7 +592,7 @@ if ($COMMAND eq 'start') {
 			} else {
 				while (my $line = <$fh>) {
 					chomp $line;
-					next if $line =~ /^\s*(#|$)/;
+					next if $line =~ /^\s*(#|$|\[)/;
 					$ENV .= "export $line; ";
 				}
 				$fh->close();
