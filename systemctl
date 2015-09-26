@@ -329,8 +329,8 @@ if ($COMMAND eq 'restart') {
 	if ($TYPE ne 'service' or is_running($data)) {
 		system $0, 'stop', $FULL_SERVICE;
 	}
-	system $0, 'start', $FULL_SERVICE;
-	exit;
+	my $ret = system $0, 'start', $FULL_SERVICE;
+	exit $ret >> 8;
 }
 
 sub pids_went_away_timeout {
@@ -691,12 +691,12 @@ if ($COMMAND eq 'enable') {
 		mkdir $ENABLED_DIR;
 	}
 	local * FILE;
-	open FILE, '>', "$ENABLED_DIR/$FULL_SERVICE";
+	open FILE, '>', "$ENABLED_DIR/$FULL_SERVICE" or die "Error creating $ENABLED_DIR/$FULL_SERVICE: $!\n";
 	exit;
 }
 
 if ($COMMAND eq 'disable') {
-	unlink "$ENABLED_DIR/$FULL_SERVICE";
+	unlink "$ENABLED_DIR/$FULL_SERVICE" or die "Error removing $ENABLED_DIR/$FULL_SERVICE: $!\n";
 	exit;
 }
 
