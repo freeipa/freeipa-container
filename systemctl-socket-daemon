@@ -33,7 +33,7 @@ sub daemonize {
 
 my ($socket_path, $socket_mode, $service) = @ARGV;
 if (not defined $socket_path or not defined $service) {
-	die "Usage: $0 /path/to/unix/socket service-to-run\n";
+	die "Usage: $0 /path/to/unix/socket mode service-to-run\n";
 }
 if (-e $socket_path) {
 	warn "Path [$socket_path] already exists, removing\n";
@@ -56,11 +56,15 @@ daemonize();
 
 while (1) {
 	next unless my $connection = $socket->accept;
+	print STDERR "Accept on [$socket_path] will start [$service]\n";
 	my $pid = fork();
 	if ($pid == 0) {
-		*STDIN = $connection;
-		*STDOUT = $connection;
-		exec '/bin/systemctl', 'start', $service;
+		close STDERR;
+		close STDIN;
+		open(STDIN, "<&", $connection);
+		close STDOUT;
+		open(STDOUT, ">&", $connection);
+		exec '/bin/systemctl', '--no-activate', 'start', $service;
 		die "exec should have never reached here\n";
 	}
 }
