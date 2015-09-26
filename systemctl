@@ -25,9 +25,13 @@ use Data::Dumper ();
 use POSIX ();
 use Time::HiRes qw(sleep time);
 
+my $SYSTEMCTL_LOG = $ENV{"_SYSTEMCTL_LITE_LOGFILE"};
+if (not defined $SYSTEMCTL_LOG) {
+	$SYSTEMCTL_LOG = '/var/log/systemctl.log';
+}
 sub log_command {
 	local * LOG;
-	open(LOG, '>>', '/var/log/systemctl.log');
+	open(LOG, '>>', $SYSTEMCTL_LOG);
 	print LOG @_;
 	close LOG;
 }
@@ -48,7 +52,7 @@ if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 }
 
 for (keys %ENV) {
-	delete $ENV{$_} unless $_ eq '_SYSTEMCTL_LITE_STARTING';
+	delete $ENV{$_} unless $_ =~ /^_SYSTEMCTL_LITE/;
 }
 
 my $RUNNING_DIR = '/run/systemctl-lite-running';
@@ -56,6 +60,10 @@ if (not -d $RUNNING_DIR) {
 	mkdir $RUNNING_DIR;
 }
 my $ENABLED_DIR = '/etc/systemctl-lite-enabled';
+if (defined $ENV{_SYSTEMCTL_LITE_ENABLED_DIR}) {
+	$ENABLED_DIR = $ENV{_SYSTEMCTL_LITE_ENABLED_DIR};
+}
+
 if (@ARGV == 1) {
 	if ($ARGV[0] eq 'start-enabled' and -d $ENABLED_DIR) {
 		local * ENABLED;
@@ -619,9 +627,9 @@ if ($COMMAND eq 'start') {
 	die "Failed to fork for [@_]\n" if not defined $pid;
 	if ($pid == 0) {
 		if (not $data->{'Service.StandardOutput'} or $data->{'Service.StandardOutput'} ne 'socket') {
-			open(STDOUT, '>>', '/var/log/systemctl.log');
+			open(STDOUT, '>>', $SYSTEMCTL_LOG);
 		}
-		open(STDERR, '>>', '/var/log/systemctl.log');
+		open(STDERR, '>>', $SYSTEMCTL_LOG);
 		if (not $data->{'Service.StandardInput'} or $data->{'Service.StandardInput'} ne 'socket') {
 			open(STDIN, '<', '/dev/null');
 		}
