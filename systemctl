@@ -37,6 +37,11 @@ sub log_command {
 }
 log_command("[@ARGV]\n");
 shift if @ARGV and $ARGV[0] eq '-q';
+my $mark_active = 1;
+if (@ARGV and $ARGV[0] eq '--no-activate') {
+	$mark_active = 0;
+	shift;
+}
 
 for (my $i = 0; $i < @ARGV; $i++) {
 	if ($ARGV[$i] eq '--ignore-dependencies') {
@@ -494,7 +499,7 @@ if ($COMMAND eq 'start') {
 		$ENV{_SYSTEMCTL_LITE_STARTING} = $FULL_SERVICE;
 	}
 
-	if ($TYPE eq 'service' and is_running($data)) {
+	if ($TYPE eq 'service' and $mark_active and is_running($data)) {
 		log_command("Service [$FULL_SERVICE] already found running, not starting again.\n");
 		exit;
 	}
@@ -654,7 +659,7 @@ if ($COMMAND eq 'start') {
 			log_command("Starting [$FULL_SERVICE] created PIDFile [$data->{'Service.PIDFile'}] but the process is not running\n");
 			exit 11;
 		}
-	} else {
+	} elsif ($mark_active) {
 		local * PIDFILE;
 		open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.pid";
 		print PIDFILE "$pid\n";

@@ -64,7 +64,7 @@ while (1) {
 		open(STDIN, "<&", $connection);
 		close STDOUT;
 		open(STDOUT, ">&", $connection);
-		exec '/bin/systemctl', 'start', $service;
+		exec '/bin/systemctl', '--no-activate', 'start', $service;
 		die "exec should have never reached here\n";
 	}
 }
