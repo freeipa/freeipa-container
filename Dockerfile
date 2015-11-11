@@ -1,10 +1,10 @@
-# Clone from the Fedora 22 image
-FROM fedora:22
+# Clone from the Fedora 23 image
+FROM fedora:23
 
 MAINTAINER Jan Pazdziora
 
 # Install FreeIPA server
-RUN mkdir -p /run/lock ; dnf install -y freeipa-server bind bind-dyndb-ldap perl && dnf clean all
+RUN mkdir -p /run/lock ; dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap perl && dnf clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
