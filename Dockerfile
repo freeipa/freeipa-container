@@ -27,6 +27,8 @@ RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while rea
 ADD volume-data-autoupdate /etc/volume-data-autoupdate
 RUN rm -rf /var/log-removed
 RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
+# Workaround 1286602
+RUN mv /usr/lib/tmpfiles.d/journal-nocow.conf /usr/lib/tmpfiles.d/journal-nocow.conf.disabled
 RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /data-template/etc/dirsrv/schema
 RUN echo 0.5 > /etc/volume-version
 RUN uuidgen > /data-template/build-id
