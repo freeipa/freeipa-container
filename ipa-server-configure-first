@@ -78,7 +78,10 @@ function upgrade_server () {
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
 fi
-systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
+if ! [ -s /etc/machine-id ] ; then
+	uuidgen | sed 's/-//g' > /etc/machine-id
+fi
+systemd-tmpfiles --remove --create
 
 find /run ! -type d | xargs rm -f
 rm -rf /tmp/*
