@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014 Jan Pazdziora
+# Copyright 2014--2015 Jan Pazdziora
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,27 +16,19 @@
 
 set -e
 
-cd /
+if ! [ -t /dev/stdout ] ; then
+	exec >> /var/log/ipa-server-configure-first.log 2>&1
+fi
 
-function usage () {
-	if [ -n "$1" ] ; then
-		echo $1 >&2
-	else
-		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z image" >&2
-	fi
-	exit 1
-}
-
-function stop_running () {
-	systemctl stop-running
-	exit
-}
-trap exit TERM
-trap stop_running EXIT
+echo "$(date) $0 $@"
 
 function update_server_ip_address () {
 	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
-	MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
+	MY_IP=''
+	if [ -f /run/ipa/ipa-server-ip ] ; then
+		MY_IP=$( cat /run/ipa/ipa-server-ip )
+	fi
+	MY_IP=${MY_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
 	if [ "$CURRENT_RECORD" == "$HOSTNAME_FQDN has address $MY_IP" ] ; then
 		return
 	fi
@@ -60,6 +52,19 @@ function update_server_ip_address () {
 		sleep 1
 	done
 }
+
+if [ "$1" == update-self-ip-address ] ; then
+	# Wait until DNS is up and running and resolving
+	HOSTNAME_FQDN=$( hostname -f )
+	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+		sleep 1
+	done
+	update_server_ip_address
+	host $HOSTNAME_FQDN
+	echo "FreeIPA server started."
+	( echo ; echo "FreeIPA server started." ) > /dev/console
+	exit
+fi
 
 function upgrade_server () {
 	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
@@ -89,92 +94,50 @@ function upgrade_server () {
 	cp -f /data-template/build-id /data/build-id
 }
 
-if ! [ -f /etc/ipa/ca.crt ] ; then
-	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
-fi
-if ! [ -s /etc/machine-id ] ; then
-	uuidgen | sed 's/-//g' > /etc/machine-id
-fi
-if [ -f /etc/ipa/ca.crt ] ; then
-	( cd /data-template && find * | while read f ; do
-		if [ -d "/data-template/$f" ] && [ -f "/data/$f" ] ; then
-			echo "Removing file /data/$f, replacing with directory from /data-template."
-			rm -f "/data/$f"
-		fi
-		if ! [ -e /data/$f ] ; then
-			tar cf - $f | ( cd /data && tar xf - )
-		fi
-		done
-	)
-	sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
-		| while read f ; do
-			rm -f "/data/$f"
-			( cd /data-template && tar cf - "./$f" ) | ( cd /data && tar xvf - )
-		done
-	cat /etc/volume-data-list | while read i ; do
-		if [ -e /data-template$i -a -e /data$i ] ; then
-			chown --reference=/data-template$i /data$i
-			chmod --reference=/data-template$i /data$i
-		fi
-	done
-fi
-if [ -f "/data/volume-version" ] ; then
-	DATA_VERSION=$(cat /data/volume-version)
-	IMAGE_VERSION=$(cat /etc/volume-version)
-	if ! [ "$DATA_VERSION" == "$IMAGE_VERSION" ] ; then
-		if [ -x /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ] ; then
-			echo "Migrating data volume version $DATA_VERSION to $IMAGE_VERSION."
-			if /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ; then
-				cat /etc/volume-version > /data/volume-version
-			else
-				echo "Migration of data volume to version $IMAGE_VERSION failed."
-				exit 13
-			fi
-		fi
-	fi
-fi
-
-systemd-tmpfiles --remove --create
-
-find /run ! -type d | xargs rm -f
-rm -rf /tmp/*
-
-CAN_EDIT_RESOLV_CONF=0
-cp -f /etc/resolv.conf /etc/resolv.conf.docker
-if echo '# test access' >> /etc/resolv.conf || umount /etc/resolv.conf 2> /dev/null ; then
-	CAN_EDIT_RESOLV_CONF=1
-	cp -f /etc/resolv.conf.docker /etc/resolv.conf
-fi
-
-if [ -f /etc/ipa/ca.crt ] ; then
+if [ "$1" == upgrade ] ; then
 	if ! diff /data/volume-version /etc/volume-version ; then
 		echo "The /data volume was created using incompatible image."
+		( echo ; echo "The /data volume was created using incompatible image." ) > /dev/console
 		exit 2
 	fi
-	if [ "$CAN_EDIT_RESOLV_CONF" == "1" ] ; then
-		if [ -f /data/etc/resolv.conf.ipa ] ; then
-			perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
-		fi
+	if [ -f /data/etc/resolv.conf.ipa ] ; then
+		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 	fi
 	# Removing kdcinfo.* which is likely to hold old IP address
 	rm -rf /var/lib/sss/pubconf/kdcinfo.*
-	if diff -q /data/build-id /data-template/build-id ; then
+	if cmp /data/build-id /data-template/build-id ; then
 		echo "FreeIPA server is already configured, starting the services."
+		( echo ; echo "FreeIPA server is already configured, starting the services." ) > /dev/console
 	else
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		( echo ; echo "FreeIPA server is already configured but with different version, starting upgrade." ) > /dev/console
 		for d in /usr/share/java/resteasy* ; do
 			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
 		done
 		upgrade_server
+		echo "FreeIPA server upgraded."
+		( echo ; echo "FreeIPA server upgraded." ) > /dev/console
 	fi
-	systemctl start-enabled
-	HOSTNAME_FQDN=$( hostname -f )
-	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
-		sleep 1
-	done
-	update_server_ip_address
-	host $HOSTNAME_FQDN
-	echo "FreeIPA server started."
+	exit
+fi
+
+set -e
+
+cd /
+
+function usage () {
+	if [ -n "$1" ] ; then
+		echo $1 >&2
+	else
+		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /path:/data:Z image" >&2
+	fi
+	exit 1
+}
+
+if [ -f /etc/ipa/ca.crt ] ; then
+	echo "The FreeIPA server was already configured."
+	( echo ; echo "The FreeIPA server was already configured." ) > /dev/console
+	exit 11
 else
 	REPLICA=false
 	if [ -f /data/ipa-replica-install-options ] ; then
@@ -222,10 +185,6 @@ else
 		FORWARDER=--forwarder=$FORWARDER
 	fi
 
-	if [ "$CAN_EDIT_RESOLV_CONF" == "0" ] ; then
-		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
-	fi
-
 	touch /data/ds-master-password
 	chmod 600 /data/ds-master-password
 	if ( if [ -n "$PASSWORD" ] ; then
@@ -267,20 +226,21 @@ else
 			fi
 		done
 		cp /etc/volume-version /data/volume-version
+		while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+			sleep 1
+		done
 		update_server_ip_address
+		systemctl enable ipa-server-update-self-ip-address.service
+		systemctl enable ipa-server-upgrade.service
+		systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
 		echo "FreeIPA server configured."
+		( echo ; echo "FreeIPA server configured." ) > /dev/console
 	else
 		ret=$?
 		echo "FreeIPA server configuration failed."
+		( echo ; echo "FreeIPA server configuration failed." ) > /dev/console
 		exit $ret
 	fi
 fi
 
-if [ -t 0 ] ; then
-	echo 'Starting interactive shell.'
-	/bin/bash
-else
-	echo 'Go loop.'
-	while true ; do sleep 1000 & wait $! ; done
-fi
-
+exit

@@ -1,0 +1,9 @@
+[Unit]
+Description=Configure IPA server upon the first start
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ipa-server-configure-first
+
+[Install]
+WantedBy=multi-user.target
