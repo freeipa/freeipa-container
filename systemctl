@@ -59,6 +59,7 @@ if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 for (keys %ENV) {
 	delete $ENV{$_} unless $_ =~ /^_SYSTEMCTL_LITE/;
 }
+$ENV{LANG} = 'C';
 
 my $RUNNING_DIR = '/run/systemctl-lite-running';
 if (not -d $RUNNING_DIR) {
