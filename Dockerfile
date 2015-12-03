@@ -8,6 +8,8 @@ RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind 
 ADD ticket-5269.patch /root/ticket-5269.patch
 RUN patch /usr/lib/python2.7/site-packages/ipaserver/install/cainstance.py < /root/ticket-5269.patch && python -c 'import ipaserver.install.cainstance'
 
+RUN ( cd /etc/systemd/system && grep -R -L '\.include /usr/lib/systemd/system' | while read i ; do rm -f /usr/lib/systemd/system/$i ; mkdir -p $( dirname /usr/lib/systemd/system/$i ) ; mv $i /usr/lib/systemd/system/$i ; done )
+RUN ( cd /etc/systemd/system && find . -name '*.service' | while read i ; do mkdir -p /usr/lib/systemd/system && mv $i /usr/lib/systemd/system/$i.d/abc.conf && sed -i '\|include /usr/lib/systemd/system|d' /usr/lib/systemd/system/$i.d/abc.conf ; done )
 ADD dbus.service /usr/lib/systemd/system/dbus.service.d/containerized.conf
 ADD httpd.service /usr/lib/systemd/system/httpd.service.d/pidfile.conf
 
