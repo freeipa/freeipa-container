@@ -176,13 +176,19 @@ sub parse_file {
 			$op = 'Unit.Requires';
 		} elsif ($file =~ /\.wants$/) {
 			$op = 'Unit.Wants';
+		} elsif ($file =~ /\.service\.d$/) {
+			$op = '';
 		} else {
 			die "Unknown directory [$file].\n";
 		}
 		my $dh = new IO::Dir($file);
 		while (defined(my $de = $dh->read)) {
 			next if $de eq '.' or $de eq '..';
-			push @{$data->{$op}}, $de unless $de =~ /\.target$/;
+			if ($op eq '') {
+				parse_file("$file/$de", $data) if $de =~ /\.conf$/;
+			} else {
+				push @{$data->{$op}}, $de unless $de =~ /\.target$/;
+			}
 		}
 		$dh->close;
 		return;
@@ -219,6 +225,9 @@ sub parse_file {
 		}
 	}
 	$fh->close;
+	if ($file =~ /\.service$/ and -d "$file.d") {
+		parse_file("$file.d", $data);
+	}
 	if (defined $data->{'Service.ExecStart'} and not defined $data->{'Service.PIDFile'}) {
 		my ($pidfile) = grep /^\/.+\.pid$/, split /\s+/, $data->{'Service.ExecStart'};
 		if (defined $pidfile) {
