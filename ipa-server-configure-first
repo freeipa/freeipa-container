@@ -94,6 +94,29 @@ fi
 if ! [ -s /etc/machine-id ] ; then
 	uuidgen | sed 's/-//g' > /etc/machine-id
 fi
+if [ -f /etc/ipa/ca.crt ] ; then
+	( cd /data-template && find * | while read f ; do
+		if [ -d "/data-template/$f" ] && [ -f "/data/$f" ] ; then
+			echo "Removing file /data/$f, replacing with directory from /data-template."
+			rm -f "/data/$f"
+		fi
+		if ! [ -e /data/$f ] ; then
+			tar cf - $f | ( cd /data && tar xf - )
+		fi
+		done
+	)
+	sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
+		| while read f ; do
+			rm -f "/data/$f"
+			( cd /data-template && tar cf - "./$f" ) | ( cd /data && tar xvf - )
+		done
+	cat /etc/volume-data-list | while read i ; do
+		if [ -e /data-template$i -a -e /data$i ] ; then
+			chown --reference=/data-template$i /data$i
+			chmod --reference=/data-template$i /data$i
+		fi
+	done
+fi
 systemd-tmpfiles --remove --create
 
 find /run ! -type d | xargs rm -f
@@ -124,27 +147,6 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
 		for d in /usr/share/java/resteasy* ; do
 			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
-		done
-		( cd /data-template && find * | while read f ; do
-			if [ -d "/data-template/$f" ] && [ -f "/data/$f" ] ; then
-				echo "Removing file /data/$f, replacing with directory from /data-template."
-				rm -f "/data/$f"
-			fi
-			if ! [ -e /data/$f ] ; then
-				tar cf - $f | ( cd /data && tar xf - )
-			fi
-			done
-		)
-		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
-			| while read f ; do
-				rm -f "/data/$f"
-				( cd /data-template && tar cf - "./$f" ) | ( cd /data && tar xvf - )
-			done
-		cat /etc/volume-data-list | while read i ; do
-			if [ -e /data-template$i -a -e /data$i ] ; then
-				chown --reference=/data-template$i /data$i
-				chmod --reference=/data-template$i /data$i
-			fi
 		done
 		upgrade_server
 	fi
