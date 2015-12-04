@@ -66,6 +66,7 @@ function upgrade_server () {
 	for i in 389-ds-base pki-server ; do
 		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > /tmp/$i.script
 		if [ -s "/tmp/$i.script" ] ; then
+			sed -i '\|/sbin/ldconfig|d' /tmp/$i.script
 			chmod a+x /tmp/$i.script
 			/tmp/$i.script 2
 		fi
