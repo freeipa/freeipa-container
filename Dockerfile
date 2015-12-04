@@ -17,8 +17,9 @@ ADD systemctl /usr/bin/systemctl
 ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
+ADD ipa-volume-upgrade-0.5-0.6 /usr/sbin/ipa-volume-upgrade-0.5-0.6
 
-RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first
+RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-volume-upgrade-0.5-0.6
 
 RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
@@ -32,7 +33,7 @@ RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles
 # Workaround 1286602
 RUN mv /usr/lib/tmpfiles.d/journal-nocow.conf /usr/lib/tmpfiles.d/journal-nocow.conf.disabled
 RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /data-template/etc/dirsrv/schema
-RUN echo 0.5 > /etc/volume-version
+RUN echo 0.6 > /etc/volume-version
 RUN uuidgen > /data-template/build-id
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445

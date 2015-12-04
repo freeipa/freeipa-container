@@ -117,6 +117,22 @@ if [ -f /etc/ipa/ca.crt ] ; then
 		fi
 	done
 fi
+if [ -f "/data/volume-version" ] ; then
+	DATA_VERSION=$(cat /data/volume-version)
+	IMAGE_VERSION=$(cat /etc/volume-version)
+	if ! [ "$DATA_VERSION" == "$IMAGE_VERSION" ] ; then
+		if [ -x /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ] ; then
+			echo "Migrating data volume version $DATA_VERSION to $IMAGE_VERSION."
+			if /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ; then
+				cat /etc/volume-version > /data/volume-version
+			else
+				echo "Migration of data volume to version $IMAGE_VERSION failed."
+				exit 13
+			fi
+		fi
+	fi
+fi
+
 systemd-tmpfiles --remove --create
 
 find /run ! -type d | xargs rm -f
