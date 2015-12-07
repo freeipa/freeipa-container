@@ -12,6 +12,8 @@ RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/sysl
 RUN for d in systemd/system tmpfiles.d ; do ( cd /etc/$d && grep -R -L '\.include /usr/lib/systemd/system' | while read i ; do rm -f /usr/lib/$d/$i ; mkdir -p $( dirname /usr/lib/$d/$i ) ; mv -v $i /usr/lib/$d/$i ; done ) ; done
 RUN ( cd /etc/systemd/system && find . -name '*.service' | while read i ; do mkdir -p /usr/lib/systemd/system/$i.d && mv $i /usr/lib/systemd/system/$i.d/abc.conf && sed -i '\|include /usr/lib/systemd/system|d' /usr/lib/systemd/system/$i.d/abc.conf ; done )
 
+RUN echo LANG=C > /etc/locale.conf
+
 RUN for i in swap.target local-fs.target rhel-autorelabel-mark.service systemd-update-done.service rpcbind.socket rhel-dmesg.service systemd-user-sessions.service network.service rhsmcertd.service proc-fs-nfsd.mount nfs-config.service nfs-client.target systemd-hwdb-update.service ldconfig.service slices.target dnf-makecache.service fedora-autorelabel-mark.service ; do rm -f /usr/lib/systemd/system/$i ; ln -s /dev/null /usr/lib/systemd/system/$i ; done
 RUN /sbin/ldconfig -X
 
