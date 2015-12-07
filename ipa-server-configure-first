@@ -35,17 +35,30 @@ trap exit TERM
 trap stop_running EXIT
 
 function update_server_ip_address () {
+	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
+	MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
+	if [ "$CURRENT_RECORD" == "$HOSTNAME_FQDN has address $MY_IP" ] ; then
+		return
+	fi
+
 	kdestroy -A
 	kinit -k
 	(
 		echo "server 127.0.0.1"
 		echo "update delete $HOSTNAME_FQDN A"
-		MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
 		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
 	kdestroy -A
+
+	while true ; do
+		NEW_RECORD=$( host -t A $HOSTNAME_FQDN )
+		if [ "$?" -eq 0 ] && [ -n "$NEW_RECORD" ] && ! [ "$NEW_RECORD" == "$CURRENT_RECORD" ] ; then
+			return
+		fi
+		sleep 1
+	done
 }
 
 function upgrade_server () {
@@ -137,13 +150,10 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	fi
 	systemctl start-enabled
 	HOSTNAME_FQDN=$( hostname -f )
-	while ! host $HOSTNAME_FQDN > /dev/null ; do
-		sleep 5
+	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+		sleep 1
 	done
 	update_server_ip_address
-	while ! host $HOSTNAME_FQDN > /dev/null ; do
-		sleep 5
-	done
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
