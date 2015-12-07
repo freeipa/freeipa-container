@@ -269,6 +269,12 @@ else
 		cp /etc/volume-version /data/volume-version
 		update_server_ip_address
 		echo "FreeIPA server configured."
+		if [ -n $JUST_INIT ] ; then
+			# If JUST_INIT is not empty, then we were asked to just
+			# run the initial setup and return success or failure.
+			# Since we've succeeded here, return 0
+			exit 0
+		fi
 	else
 		ret=$?
 		echo "FreeIPA server configuration failed."
