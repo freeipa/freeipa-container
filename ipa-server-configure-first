@@ -213,15 +213,6 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if [ -z "$FORWARDER" ] ; then
-		FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
-	fi
-	if [ "$FORWARDER" == '127.0.0.1' ] ; then
-		FORWARDER=--no-forwarders
-	else
-		FORWARDER=--forwarder=$FORWARDER
-	fi
-
 	if [ "$CAN_EDIT_RESOLV_CONF" == "0" ] ; then
 		find /usr -name bindinstance.py | xargs sed -i '/changing resolv.conf to point to ourselves/s/^/#/'
 	fi
@@ -255,7 +246,6 @@ else
 			fi
 			echo "-r $REALM"
 		fi
-		echo "--setup-dns $FORWARDER"
 		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
