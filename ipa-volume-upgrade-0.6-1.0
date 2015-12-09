@@ -9,3 +9,5 @@ systemctl enable pki-tomcatd@pki-tomcat.service
 systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
 systemctl enable ipa-server-upgrade.service
 systemctl enable ipa-server-update-self-ip-address.service
+
+python -c "from ipaserver.install import sysupgrade; sysupgrade.set_upgrade_state('dns', 'regular_named_masked', True);"
