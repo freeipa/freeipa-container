@@ -14,7 +14,7 @@ RUN ( cd /etc/systemd/system && find . -name '*.service' | while read i ; do mkd
 
 RUN echo LANG=C > /etc/locale.conf
 
-RUN for i in swap.target local-fs.target rhel-autorelabel-mark.service systemd-update-done.service rpcbind.socket rhel-dmesg.service systemd-user-sessions.service network.service rhsmcertd.service proc-fs-nfsd.mount nfs-config.service nfs-client.target systemd-hwdb-update.service ldconfig.service slices.target dnf-makecache.service fedora-autorelabel-mark.service ; do rm -f /usr/lib/systemd/system/$i ; ln -s /dev/null /usr/lib/systemd/system/$i ; done
+RUN for i in swap.target local-fs.target rhel-autorelabel-mark.service systemd-update-done.service rpcbind.socket rhel-dmesg.service systemd-user-sessions.service network.service rhsmcertd.service proc-fs-nfsd.mount nfs-config.service nfs-client.target systemd-hwdb-update.service ldconfig.service slices.target dnf-makecache.service dnf-makecache.timer fedora-autorelabel-mark.service ; do rm -f /usr/lib/systemd/system/$i ; ln -s /dev/null /usr/lib/systemd/system/$i ; done
 RUN /sbin/ldconfig -X
 
 COPY init-data ipa-server-configure-first ipa-volume-upgrade-* /usr/sbin/
