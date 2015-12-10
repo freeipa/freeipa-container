@@ -14,6 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+mark_exit_code () {
+	exit_code=$?
+	echo $exit_code > /run/ipa/exit_code
+	exit $exit_code
+}
+mkdir -p /run/ipa
+trap mark_exit_code ERR EXIT
+
 set -e
 
 if ! [ -t /dev/stdout ] ; then
