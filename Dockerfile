@@ -1,10 +1,10 @@
-# Clone from the Fedora 21 image
-FROM fedora:21
+# Clone from the Fedora 22 image
+FROM fedora:22
 
 MAINTAINER Jan Pazdziora
 
 # Install FreeIPA client
-RUN yum install -y freeipa-client hostname perl 'perl(Data::Dumper)' && yum clean all
+RUN dnf install -y freeipa-client hostname perl 'perl(Data::Dumper)' && dnf clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
