@@ -103,6 +103,12 @@ for i in /run/* /tmp/* ; do
 done
 
 mkdir -p /run/ipa
+if [ "$1" == 'exit-on-finished' ] ; then
+	touch /run/ipa/$1
+else
+	touch /run/ipa/exit-on-error
+fi
+
 if [ -n "$IPA_SERVER_IP" ] ; then
 	echo "$IPA_SERVER_IP" > /run/ipa/ipa-server-ip
 fi

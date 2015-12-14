@@ -5,6 +5,7 @@ Before=ipa.service
 [Service]
 Type=oneshot
 ExecStart=/usr/sbin/ipa-server-configure-first upgrade
+ExecStartPost=/usr/sbin/ipa-server-status-check
 FailureAction=poweroff
 
 [Install]

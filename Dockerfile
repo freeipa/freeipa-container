@@ -17,8 +17,8 @@ RUN echo LANG=C > /etc/locale.conf
 RUN for i in swap.target local-fs.target rhel-autorelabel-mark.service systemd-update-done.service rpcbind.socket rhel-dmesg.service systemd-user-sessions.service network.service rhsmcertd.service proc-fs-nfsd.mount nfs-config.service nfs-client.target systemd-hwdb-update.service ldconfig.service slices.target dnf-makecache.service dnf-makecache.timer fedora-autorelabel-mark.service named.service ; do rm -f /usr/lib/systemd/system/$i ; ln -s /dev/null /usr/lib/systemd/system/$i ; done
 RUN /sbin/ldconfig -X
 
-COPY init-data ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
-RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-*
+COPY init-data ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
+RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-*
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 RUN mkdir -p /usr/lib/systemd/system/systemd-poweroff.service.d && ( echo '[Service]' ; echo 'ExecStartPre=/usr/bin/systemctl switch-root /usr /sbin/exit-with-status' ) > /usr/lib/systemd/system/systemd-poweroff.service.d/exit-via-chroot.conf
@@ -51,4 +51,5 @@ VOLUME [ "/tmp", "/run", "/data" ]
 ENTRYPOINT [ "/usr/sbin/init-data" ]
 RUN uuidgen > /data-template/build-id
 
+LABEL INSTALL "docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} exit-on-finished"
 LABEL RUN "docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME}"
