@@ -70,6 +70,9 @@ if [ -f "$DATA/build-id" ] ; then
 			fi
 		done
 	fi
+	if [ -f /etc/ipa/ca.crt ] ; then
+		rm -f "$DATA/etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service"
+	fi
 fi
 if [ -f "$DATA/volume-version" ] ; then
 	DATA_VERSION=$(cat $DATA/volume-version)
