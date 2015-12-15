@@ -86,8 +86,6 @@ function upgrade_server () {
 			/tmp/$i.script 2
 		fi
 	done
-	# workaround https://fedorahosted.org/freeipa/ticket/5113
-	systemctl start dirsrv.target
 	systemctl start certmonger.service
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
 		PLATFORM=$(python -c 'import ipaplatform; print ipaplatform.NAME;')
