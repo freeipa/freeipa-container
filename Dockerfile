@@ -4,7 +4,7 @@ FROM rhel7
 MAINTAINER Jan Pazdziora
 
 # Install FreeIPA server
-RUN mkdir -p /run/lock ; yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns bind bind-dyndb-ldap perl 'perl(Time::HiRes)' patch && yum clean all
+RUN mkdir -p /run/lock ; yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns bind bind-dyndb-ldap perl 'perl(Time::HiRes)' && yum clean all
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
