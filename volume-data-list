@@ -11,6 +11,7 @@
 /etc/nsswitch.conf
 /etc/ntp.conf
 /etc/openldap/
+/etc/pam.d/
 /etc/pki/ca-trust/
 /etc/pki/nssdb/
 /etc/pki/pki-tomcat/
@@ -20,6 +21,7 @@
 /etc/systemctl-lite-enabled/
 /etc/systemd/system/
 /etc/tmpfiles.d/
+/etc/yp.conf
 /root/ca-agent.p12
 /root/cacert.p12
 /root/.dogtag/

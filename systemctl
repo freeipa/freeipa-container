@@ -260,7 +260,7 @@ sub get_exec_start {
 		warn "No ExecStart value found for [$SERVICE].\n";
 		exit 3;
 	}
-	return split /\s+/, $d;
+	return $d;
 }
 
 sub get_pid {
@@ -476,17 +476,18 @@ if ($COMMAND eq 'stop') {
 }
 
 sub add_runuser {
-	my ($data, $cmd) = @_;
+	my ($data, @cmd) = @_;
 	if (defined $data->{'Service.User'}) {
-		unshift @$cmd, '-u', $data->{'Service.User'}, '--';
+		unshift @cmd, '-u', $data->{'Service.User'}, '--';
 		if (defined $data->{'Service.Group'}) {
-			unshift @$cmd, '-g', $data->{'Service.Group'};
+			unshift @cmd, '-g', $data->{'Service.Group'};
 		}
 		if (defined $data->{'Service.SupplementaryGroups'}) {
-			unshift @$cmd, '-G', $data->{'Service.SupplementaryGroups'};
+			unshift @cmd, '-G', $data->{'Service.SupplementaryGroups'};
 		}
-		unshift @$cmd, '/usr/sbin/runuser';
+		unshift @cmd, '/usr/sbin/runuser';
 	}
+	return join ' ', @cmd;
 }
 
 if ($COMMAND eq 'start') {
@@ -558,23 +559,23 @@ if ($COMMAND eq 'start') {
 			if ($x =~ s/^-//) {
 				$can_fail = 1;
 			}
-			my @cmd = split /\s+/, $x;
+			my $cmd = $x;
 			if (not $data->{'Service.PermissionsStartOnly'} or $data->{'Service.PermissionsStartOnly'} =~ /^(false|0)$/i) {
-				add_runuser($data, \@cmd);
+				$cmd = add_runuser($data, $cmd);
 			}
 			no warnings 'uninitialized';
-			log_command("Running start pre [@cmd]\n");
-			if (system @cmd and not $can_fail) {
+			log_command("Running start pre [$cmd]\n");
+			if (system $cmd and not $can_fail) {
 				exit 1;
 			}
 		}
 	}
-	my @paths;
+	my $path;
 	if ($TYPE eq 'socket') {
 		my $service = $SERVICE;
 		if (defined $data->{'Socket.Accept'} and $data->{'Socket.Accept'} eq 'true') {
 			$service =~ s/\.socket$/\@.service/;
-			@paths = ( '/bin/systemctl-socket-daemon', $data->{'Socket.ListenStream'}, $data->{'Socket.SocketMode'} // '0666', $service );
+			$path = join ' ', '/bin/systemctl-socket-daemon', $data->{'Socket.ListenStream'}, $data->{'Socket.SocketMode'} // '0666', $service;
 		} else {
 			$service =~ s/\.socket$/\.service/;
 			my $ret = system "$0 is-active $service > /dev/null";
@@ -582,12 +583,12 @@ if ($COMMAND eq 'start') {
 				log_command("Service [$service] is already running for [$SERVICE]\n");
 				exit;
 			}
-			@paths = ( $0, 'start', $service );
+			$path = join ' ', $0, 'start', $service;
 		}
 	} else {
-		@paths = get_exec_start($data);
+		$path = get_exec_start($data);
 	}
-	my $first_path = $paths[0];
+	my ($first_path) = ($path =~ /^\s*(\S+)/);
 
 	my $ENV = '';
 	if (exists $data->{'Service.EnvironmentFile'}) {
@@ -617,10 +618,10 @@ if ($COMMAND eq 'start') {
 		$x =~ s/^"(.*)"$/$1/;
 		$ENV .= "export $x; ";
 	}
-	add_runuser($data, \@paths);
-	log_command("Running [$ENV@paths]\n");
+	$path = add_runuser($data, $path);
+	log_command("Running [$ENV$path]\n");
 	if (defined $data->{'Service.Type'} and $data->{'Service.Type'} eq 'oneshot') {
-		system "$ENV@paths";
+		system "$ENV$path";
 		if (defined $data->{'Service.RemainAfterExit'} and $data->{'Service.RemainAfterExit'} eq 'yes') {
 			local * PIDFILE;
 			open PIDFILE, '>', "$RUNNING_DIR/$FULL_SERVICE.oneshot";
@@ -640,7 +641,7 @@ if ($COMMAND eq 'start') {
 		}
 		setpgrp();
 		POSIX::setsid();
-		exec "$ENV@paths";
+		exec "$ENV$path";
 	}
 	if (defined $data->{'Service.PIDFile'}) {
 		log_command("Service [$FULL_SERVICE] defines PIDFile [$data->{'Service.PIDFile'}], not marking pid\n");
