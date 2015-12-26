@@ -28,6 +28,8 @@ if ! [ -t /dev/stdout ] ; then
 	exec >> /var/log/ipa-server-configure-first.log 2>&1
 fi
 
+tail --silent -f --retry /var/log/ipa-server-configure-first.log 2> /dev/null > /dev/console &
+
 echo "$(date) $0 $@"
 
 function update_server_ip_address () {
