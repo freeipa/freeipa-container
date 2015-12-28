@@ -253,7 +253,8 @@ else
 					grep '^--ds-password=' /data/ipa-server-install-options | xargs echo -- | sed 's/^-- --ds-password=//' > /data/ds-master-password
 				fi
 			fi
-			echo "-r $REALM"
+			grep -q '^--realm=' /data/ipa-server-install-options || \
+			    echo "-r $REALM"
 		fi
 		echo "--setup-dns $FORWARDER"
 		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
