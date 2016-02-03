@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014--2015 Jan Pazdziora
+# Copyright 2014--2016 Jan Pazdziora
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -200,8 +200,6 @@ else
 		FORWARDER=--forwarder=$FORWARDER
 	fi
 
-	touch /data/ds-master-password
-	chmod 600 /data/ds-master-password
 	if ( if [ -n "$PASSWORD" ] ; then
 			if $REPLICA ; then
 				echo "--password=$PASSWORD"
@@ -209,7 +207,6 @@ else
 				echo "--ds-password=$PASSWORD"
 			fi
 			echo "--admin-password=$PASSWORD"
-			echo "$PASSWORD" > /data/ds-master-password
 		fi
 		if [ -n "$DEBUG" ] ; then
 			echo "--debug"
@@ -217,15 +214,9 @@ else
 		if $REPLICA ; then
 			cat /data/ipa-replica-install-options
 			echo "--skip-conncheck"
-			if grep -q '^--password=' /data/ipa-replica-install-options ; then
-				grep '^--password=' /data/ipa-replica-install-options | xargs echo -- | sed 's/^-- --password=//' > /data/ds-master-password
-			fi
 		else
 			if [ -f /data/ipa-server-install-options ] ; then
 				cat /data/ipa-server-install-options
-				if grep -q '^--ds-password=' /data/ipa-server-install-options ; then
-					grep '^--ds-password=' /data/ipa-server-install-options | xargs echo -- | sed 's/^-- --ds-password=//' > /data/ds-master-password
-				fi
 			fi
 			echo "-r $REALM"
 		fi
