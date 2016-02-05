@@ -329,6 +329,7 @@ sub exec_stop_pre {
 	if (defined $data->{'Socket.ExecStopPre'}) {
 		for my $x (@{ $data->{'Socket.ExecStopPre'} }) {
 			log_command("Running stop pre [$x]\n");
+			$x =~ s/^-//; # if allowed to fail or not it does not matter
 			system $x;
 		}
 	}
@@ -338,6 +339,7 @@ sub exec_stop_post {
 	if (defined $data->{'Service.ExecStopPost'}) {
 		for my $x (@{ $data->{'Service.ExecStopPost'} }) {
 			log_command("Running stop post [$x]\n");
+			$x =~ s/^-//;
 			system $x;
 		}
 	}
