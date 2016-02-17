@@ -72,7 +72,6 @@ if [ "$1" == update-self-ip-address ] ; then
 	update_server_ip_address
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
-	( echo ; echo "FreeIPA server started." ) > /dev/console
 	exit
 fi
 
@@ -111,8 +110,7 @@ function upgrade_server () {
 
 if [ "$1" == upgrade ] ; then
 	if ! diff /data/volume-version /etc/volume-version ; then
-		echo "The /data volume was created using incompatible image."
-		( echo ; echo "The /data volume was created using incompatible image." ) > /dev/console
+		echo "The /data volume was created using incompatible image." >&2
 		exit 2
 	fi
 	if [ -f /data/etc/resolv.conf.ipa ] ; then
@@ -122,16 +120,13 @@ if [ "$1" == upgrade ] ; then
 	rm -rf /var/lib/sss/pubconf/kdcinfo.*
 	if cmp /data/build-id /data-template/build-id ; then
 		echo "FreeIPA server is already configured, starting the services."
-		( echo ; echo "FreeIPA server is already configured, starting the services." ) > /dev/console
 	else
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
-		( echo ; echo "FreeIPA server is already configured but with different version, starting upgrade." ) > /dev/console
 		for d in /usr/share/java/resteasy* ; do
 			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
 		done
 		upgrade_server
 		echo "FreeIPA server upgraded."
-		( echo ; echo "FreeIPA server upgraded." ) > /dev/console
 	fi
 	exit
 fi
@@ -150,8 +145,7 @@ function usage () {
 }
 
 if [ -f /etc/ipa/ca.crt ] ; then
-	echo "The FreeIPA server was already configured."
-	( echo ; echo "The FreeIPA server was already configured." ) > /dev/console
+	echo "The FreeIPA server was already configured." >&2
 	exit 11
 else
 	REPLICA=false
@@ -240,11 +234,9 @@ else
 		systemctl enable ipa-server-upgrade.service
 		systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
 		echo "FreeIPA server configured."
-		( echo ; echo "FreeIPA server configured." ) > /dev/console
 	else
 		ret=$?
-		echo "FreeIPA server configuration failed."
-		( echo ; echo "FreeIPA server configuration failed." ) > /dev/console
+		echo "FreeIPA server configuration failed." >&2
 		exit $ret
 	fi
 fi
