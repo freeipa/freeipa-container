@@ -8,4 +8,4 @@ ExecStartPost=/usr/sbin/ipa-server-status-check
 FailureAction=poweroff
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=container-ipa.target
