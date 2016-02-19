@@ -76,7 +76,9 @@ if [ -f "$DATA/build-id" ] ; then
 		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
 			| while read f ; do
 				rm -f "$DATA/$f"
-				( cd $DATA_TEMPLATE && tar cf - "./$f" ) | ( cd $DATA && tar xvf - )
+				if [ -e "$DATA_TEMPLATE/$f" ] ; then
+					( cd $DATA_TEMPLATE && tar cf - "./$f" ) | ( cd $DATA && tar xvf - )
+				fi
 			done
 		cat /etc/volume-data-list | while read i ; do
 			if [ -e $DATA_TEMPLATE$i -a -e $DATA$i ] ; then
