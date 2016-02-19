@@ -45,6 +45,21 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 		fi
 	fi
 fi
+if [ -f "$DATA/volume-version" ] ; then
+	DATA_VERSION=$(cat $DATA/volume-version)
+	IMAGE_VERSION=$(cat /etc/volume-version)
+	if ! [ "$DATA_VERSION" == "$IMAGE_VERSION" ] ; then
+		if [ -x /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ] ; then
+			echo "Migrating $DATA data volume version $DATA_VERSION to $IMAGE_VERSION."
+			if /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ; then
+				cat /etc/volume-version > $DATA/volume-version
+			else
+				echo "Migration of $DATA volume to version $IMAGE_VERSION failed."
+				exit 13
+			fi
+		fi
+	fi
+fi
 if [ -f "$DATA/build-id" ] ; then
 	if ! cmp -s $DATA/build-id $DATA_TEMPLATE/build-id ; then
 		echo "FreeIPA server is already configured but with different version, volume update."
@@ -72,21 +87,6 @@ if [ -f "$DATA/build-id" ] ; then
 	fi
 	if [ -f /etc/ipa/ca.crt ] ; then
 		rm -f "$DATA/etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service"
-	fi
-fi
-if [ -f "$DATA/volume-version" ] ; then
-	DATA_VERSION=$(cat $DATA/volume-version)
-	IMAGE_VERSION=$(cat /etc/volume-version)
-	if ! [ "$DATA_VERSION" == "$IMAGE_VERSION" ] ; then
-		if [ -x /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ] ; then
-			echo "Migrating $DATA data volume version $DATA_VERSION to $IMAGE_VERSION."
-			if /usr/sbin/ipa-volume-upgrade-$DATA_VERSION-$IMAGE_VERSION ; then
-				cat /etc/volume-version > $DATA/volume-version
-			else
-				echo "Migration of $DATA volume to version $IMAGE_VERSION failed."
-				exit 13
-			fi
-		fi
 	fi
 fi
 
