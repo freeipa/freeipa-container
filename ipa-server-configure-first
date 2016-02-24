@@ -35,17 +35,30 @@ trap exit TERM
 trap stop_running EXIT
 
 function update_server_ip_address () {
+	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
+	MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
+	if [ "$CURRENT_RECORD" == "$HOSTNAME_FQDN has address $MY_IP" ] ; then
+		return
+	fi
+
 	kdestroy -A
 	kinit -k
 	(
 		echo "server 127.0.0.1"
 		echo "update delete $HOSTNAME_FQDN A"
-		MY_IP=${IPA_SERVER_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
 		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
 	kdestroy -A
+
+	while true ; do
+		NEW_RECORD=$( host -t A $HOSTNAME_FQDN )
+		if [ "$?" -eq 0 ] && [ -n "$NEW_RECORD" ] && ! [ "$NEW_RECORD" == "$CURRENT_RECORD" ] ; then
+			return
+		fi
+		sleep 1
+	done
 }
 
 function upgrade_server () {
@@ -53,13 +66,15 @@ function upgrade_server () {
 	for i in 389-ds-base pki-server ; do
 		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > /tmp/$i.script
 		if [ -s "/tmp/$i.script" ] ; then
+			sed -i '\|/sbin/ldconfig|d' /tmp/$i.script
 			chmod a+x /tmp/$i.script
 			/tmp/$i.script 2
 		fi
 	done
-	ipa-ldap-updater -u -q -y /data/ds-master-password
+	# workaround https://fedorahosted.org/freeipa/ticket/5113
+	systemctl start dirsrv.target
 	systemctl start certmonger.service
-	ipa-upgradeconfig
+	ipa-server-upgrade
 	for c in /etc/systemctl-lite-enabled/*-domainname.service ; do
 		base_c=$(basename $c)
 		for i in /usr/lib/systemd/system/*-domainname.service ; do
@@ -77,9 +92,13 @@ function upgrade_server () {
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	( cd /data-template && tar cf - . ) | ( cd /data && tar xf - )
 fi
-systemd-tmpfiles --remove --create 2>&1 | grep -v 'Failed to replace specifiers' || :
+if ! [ -s /etc/machine-id ] ; then
+	uuidgen | sed 's/-//g' > /etc/machine-id
+fi
+systemd-tmpfiles --remove --create
 
-rm -f /var/run/*.pid /run/systemctl-lite-running/*
+find /run ! -type d | xargs rm -f
+rm -rf /tmp/*
 
 CAN_EDIT_RESOLV_CONF=0
 cp -f /etc/resolv.conf /etc/resolv.conf.docker
@@ -117,6 +136,11 @@ if [ -f /etc/ipa/ca.crt ] ; then
 			fi
 			done
 		)
+		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
+			| while read f ; do
+				rm -f "/data/$f"
+				( cd /data-template && tar cf - "./$f" ) | ( cd /data && tar xvf - )
+			done
 		cat /etc/volume-data-list | while read i ; do
 			if [ -e /data-template$i -a -e /data$i ] ; then
 				chown --reference=/data-template$i /data$i
@@ -127,13 +151,10 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	fi
 	systemctl start-enabled
 	HOSTNAME_FQDN=$( hostname -f )
-	while ! host $HOSTNAME_FQDN > /dev/null ; do
-		sleep 5
+	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+		sleep 1
 	done
 	update_server_ip_address
-	while ! host $HOSTNAME_FQDN > /dev/null ; do
-		sleep 5
-	done
 	host $HOSTNAME_FQDN
 	echo "FreeIPA server started."
 else
