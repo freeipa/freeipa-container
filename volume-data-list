@@ -18,7 +18,6 @@
 /etc/rndc.key
 /etc/sssd/
 /etc/sysconfig/
-/etc/systemctl-lite-enabled/
 /etc/systemd/system/
 /etc/tmpfiles.d/
 /etc/yp.conf
@@ -46,6 +45,7 @@
 /var/lib/sss/mc/
 /var/lib/sss/pipes/
 /var/lib/sss/pubconf/
+/var/lib/systemd/
 /var/log/
 /var/named/data/
 /var/named/dynamic/
