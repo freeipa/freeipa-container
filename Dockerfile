@@ -6,8 +6,6 @@ MAINTAINER Jan Pazdziora
 # Install FreeIPA server
 RUN mkdir -p /run/lock ; yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns bind bind-dyndb-ldap perl 'perl(Time::HiRes)' && yum clean all
 
-# Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
-RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
 RUN for d in systemd/system tmpfiles.d ; do ( cd /etc/$d && grep -R -L '\.include /usr/lib/systemd/system' | while read i ; do rm -f /usr/lib/$d/$i ; mkdir -p $( dirname /usr/lib/$d/$i ) ; mv -v $i /usr/lib/$d/$i ; done ) ; done
 RUN ( cd /etc/systemd/system && find . -name '*.service' | while read i ; do mkdir -p /usr/lib/systemd/system/$i.d && mv $i /usr/lib/systemd/system/$i.d/abc.conf && sed -i '\|include /usr/lib/systemd/system|d' /usr/lib/systemd/system/$i.d/abc.conf ; done )
 ADD dbus.service /usr/lib/systemd/system/dbus.service.d/containerized.conf
