@@ -47,7 +47,7 @@ RUN echo 1.1 > /etc/volume-version
 
 RUN for i in /usr/lib/systemd/system/*-domainname.service ; do sed -i 's#^ExecStart=/#ExecStart=-/#' $i ; done
 
-RUN sed -i 's/^UUID=/# UUID=/' /etc/fstab
+RUN if [ -f /etc/fstab ] ; then sed -i 's/^UUID=/# UUID=/' /etc/fstab; fi
 
 ENV container docker
 
