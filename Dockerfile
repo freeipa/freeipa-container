@@ -6,16 +6,20 @@ MAINTAINER Jan Pazdziora
 # Install FreeIPA server
 RUN mkdir -p /run/lock ; yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns bind bind-dyndb-ldap perl 'perl(Time::HiRes)' && yum clean all
 
-ADD dbus.service /etc/systemd/system/dbus.service
-RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
-ADD httpd.service /etc/systemd/system/httpd.service
+# Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
+RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
+RUN for d in systemd/system tmpfiles.d ; do ( cd /etc/$d && grep -R -L '\.include /usr/lib/systemd/system' | while read i ; do rm -f /usr/lib/$d/$i ; mkdir -p $( dirname /usr/lib/$d/$i ) ; mv -v $i /usr/lib/$d/$i ; done ) ; done
+RUN ( cd /etc/systemd/system && find . -name '*.service' | while read i ; do mkdir -p /usr/lib/systemd/system/$i.d && mv $i /usr/lib/systemd/system/$i.d/abc.conf && sed -i '\|include /usr/lib/systemd/system|d' /usr/lib/systemd/system/$i.d/abc.conf ; done )
+ADD dbus.service /usr/lib/systemd/system/dbus.service.d/containerized.conf
+ADD httpd.service /usr/lib/systemd/system/httpd.service.d/pidfile.conf
 
 ADD systemctl /usr/bin/systemctl
 ADD systemctl-socket-daemon /usr/bin/systemctl-socket-daemon
 
 ADD ipa-server-configure-first /usr/sbin/ipa-server-configure-first
+ADD ipa-volume-upgrade-0.5-0.6 /usr/sbin/ipa-volume-upgrade-0.5-0.6
 
-RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first
+RUN chmod -v +x /usr/bin/systemctl /usr/bin/systemctl-socket-daemon /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-volume-upgrade-0.5-0.6
 
 RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
@@ -27,7 +31,7 @@ ADD volume-data-autoupdate /etc/volume-data-autoupdate
 RUN rm -rf /var/log-removed
 RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
 RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /data-template/etc/dirsrv/schema
-RUN echo 0.5 > /etc/volume-version
+RUN echo 0.6 > /etc/volume-version
 RUN uuidgen > /data-template/build-id
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445

@@ -59,6 +59,7 @@ if (@ARGV == 2 and $ARGV[0] eq '--system' and $ARGV[1] eq 'daemon-reload') {
 for (keys %ENV) {
 	delete $ENV{$_} unless $_ =~ /^_SYSTEMCTL_LITE/;
 }
+$ENV{LANG} = 'C';
 
 my $RUNNING_DIR = '/run/systemctl-lite-running';
 if (not -d $RUNNING_DIR) {
@@ -176,13 +177,19 @@ sub parse_file {
 			$op = 'Unit.Requires';
 		} elsif ($file =~ /\.wants$/) {
 			$op = 'Unit.Wants';
+		} elsif ($file =~ /\.service\.d$/) {
+			$op = '';
 		} else {
 			die "Unknown directory [$file].\n";
 		}
 		my $dh = new IO::Dir($file);
 		while (defined(my $de = $dh->read)) {
 			next if $de eq '.' or $de eq '..';
-			push @{$data->{$op}}, $de unless $de =~ /\.target$/;
+			if ($op eq '') {
+				parse_file("$file/$de", $data) if $de =~ /\.conf$/;
+			} else {
+				push @{$data->{$op}}, $de unless $de =~ /\.target$/;
+			}
 		}
 		$dh->close;
 		return;
@@ -219,6 +226,9 @@ sub parse_file {
 		}
 	}
 	$fh->close;
+	if ($file =~ /\.service$/ and -d "$file.d") {
+		parse_file("$file.d", $data);
+	}
 	if (defined $data->{'Service.ExecStart'} and not defined $data->{'Service.PIDFile'}) {
 		my ($pidfile) = grep /^\/.+\.pid$/, split /\s+/, $data->{'Service.ExecStart'};
 		if (defined $pidfile) {
@@ -319,6 +329,7 @@ sub exec_stop_pre {
 	if (defined $data->{'Socket.ExecStopPre'}) {
 		for my $x (@{ $data->{'Socket.ExecStopPre'} }) {
 			log_command("Running stop pre [$x]\n");
+			$x =~ s/^-//; # if allowed to fail or not it does not matter
 			system $x;
 		}
 	}
@@ -328,6 +339,7 @@ sub exec_stop_post {
 	if (defined $data->{'Service.ExecStopPost'}) {
 		for my $x (@{ $data->{'Service.ExecStopPost'} }) {
 			log_command("Running stop post [$x]\n");
+			$x =~ s/^-//;
 			system $x;
 		}
 	}
