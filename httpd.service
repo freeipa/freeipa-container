@@ -1,2 +1,0 @@
-[Service]
-PIDFile=/var/run/httpd/httpd.pid
