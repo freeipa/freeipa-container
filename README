@@ -3,7 +3,7 @@
 This repository contains the Dockerfile and associated assets for
 building a FreeIPA server Docker image from the official yum repo.
 
-Install docker 1.6+:
+Install docker 1.8+:
 
     yum install -y docker
 
@@ -45,6 +45,7 @@ You then run the container with
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test \
+       -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
        -v /var/lib/ipa-data:/data:Z freeipa-server
 
 If you do not specify the passwords in the ipa-server-install-options
@@ -52,6 +53,7 @@ file, use `PASSWORD` environment variable via the `-e` option:
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test -e PASSWORD=Secret123 \
+       -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
        -v /var/lib/ipa-data:/data:Z freeipa-server
 
 If the above fails with error about invalid value for flag -v
@@ -110,7 +112,7 @@ freeipa-server container directly:
 The first time this container runs, it invokes `ipa-client-install`
 with the given admin password.
 
-# Copyright 2014--2015 Jan Pazdziora
+# Copyright 2014--2016 Jan Pazdziora
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
