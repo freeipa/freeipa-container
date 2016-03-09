@@ -4,9 +4,7 @@ FROM fedora:23
 MAINTAINER Jan Pazdziora
 
 RUN curl -o /etc/yum.repos.d/pvoborni-freeipa-4-3-fedora-23.repo https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-4-3/repo/fedora-23/pvoborni-freeipa-4-3-fedora-23.repo
-RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap patch && dnf clean all
-ADD ticket-5269.patch /root/ticket-5269.patch
-RUN patch /usr/lib/python2.7/site-packages/ipaserver/install/cainstance.py < /root/ticket-5269.patch && python -c 'import ipaserver.install.cainstance'
+RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap && dnf clean all
 
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
