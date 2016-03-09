@@ -5,8 +5,7 @@ MAINTAINER Jan Pazdziora
 
 RUN mkdir -p /run/lock ; yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns bind bind-dyndb-ldap && yum clean all
 
-RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
-RUN echo '0b6f62258de66f74328b0cf45cc937fae6a30e62 /etc/systemd/system/dbus.service' | sha1sum --quiet -c && rm -vf /etc/systemd/system/dbus.service
+RUN echo '7fe9c3084d2b8ba846c23458be86c8677693f0eb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target sysinit.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
