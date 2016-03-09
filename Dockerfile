@@ -3,7 +3,7 @@ FROM fedora:23
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap 'perl(bigint)' patch && dnf clean all
+RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap patch && dnf clean all
 ADD ticket-5269.patch /root/ticket-5269.patch
 RUN patch /usr/lib/python2.7/site-packages/ipaserver/install/cainstance.py < /root/ticket-5269.patch && python -c 'import ipaserver.install.cainstance'
 
