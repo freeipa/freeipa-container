@@ -183,13 +183,15 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if [ -z "$FORWARDER" ] ; then
-		FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
-	fi
-	if [ "$FORWARDER" == '127.0.0.1' ] ; then
-		FORWARDER=--no-forwarders
-	else
-		FORWARDER=--forwarder=$FORWARDER
+	if [ -f /data/ipa-server-install-options ] && ! grep -q '^--forwarder=' /data/ipa-server-install-options ; then
+		if [ -z "$FORWARDER" ] ; then
+			FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+		fi
+		if [ "$FORWARDER" == '127.0.0.1' ] ; then
+			FORWARDER=--no-forwarders
+		else
+			FORWARDER=--forwarder=$FORWARDER
+		fi
 	fi
 
 	if ( if [ -n "$PASSWORD" ] ; then
