@@ -107,6 +107,21 @@ for i in /run/* /tmp/* ; do
 	fi
 done
 
+SHOW_LOG=0
+if [ -t 1 ] ; then
+	SHOW_LOG=1
+elif [ "$1" == '--show-log' ] ; then
+	shift
+	SHOW_LOG=1
+fi
+if [ $SHOW_LOG == 1 ] ; then
+	touch /var/log/ipa-server-configure-first.log
+	(
+	trap '' SIGHUP SIGTERM
+	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log 2> /dev/null < /dev/null &
+	)
+fi
+
 mkdir -p /run/ipa
 if [ "$1" == 'exit-on-finished' ] ; then
 	touch /run/ipa/$1

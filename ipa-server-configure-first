@@ -24,13 +24,9 @@ trap mark_exit_code ERR EXIT
 
 set -e
 
-if ! [ -t /dev/stdout ] ; then
-	exec >> /var/log/ipa-server-configure-first.log 2>&1
-fi
+exec >> /var/log/ipa-server-configure-first.log 2>&1
 
 echo "$(date) $0 $@"
-
-tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log 2> /dev/null > /dev/console &
 
 function update_server_ip_address () {
 	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
