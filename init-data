@@ -115,10 +115,14 @@ elif [ "$1" == '--show-log' ] ; then
 	SHOW_LOG=1
 fi
 if [ $SHOW_LOG == 1 ] ; then
-	touch /var/log/ipa-server-configure-first.log
+	for i in /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log ; do
+		if ! [ -f $i ] ; then
+			touch $i
+		fi
+	done
 	(
 	trap '' SIGHUP SIGTERM
-	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log 2> /dev/null < /dev/null &
+	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log 2> /dev/null < /dev/null &
 	)
 fi
 
