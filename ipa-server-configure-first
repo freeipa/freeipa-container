@@ -23,10 +23,7 @@ mkdir -p /run/ipa
 trap mark_exit_code ERR EXIT
 
 set -e
-
-if ! [ -t /dev/stdout ] ; then
-	exec >> /var/log/ipa-server-configure-first.log 2>&1
-fi
+set -x
 
 echo "$(date) $0 $@"
 
@@ -164,6 +161,8 @@ else
 	else
 		if [ ! -f /data/ipa-server-install-options ] && [ -z "$PASSWORD" ] ; then
 			usage
+		elif [ ! -f /data/ipa-server-install-options ]; then
+			touch /data/ipa-server-install-options
 		fi
 		RUN_CMD="/usr/sbin/ipa-server-install"
 	fi
@@ -228,7 +227,9 @@ else
 				ln -sf /data$i $i
 			fi
 		done
-		cp /etc/volume-version /data/volume-version
+		if [ -f /etc/volume-verson ]; then
+			cp /etc/volume-version /data/volume-version
+		fi
 		while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
 			sleep 1
 		done
