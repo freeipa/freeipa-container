@@ -5,7 +5,7 @@ Description=Configure IPA server upon the first start
 Type=oneshot
 ExecStart=/usr/sbin/ipa-server-configure-first
 ExecStartPost=/usr/sbin/ipa-server-status-check
-FailureAction=poweroff
+#FailureAction=poweroff
 
 [Install]
-WantedBy=container-ipa.target
+WantedBy=multi-user.target
