@@ -51,7 +51,7 @@ ENV container docker
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
-VOLUME [ "/tmp", "/run", "/data" ]
+VOLUME [ "/data" ]
 
 ENTRYPOINT [ "/usr/sbin/init-data" ]
 RUN uuidgen > /data-template/build-id
