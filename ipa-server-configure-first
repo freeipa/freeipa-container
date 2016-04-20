@@ -24,14 +24,6 @@ trap mark_exit_code ERR EXIT
 
 set -e
 
-if ! [ -t /dev/stdout ] ; then
-	exec >> /var/log/ipa-server-configure-first.log 2>&1
-fi
-
-echo "$(date) $0 $@"
-
-tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log 2> /dev/null > /dev/console &
-
 function update_server_ip_address () {
 	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
 	MY_IP=''
@@ -64,6 +56,9 @@ function update_server_ip_address () {
 }
 
 if [ "$1" == update-self-ip-address ] ; then
+	exec >> /var/log/ipa-server-run.log 2>&1
+	echo "$(date) $0 $@"
+
 	# Wait until DNS is up and running and resolving
 	HOSTNAME_FQDN=$( hostname -f )
 	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
@@ -74,6 +69,10 @@ if [ "$1" == update-self-ip-address ] ; then
 	echo "FreeIPA server started."
 	exit
 fi
+
+exec >> /var/log/ipa-server-configure-first.log 2>&1
+
+echo "$(date) $0 $@"
 
 function upgrade_server () {
 	systemctl stop dirsrv.target
@@ -185,13 +184,15 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if [ -z "$FORWARDER" ] ; then
-		FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
-	fi
-	if [ "$FORWARDER" == '127.0.0.1' ] ; then
-		FORWARDER=--no-forwarders
-	else
-		FORWARDER=--forwarder=$FORWARDER
+	if [ -f /data/ipa-server-install-options ] && ! grep -Eq '^--forwarder=|^--no-forwarders' /data/ipa-server-install-options ; then
+		if [ -z "$FORWARDER" ] ; then
+			FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
+		fi
+		if [ "$FORWARDER" == '127.0.0.1' ] ; then
+			FORWARDER=--no-forwarders
+		else
+			FORWARDER=--forwarder=$FORWARDER
+		fi
 	fi
 
 	if ( if [ -n "$PASSWORD" ] ; then
