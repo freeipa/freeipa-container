@@ -1,4 +1,0 @@
-.include /lib/systemd/system/httpd.service
-[Service]
-PIDFile=/var/run/httpd/httpd.pid
-
