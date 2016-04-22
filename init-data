@@ -29,6 +29,16 @@ fi
 DATA=/data
 DATA_TEMPLATE=/data-template
 
+if [ -f "$DATA/hostname" ] ; then
+	STORED_HOSTNAME="$( cat $DATA/hostname )"
+	if [ "$HOSTNAME" != "$STORED_HOSTNAME" ] ; then
+		echo "Invocation error: use -h $STORED_HOSTNAME to match the configured hostname". >&2
+		exit 15
+	fi
+else
+	echo "$HOSTNAME" > "$DATA/hostname"
+fi
+
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
 	if [ -n "$PASSWORD" ] || [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
@@ -106,6 +116,25 @@ for i in /run/* /tmp/* ; do
 		rm -rf "$i"
 	fi
 done
+
+SHOW_LOG=0
+if [ -t 1 ] ; then
+	SHOW_LOG=1
+elif [ "$1" == '--show-log' ] ; then
+	shift
+	SHOW_LOG=1
+fi
+if [ $SHOW_LOG == 1 ] ; then
+	for i in /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log ; do
+		if ! [ -f $i ] ; then
+			touch $i
+		fi
+	done
+	(
+	trap '' SIGHUP SIGTERM
+	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log 2> /dev/null < /dev/null &
+	)
+fi
 
 mkdir -p /run/ipa
 if [ "$1" == 'exit-on-finished' ] ; then
