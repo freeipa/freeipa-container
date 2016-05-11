@@ -5,6 +5,8 @@ MAINTAINER Jan Pazdziora
 
 RUN curl -o /etc/yum.repos.d/pvoborni-freeipa-4-3-fedora-23.repo https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-4-3/repo/fedora-23/pvoborni-freeipa-4-3-fedora-23.repo
 RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap && dnf clean all
+# Workaround 1332456
+RUN dnf upgrade -y nss && dnf clean all
 
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
