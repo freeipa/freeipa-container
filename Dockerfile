@@ -4,8 +4,6 @@ FROM fedora:23
 MAINTAINER Jan Pazdziora
 
 RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap && dnf clean all
-# Workaround 1332456
-RUN dnf upgrade -y nss && dnf clean all
 
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
