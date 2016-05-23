@@ -77,16 +77,17 @@ echo "$(date) $0 $@"
 function upgrade_server () {
 	systemctl stop dirsrv.target
 	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
+	DIR=/var/libexec/ipa/ipa-upgrade-rpm-scriptlets.$$
+	mkdir -p $DIR
 	for i in 389-ds-base pki-server ; do
-		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > /tmp/$i.script
-		if [ -s "/tmp/$i.script" ] ; then
-			sed -i '\|/sbin/ldconfig|d' /tmp/$i.script
-			chmod a+x /tmp/$i.script
-			/tmp/$i.script 2
+		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > $DIR/$i.script
+		if [ -s "$DIR/$i.script" ] ; then
+			sed -i '\|/sbin/ldconfig|d' $DIR/$i.script
+			chmod a+x $DIR/$i.script
+			$DIR/$i.script 2
 		fi
 	done
-	# workaround https://fedorahosted.org/freeipa/ticket/5113
-	systemctl start dirsrv.target
+	rm -rf $DIR
 	systemctl start certmonger.service
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
 		PLATFORM=$(python -c 'import ipaplatform; print ipaplatform.NAME;')

@@ -110,7 +110,7 @@ if ! [ -s /etc/machine-id ] ; then
 fi
 
 for i in /run/* /tmp/* ; do
-	if [ "$i" == '/run/lock' ] || [ "$i" == '/run/secrets' ] ; then
+	if [ "$i" == '/run/secrets' ] ; then
 		:
 	else
 		rm -rf "$i"
