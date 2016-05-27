@@ -3,9 +3,22 @@ FROM fedora:23
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns bind bind-dyndb-ldap && dnf clean all
+ENV container=docker
+
+RUN : > /etc/fstab
+
+RUN dnf install -y \
+        bind \
+        bind-dyndb-ldap \
+        findutils \
+        freeipa-server \
+        freeipa-server-dns \
+    && dnf clean all
+
 # Workaround 1332456
-RUN dnf upgrade -y nss && dnf clean all
+RUN dnf upgrade -y \
+        nss \
+    && dnf clean all
 
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
@@ -46,10 +59,6 @@ RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
 RUN for i in /usr/lib/systemd/system/*-domainname.service ; do sed -i 's#^ExecStart=/#ExecStart=-/#' $i ; done
-
-RUN sed -i 's/^UUID=/# UUID=/' /etc/fstab
-
-ENV container docker
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
