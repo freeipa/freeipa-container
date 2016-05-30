@@ -19,7 +19,7 @@ RUN dnf upgrade -y \
     && dnf clean all
 
 RUN groupadd -g 389 dirsrv \
-    && useradd -u 389 -g 389 \
+    && useradd -u 389 -g 389 -M \
         -c 'DS System User' \
         -d '/var/lib/dirsrv' \
         -s '/sbin/nologin' dirsrv \
