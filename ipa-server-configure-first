@@ -25,13 +25,13 @@ trap mark_exit_code ERR EXIT
 set -e
 
 function update_server_ip_address () {
-	CURRENT_RECORD=$( host -t A $HOSTNAME_FQDN )
+	CURRENT_IP=$( dig +short -t A $HOSTNAME_FQDN )
 	MY_IP=''
 	if [ -f /run/ipa/ipa-server-ip ] ; then
 		MY_IP=$( cat /run/ipa/ipa-server-ip )
 	fi
 	MY_IP=${MY_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
-	if [ "$CURRENT_RECORD" == "$HOSTNAME_FQDN has address $MY_IP" ] ; then
+	if [ "$CURRENT_IP" == "$MY_IP" ] ; then
 		return
 	fi
 
@@ -39,17 +39,17 @@ function update_server_ip_address () {
 	kinit -k
 	(
 		echo "server 127.0.0.1"
-		echo "update delete $HOSTNAME_FQDN A"
 		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
+		echo "update delete $HOSTNAME_FQDN A $CURRENT_IP"
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
 	kdestroy -A
 
 	while true ; do
-		NEW_RECORD=$( host -t A $HOSTNAME_FQDN )
-		if [ "$?" -eq 0 ] && [ -n "$NEW_RECORD" ] && ! [ "$NEW_RECORD" == "$CURRENT_RECORD" ] ; then
-			return
+		NEW_IP=$( dig +short -t A $HOSTNAME_FQDN )
+		if [ "$NEW_IP" == "$MY_IP" ] ; then
+			break
 		fi
 		sleep 1
 	done
