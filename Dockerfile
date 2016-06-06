@@ -11,7 +11,7 @@ RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/sysl
 RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN echo '0b6f62258de66f74328b0cf45cc937fae6a30e62 /etc/systemd/system/dbus.service' | sha1sum --quiet -c && rm -vf /etc/systemd/system/dbus.service
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
-RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
+RUN find /etc/systemd/system/* '!' -name '*.wants' -exec rm -rvf {} \;
 RUN for i in basic.target sysinit.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
 
 RUN echo LANG=C > /etc/locale.conf
@@ -43,7 +43,7 @@ RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/s
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
-RUN for i in /usr/lib/systemd/system/*-domainname.service ; do sed -i 's#^ExecStart=/#ExecStart=-/#' $i ; done
+RUN find /usr/lib/systemd/system -name "*-domainname.service" -exec sed -i 's#^ExecStart=/#ExecStart=-/#' {} \;
 
 RUN sed -i 's/^UUID=/# UUID=/' /etc/fstab
 
