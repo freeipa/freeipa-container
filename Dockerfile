@@ -28,7 +28,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service
 
-RUN mkdir -p /usr/lib/systemd/system/systemd-poweroff.service.d && ( echo '[Service]' ; echo 'ExecStartPre=/usr/bin/systemctl switch-root /usr /sbin/exit-with-status' ) > /usr/lib/systemd/system/systemd-poweroff.service.d/exit-via-chroot.conf
+COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
 RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do echo $i ; if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; fi ; mkdir -p $( dirname $i ) ; if [ "$i" == /var/log/ ] ; then mv /var/log /var/log-removed ; else rm -rf $i ; fi ; ln -sf /data${i%/} ${i%/} ; done
@@ -41,8 +41,6 @@ RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
 RUN for i in /usr/lib/systemd/system/*-domainname.service ; do sed -i 's#^ExecStart=/#ExecStart=-/#' $i ; done
-
-RUN sed -i 's/^UUID=/# UUID=/' /etc/fstab
 
 ENV container docker
 
