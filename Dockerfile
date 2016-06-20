@@ -4,7 +4,7 @@ FROM rhel7
 MAINTAINER Jan Pazdziora
 
 RUN cd /etc/yum.repos.d && curl -LO https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-4-3-centos-7/repo/epel-7/pvoborni-freeipa-4-3-centos-7-epel-7.repo
-RUN mkdir -p /run/lock && yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms --enablerepo=group_freeipa-freeipa-4-3-centos-7 -y ipa-server ipa-server-dns bind bind-dyndb-ldap tar && yum clean all
+RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms --enablerepo=group_freeipa-freeipa-4-3-centos-7 -y ipa-server ipa-server-dns bind bind-dyndb-ldap tar && yum clean all
 
 RUN echo '7fe9c3084d2b8ba846c23458be86c8677693f0eb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
@@ -25,7 +25,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service
 
-RUN mkdir -p /usr/lib/systemd/system/systemd-poweroff.service.d && ( echo '[Service]' ; echo 'ExecStartPre=/usr/bin/systemctl switch-root /usr /sbin/exit-with-status' ) > /usr/lib/systemd/system/systemd-poweroff.service.d/exit-via-chroot.conf
+COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
