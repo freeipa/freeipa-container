@@ -8,6 +8,9 @@ check-branches:
 		if git show $$BRANCH:Dockerfile > /dev/null 2>&1 ; then \
 			git diff HEAD:$$i $$BRANCH:Dockerfile ; \
 			! git diff --numstat HEAD $$BRANCH | grep -E -v 'Dockerfile|Makefile' | grep . ; \
+		elif git show origin/$$BRANCH:Dockerfile > /dev/null 2>&1 ; then \
+			git diff HEAD:$$i origin/$$BRANCH:Dockerfile ; \
+			! git diff --numstat HEAD origin/$$BRANCH | grep -E -v 'Dockerfile|Makefile' | grep . ; \
 		else \
 			echo "    skipping, no branch $$BRANCH" ; \
 		fi \
