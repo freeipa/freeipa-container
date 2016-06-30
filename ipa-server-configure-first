@@ -25,7 +25,7 @@ trap mark_exit_code ERR EXIT
 set -e
 
 function update_server_ip_address () {
-	CURRENT_IP=$( dig +short -t A $HOSTNAME_FQDN )
+	CURRENT_IP=$( dig +short -t A $HOSTNAME )
 	MY_IP=''
 	if [ -f /run/ipa/ipa-server-ip ] ; then
 		MY_IP=$( cat /run/ipa/ipa-server-ip )
@@ -38,15 +38,15 @@ function update_server_ip_address () {
 	kdestroy -A
 	kinit -k
 	(
-		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
-		echo "update delete $HOSTNAME_FQDN A $CURRENT_IP"
+		echo "update add $HOSTNAME 180 A $MY_IP"
+		echo "update delete $HOSTNAME A $CURRENT_IP"
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
 	kdestroy -A
 
 	while true ; do
-		NEW_IP=$( dig +short -t A $HOSTNAME_FQDN )
+		NEW_IP=$( dig +short -t A $HOSTNAME )
 		if [ "$NEW_IP" == "$MY_IP" ] ; then
 			break
 		fi
@@ -60,12 +60,11 @@ if [ "$1" == update-self-ip-address ] ; then
 
 	if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 		# Wait until DNS is up and running and resolving
-		HOSTNAME_FQDN=$( hostname -f )
-		while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+		while ! host -t A $HOSTNAME > /dev/null ; do
 			sleep 1
 		done
 		update_server_ip_address
-		host $HOSTNAME_FQDN
+		host $HOSTNAME
 	else
 		echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
 	fi
@@ -182,10 +181,9 @@ else
 	)
 	xargs rm -f < /etc/volume-data-mv-list
 
-	HOSTNAME_FQDN=$( hostname -f )
-	HOSTNAME_SHORT=${HOSTNAME_FQDN%%.*}
-	DOMAIN=${HOSTNAME_FQDN#*.}
-	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME_FQDN" ] ; then
+	HOSTNAME_SHORT=${HOSTNAME%%.*}
+	DOMAIN=${HOSTNAME#*.}
+	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME" ] ; then
 		usage
 	fi
 
@@ -224,7 +222,7 @@ else
 		cp /etc/volume-version /data/volume-version
 		if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
-			while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+			while ! host -t A $HOSTNAME > /dev/null ; do
 				sleep 1
 			done
 			update_server_ip_address
