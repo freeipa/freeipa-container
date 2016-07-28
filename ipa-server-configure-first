@@ -154,15 +154,18 @@ else
 			usage "Too many install options files."
 		fi
 		REPLICA=true
+		OPTIONS_FILE=/data/ipa-replica-install-options
 		if [ $(ls /data/ | grep  \\.gpg$ | wc -l) -gt 1 ] ; then
 			usage "Too many .gpg files"
 		fi
-		if [ ! -f /data/*.gpg ] ; then
-			usage "Cannot create an IPA replica without .gpg file"
+		RUN_CMD="/usr/sbin/ipa-replica-install"
+		if [ -f /data/*.gpg ] ; then
+			RUN_CMD="/usr/sbin/ipa-replica-install /data/*.gpg"
 		fi
-		RUN_CMD="/usr/sbin/ipa-replica-install /data/*.gpg"
 	else
-		if [ ! -f /data/ipa-server-install-options ] && [ -z "$PASSWORD" ] ; then
+		if [ -f /data/ipa-server-install-options ] ; then
+			OPTIONS_FILE=/data/ipa-server-install-options
+		elif [ -z "$PASSWORD" ] ; then
 			usage
 		fi
 		RUN_CMD="/usr/sbin/ipa-server-install"
@@ -185,7 +188,7 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if [ -f /data/ipa-server-install-options ] && ! grep -Eq '^--forwarder=|^--no-forwarders' /data/ipa-server-install-options ; then
+	if ! grep -Eq '^--forwarder=|^--no-forwarders' $OPTIONS_FILE ; then
 		if [ -z "$FORWARDER" ] ; then
 			FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
 		fi
