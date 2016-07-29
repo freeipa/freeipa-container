@@ -188,17 +188,6 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if ! grep -Eq '^--forwarder=|^--no-forwarders' $OPTIONS_FILE ; then
-		if [ -z "$FORWARDER" ] ; then
-			FORWARDER=$( awk '$1 == "nameserver" { print $2; exit }' /etc/resolv.conf )
-		fi
-		if [ "$FORWARDER" == '127.0.0.1' ] ; then
-			FORWARDER=--no-forwarders
-		else
-			FORWARDER=--forwarder=$FORWARDER
-		fi
-	fi
-
 	if ( if [ -n "$PASSWORD" ] ; then
 			if $REPLICA ; then
 				echo "--password=$PASSWORD"
@@ -220,7 +209,6 @@ else
 			grep -q '^--realm=' /data/ipa-server-install-options || \
 			    echo "-r $REALM"
 		fi
-		echo "--setup-dns $FORWARDER"
 		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
