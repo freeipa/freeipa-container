@@ -59,13 +59,17 @@ if [ "$1" == update-self-ip-address ] ; then
 	exec >> /var/log/ipa-server-run.log 2>&1
 	echo "$(date) $0 $@"
 
-	# Wait until DNS is up and running and resolving
-	HOSTNAME_FQDN=$( hostname -f )
-	while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
-		sleep 1
-	done
-	update_server_ip_address
-	host $HOSTNAME_FQDN
+	if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+		# Wait until DNS is up and running and resolving
+		HOSTNAME_FQDN=$( hostname -f )
+		while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+			sleep 1
+		done
+		update_server_ip_address
+		host $HOSTNAME_FQDN
+	else
+		echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
+	fi
 	echo "FreeIPA server started."
 	exit
 fi
@@ -220,10 +224,14 @@ else
 			fi
 		done
 		cp /etc/volume-version /data/volume-version
-		while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
-			sleep 1
-		done
-		update_server_ip_address
+		if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+			while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
+				sleep 1
+			done
+			update_server_ip_address
+		else
+			echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
+		fi
 		systemctl enable ipa-server-update-self-ip-address.service
 		systemctl enable ipa-server-upgrade.service
 		systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
