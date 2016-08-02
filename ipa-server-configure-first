@@ -38,7 +38,6 @@ function update_server_ip_address () {
 	kdestroy -A
 	kinit -k
 	(
-		echo "server 127.0.0.1"
 		echo "update add $HOSTNAME_FQDN 180 A $MY_IP"
 		echo "update delete $HOSTNAME_FQDN A $CURRENT_IP"
 		echo "send"
