@@ -5,6 +5,8 @@ MAINTAINER Jan Pazdziora
 
 RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
 
+# Workaround 1364139
+RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround 1377973
 RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.append(ipautil.CheckedIPAddress(ha, match_local=False))/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
