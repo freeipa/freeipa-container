@@ -214,7 +214,6 @@ else
 		fi
 		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
-		cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i
 			if [ -e $i ] ; then
@@ -224,6 +223,7 @@ else
 		done
 		cp /etc/volume-version /data/volume-version
 		if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			while ! host -t A $HOSTNAME_FQDN > /dev/null ; do
 				sleep 1
 			done
