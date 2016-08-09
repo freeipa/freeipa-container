@@ -14,6 +14,7 @@ RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.serv
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
 RUN rm -fv /usr/lib/systemd/system/sysinit.target.wants/*
+RUN echo 'disable *' > /usr/lib/systemd/system-preset/10-container-disable.preset
 
 RUN echo LANG=C > /etc/locale.conf
 

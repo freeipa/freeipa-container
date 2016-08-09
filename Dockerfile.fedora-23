@@ -13,6 +13,7 @@ RUN echo '0b6f62258de66f74328b0cf45cc937fae6a30e62 /etc/systemd/system/dbus.serv
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target sysinit.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
+RUN echo 'disable *' > /usr/lib/systemd/system-preset/10-container-disable.preset
 
 RUN echo LANG=C > /etc/locale.conf
 
