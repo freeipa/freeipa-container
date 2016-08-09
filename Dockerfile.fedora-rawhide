@@ -3,7 +3,7 @@ FROM fedora:rawhide
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf upgrade -y && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
+RUN mkdir -p /run/lock && dnf upgrade -y && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
 
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
