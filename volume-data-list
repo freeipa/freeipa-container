@@ -16,6 +16,7 @@
 /etc/pki/nssdb/
 /etc/pki/pki-tomcat/
 /etc/rndc.key
+/etc/samba/
 /etc/sssd/
 /etc/sysconfig/
 /etc/systemd/system/
@@ -41,7 +42,9 @@
 /var/lib/ipa/
 /var/lib/ipa-client/
 /var/lib/pki/
+/var/lib/samba/
 /var/lib/sss/db/
+/var/lib/sss/keytabs/
 /var/lib/sss/mc/
 /var/lib/sss/pipes/
 /var/lib/sss/pubconf/
