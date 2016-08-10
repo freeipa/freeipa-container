@@ -4,7 +4,7 @@ FROM rhel7
 MAINTAINER Jan Pazdziora
 
 RUN cd /etc/yum.repos.d && curl -LO https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-4-3-centos-7/repo/epel-7/pvoborni-freeipa-4-3-centos-7-epel-7.repo
-RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms --enablerepo=group_freeipa-freeipa-4-3-centos-7 -y ipa-server ipa-server-dns tar && yum clean all
+RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms --enablerepo=group_freeipa-freeipa-4-3-centos-7 -y ipa-server ipa-server-dns ipa-server-trust-ad tar && yum clean all
 
 RUN echo '7fe9c3084d2b8ba846c23458be86c8677693f0eb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
