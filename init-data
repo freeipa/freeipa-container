@@ -107,8 +107,10 @@ echo "$(date) $0 $@" >> /var/log/ipa-server-configure-first.log
 for i in /run/* /tmp/* ; do
 	if [ "$i" == '/run/secrets' ] ; then
 		:
+	elif [ -f "$i" ] ; then
+		rm -f "$i"
 	else
-		rm -rf "$i"
+		rm -rf "$i/*"
 	fi
 done
 
