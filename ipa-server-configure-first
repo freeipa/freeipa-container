@@ -24,6 +24,8 @@ trap mark_exit_code ERR EXIT
 
 set -e
 
+HOSTNAME=$( uname -n )
+
 function update_server_ip_address () {
 	CURRENT_IP=$( dig +short -t A $HOSTNAME )
 	MY_IP=''
