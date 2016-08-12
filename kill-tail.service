@@ -1,0 +1,12 @@
+[Unit]
+Description=Kill the tail -f which shows the logs
+Before=shutdown.target
+DefaultDependencies=no
+ConditionPathExists=/run/ipa/tail-log.pid
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'kill -9 $( cat /run/ipa/tail-log.pid )'
+
+[Install]
+WantedBy=shutdown.target

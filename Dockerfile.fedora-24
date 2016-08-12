@@ -26,10 +26,11 @@ RUN /sbin/ldconfig -X
 
 COPY init-data ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
 RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-*
-COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
+COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service kill-tail.service /usr/lib/systemd/system/
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
+RUN mkdir -p /usr/lib/systemd/system/shutdown.target.wants && ln -sf /usr/lib/systemd/system/kill-tail.service /usr/lib/systemd/system/shutdown.target.wants/kill-tail.service
 
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service

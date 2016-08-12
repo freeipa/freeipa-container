@@ -114,6 +114,7 @@ for i in /run/* /tmp/* ; do
 	fi
 done
 
+mkdir -p /run/ipa
 SHOW_LOG=0
 if [ -t 1 ] ; then
 	SHOW_LOG=1
@@ -130,10 +131,10 @@ if [ $SHOW_LOG == 1 ] ; then
 	(
 	trap '' SIGHUP SIGTERM
 	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log 2> /dev/null < /dev/null &
+	echo $! > /run/ipa/tail-log.pid
 	)
 fi
 
-mkdir -p /run/ipa
 if [ "$1" == 'exit-on-finished' ] ; then
 	touch /run/ipa/$1
 else
