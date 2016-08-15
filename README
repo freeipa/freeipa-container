@@ -29,17 +29,19 @@ parameter per line. You probably want at least
     --ds-password=The-directory-server-password
     --admin-password=The-admin-password
 
-If you want to create a replica instead of master, put the GPG-encrypted
-replica information file to this directory, plus file
+If you want to create a replica instead of master, put file
 
     ipa-replica-install-options
 
-to instruct the container to create a replica. That file should contain
-command line parameters to the ipa-replica-install command, possibly at
-least
+to this directory to instruct the container to create a replica. That
+file should contain command line parameters to the ipa-replica-install
+command, possibly at least
 
     --password=The-directory-server-password
     --admin-password=The-admin-password
+
+If your setup is of Domain Level < 1, GPG-encrypted replica information
+file is also needed.
 
 You then run the container with
 
