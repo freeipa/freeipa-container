@@ -51,7 +51,7 @@ DATA_TEMPLATE=/data-template
 if [ -f "$DATA/hostname" ] ; then
 	STORED_HOSTNAME="$( cat $DATA/hostname )"
 	if [ "$HOSTNAME" != "$STORED_HOSTNAME" ] ; then
-		echo "Invocation error: use -h $STORED_HOSTNAME to match the configured hostname". >&2
+		echo "Invocation error: use -h $STORED_HOSTNAME to match the configured hostname." >&2
 		exit 15
 	fi
 else
