@@ -169,8 +169,6 @@ else
 	else
 		if [ -f /data/ipa-server-install-options ] ; then
 			OPTIONS_FILE=/data/ipa-server-install-options
-		elif [ -z "$PASSWORD" ] ; then
-			usage
 		fi
 		RUN_CMD="/usr/sbin/ipa-server-install"
 	fi
@@ -191,14 +189,7 @@ else
 
 	REALM=${DOMAIN^^}
 
-	if ( if [ -n "$PASSWORD" ] ; then
-			if $REPLICA ; then
-				echo "--password=$PASSWORD"
-			else
-				echo "--ds-password=$PASSWORD"
-			fi
-			echo "--admin-password=$PASSWORD"
-		fi
+	if (
 		if [ -n "$DEBUG" ] ; then
 			echo "--debug"
 		fi
