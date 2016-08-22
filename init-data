@@ -73,6 +73,9 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 			echo "$IPA_SERVER_INSTALL_OPTS" >> $DATA/ipa-server-install-options
 		fi
 	fi
+	if [ -n "$DEBUG" ] ; then
+		echo "--debug" >> $DATA/ipa-server-install-options
+	fi
 fi
 if [ -f "$DATA/volume-version" ] ; then
 	DATA_VERSION=$(cat $DATA/volume-version)

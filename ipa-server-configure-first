@@ -190,9 +190,6 @@ else
 	REALM=${DOMAIN^^}
 
 	if (
-		if [ -n "$DEBUG" ] ; then
-			echo "--debug"
-		fi
 		if $REPLICA ; then
 			cat /data/ipa-replica-install-options
 			echo "--skip-conncheck"
