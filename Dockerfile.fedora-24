@@ -3,7 +3,7 @@ FROM fedora:24
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
+RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
 
 # Workaround 1353956
 RUN sed -i '/my @rdnconditions/a;' /usr/share/dirsrv/updates/91reindex.pl
