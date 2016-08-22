@@ -46,6 +46,48 @@ else
 fi
 
 DATA=/data
+COMMAND=
+if [ -n "$1" ] ; then
+	case "$1" in
+		ipa-server-install)
+			COMMAND="$1"
+			shift
+		;;
+		ipa-replica-install)
+			COMMAND="$1"
+			shift
+		;;
+		-*)
+			:
+		;;
+		*)
+		echo "Invocation error: command [$1] not supported." >&2
+		exit 8
+
+	esac
+fi
+if [ -z "$COMMAND" ] ; then
+	if [ -f $DATA/ipa-replica-install-options ] ; then
+		COMMAND=ipa-replica-install
+	else
+		COMMAND=ipa-server-install
+	fi
+fi
+
+if [ -n "$IPA_SERVER_INSTALL_OPTS" -a "$COMMAND" != 'ipa-server-install' ] ; then
+	echo "Invocation error: IPA_SERVER_INSTALL_OPTS should only be used with ipa-server-install." >&2
+	exit 7
+fi
+
+OPTIONS_FILE=/run/ipa/$COMMAND-options
+
+DATA_OPTIONS_FILE=$DATA/$COMMAND-options
+touch $OPTIONS_FILE
+chmod 600 $OPTIONS_FILE
+for i in "$@" ; do
+	printf '%q\n' "$i" >> $OPTIONS_FILE
+done
+
 DATA_TEMPLATE=/data-template
 
 if [ -f "$DATA/hostname" ] ; then
@@ -60,21 +102,30 @@ fi
 
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
-	if [ -n "$PASSWORD" ] || [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
-		touch $DATA/ipa-server-install-options
-		chmod 600 $DATA/ipa-server-install-options
-		if [ -n "$PASSWORD" ] ; then
-			echo "--admin-password='$PASSWORD'" >> $DATA/ipa-server-install-options
-			if ! grep -q '^--ds-password' $DATA/ipa-server-install-options ; then
-				echo "--ds-password='$PASSWORD'" >> $DATA/ipa-server-install-options
+	if [ -n "$PASSWORD" ] ; then
+		if [ "$COMMAND" == 'ipa-server-install' ] ; then
+			printf '%q\n' "--admin-password='$PASSWORD'" >> $OPTIONS_FILE
+			if ! grep -q '^--ds-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
+				printf '%q\n' "--ds-password='$PASSWORD'" >> $OPTIONS_FILE
 			fi
+		elif [ "$COMMAND" == 'ipa-replica-install' ] ; then
+			printf '%q\n' "--password='$PASSWORD'" >> $OPTIONS_FILE
+			if ! grep -q '^--admin-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
+				printf '%q\n' "--admin-password='$PASSWORD'" >> $OPTIONS_FILE
+			fi
+		else
+			echo "Warning: ignoring environment variable PASSWORD." >&2
 		fi
-		if [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
-			echo "$IPA_SERVER_INSTALL_OPTS" >> $DATA/ipa-server-install-options
+	fi
+	if [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
+		if [ "$COMMAND" == 'ipa-server-install' -o "$COMMAND" = 'ipa-replica-install' ] ; then
+			echo "$IPA_SERVER_INSTALL_OPTS" >> $OPTIONS_FILE
+		else
+			echo "Warning: ignoring environment variable IPA_SERVER_INSTALL_OPTS." >&2
 		fi
 	fi
 	if [ -n "$DEBUG" ] ; then
-		echo "--debug" >> $DATA/ipa-server-install-options
+		echo "--debug" >> $OPTIONS_FILE
 	fi
 fi
 if [ -f "$DATA/volume-version" ] ; then

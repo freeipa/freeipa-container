@@ -152,25 +152,20 @@ if [ -f /etc/ipa/ca.crt ] ; then
 	echo "The FreeIPA server was already configured." >&2
 	exit 11
 else
-	REPLICA=false
-	if [ -f /data/ipa-replica-install-options ] ; then
+	COMMAND=ipa-server-install
+	RUN_CMD="/usr/sbin/ipa-server-install"
+	if [ -f /run/ipa/ipa-replica-install-options ] ; then
 		if [ -f /data/ipa-server-install-options ] ; then
 			usage "Too many install options files."
 		fi
-		REPLICA=true
-		OPTIONS_FILE=/data/ipa-replica-install-options
 		if [ $(ls /data/ | grep  \\.gpg$ | wc -l) -gt 1 ] ; then
 			usage "Too many .gpg files"
 		fi
+		COMMAND=ipa-replica-install
 		RUN_CMD="/usr/sbin/ipa-replica-install"
 		if [ -f /data/*.gpg ] ; then
 			RUN_CMD="/usr/sbin/ipa-replica-install /data/*.gpg"
 		fi
-	else
-		if [ -f /data/ipa-server-install-options ] ; then
-			OPTIONS_FILE=/data/ipa-server-install-options
-		fi
-		RUN_CMD="/usr/sbin/ipa-server-install"
 	fi
 
 	(
@@ -187,20 +182,12 @@ else
 		usage
 	fi
 
-	REALM=${DOMAIN^^}
-
 	if (
-		if $REPLICA ; then
-			cat /data/ipa-replica-install-options
-			echo "--skip-conncheck"
-		else
-			if [ -f /data/ipa-server-install-options ] ; then
-				cat /data/ipa-server-install-options
-			fi
-			grep -q '^--realm=' /data/ipa-server-install-options || \
-			    echo "-r $REALM"
+		if [ -f /data/$COMMAND-options ] ; then
+			cat /data/$COMMAND-options
 		fi
-		) | xargs $RUN_CMD -U $IPA_SERVER_INSTALL_OPTS ; then
+		cat /run/ipa/$COMMAND-options
+		) | xargs $RUN_CMD -U ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i
