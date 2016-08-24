@@ -21,6 +21,12 @@ set -e
 
 cd /
 
+case "$1" in
+	/bin/install.sh|/bin/uninstall.sh|/bin/bash|bash)
+		exec "$@"
+	;;
+esac
+
 if ls -dZ /sys/fs/cgroup | grep -q :svirt_sandbox_file_t: ; then
 	echo "Invocation error: use -v /sys/fs/cgroup:/sys/fs/cgroup:ro parameter to docker run." >&2
 	exit 9

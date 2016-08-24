@@ -179,7 +179,7 @@ else
 	HOSTNAME_SHORT=${HOSTNAME%%.*}
 	DOMAIN=${HOSTNAME#*.}
 	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME" ] ; then
-		usage
+		usage "The container has to have fully-qualified hostname defined."
 	fi
 
 	STDIN=/dev/stdin

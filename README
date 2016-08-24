@@ -99,6 +99,19 @@ address. Starting the server would then be
 	-p 88:88/udp -p 464:464/udp -p 123:123/udp -p 7389:7389 \
 	-p 9443:9443 -p 9444:9444 -p 9445:9445 ...
 
+# Configuring and running with atomic
+
+On platforms with `atomic` command available, the container can be
+configured with
+
+    atomic install freeipa-server --hostname ipa.example.test [opts]
+
+It will use /var/lib/freeipa-server to store the configuration
+and data. The container then gets started with
+
+    atomic run freeipa-server
+
+Version 1.12 of atomic is needed.
 
 # IPA-enrolled client in Docker
 

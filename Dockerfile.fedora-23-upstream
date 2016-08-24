@@ -21,7 +21,8 @@ RUN echo LANG=C > /etc/locale.conf
 RUN /sbin/ldconfig -X
 
 COPY init-data ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
-RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-*
+COPY install.sh uninstall.sh /bin/
+RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh
 COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service kill-tail.service /usr/lib/systemd/system/
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
@@ -58,5 +59,13 @@ STOPSIGNAL RTMIN+3
 ENTRYPOINT [ "/usr/sbin/init-data" ]
 RUN uuidgen > /data-template/build-id
 
-LABEL INSTALL "docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} exit-on-finished"
-LABEL RUN "docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME}"
+# Invocation:
+# docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
+
+# For atomic, we run INSTALL --privileged but install.sh will start another unprivileged container.
+# We do it this way to be able to set hostname for the unprivileged container.
+LABEL INSTALL 'docker run -ti --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} -e NAME=${NAME} -e IMAGE=${IMAGE} ${IMAGE} /bin/install.sh'
+LABEL RUN 'docker run ${RUN_OPTS} --rm --name ${NAME} -v /var/lib/${NAME}:/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp ${IMAGE}'
+LABEL RUN_OPTS_FILE '/var/lib/${NAME}/docker-run-opts'
+LABEL STOP 'docker stop ${NAME}'
+LABEL UNINSTALL 'docker run --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} ${IMAGE} /bin/uninstall.sh'
