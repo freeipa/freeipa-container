@@ -177,13 +177,7 @@ fi
 
 echo "$(date) $0 $@" >> /var/log/ipa-server-configure-first.log
 
-SHOW_LOG=0
-if [ -t 1 ] ; then
-	SHOW_LOG=1
-elif [ "$1" == '--show-log' ] ; then
-	shift
-	SHOW_LOG=1
-fi
+SHOW_LOG=${SHOW_LOG:-1}
 if [ $SHOW_LOG == 1 ] ; then
 	for i in /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log ; do
 		if ! [ -f $i ] ; then
