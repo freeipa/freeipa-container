@@ -182,12 +182,20 @@ else
 		usage
 	fi
 
-	if (
+	STDIN=/dev/stdin
+	STDOUT=/dev/stdout
+	STDERR=/dev/stderr
+	if [ -e /dev/console ] && ( test -t 0 ) < /dev/console ; then
+		STDIN=/dev/console
+		STDOUT=/dev/console
+		STDERR=/dev/console
+	fi
+	if xargs -a <(
 		if [ -f /data/$COMMAND-options ] ; then
 			cat /data/$COMMAND-options
 		fi
 		cat /run/ipa/$COMMAND-options
-		) | xargs $RUN_CMD -U ; then
+		) $RUN_CMD < $STDIN > $STDOUT 2> $STDERR ; then
 		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i

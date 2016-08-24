@@ -19,47 +19,54 @@ Create directory which will hold the server data:
 
     mkdir /var/lib/ipa-data
 
-You can optionally put into this directory a file
-
-    ipa-server-install-options
-
-with command line parameters to ipa-server-install command, one
-parameter per line. You probably want at least
-
-    --ds-password=The-directory-server-password
-    --admin-password=The-admin-password
-
-If you want to create a replica instead of master, put file
-
-    ipa-replica-install-options
-
-to this directory to instruct the container to create a replica. That
-file should contain command line parameters to the ipa-replica-install
-command, possibly at least
-
-    --password=The-directory-server-password
-    --admin-password=The-admin-password
-
-If your setup is of Domain Level < 1, GPG-encrypted replica information
-file is also needed.
-
 You then run the container with
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test \
        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-       -v /var/lib/ipa-data:/data:Z freeipa-server
+       -v /var/lib/ipa-data:/data:Z freeipa-server [ opts ]
 
-If you do not specify the passwords in the ipa-server-install-options
-file, use `PASSWORD` environment variable via the `-e` option:
+Standard `ipa-server-install` will be started and you can configure
+the server. The `docker run` invocation also accepts command line
+parameters that will be passed to `ipa-server-install`, so
+unattended invocation is possible. Optionally, you can put into the
+directory mounted into /data (/var/lib/ipa-data in this example) a file
+
+    ipa-server-install-options
+
+with command line parameters to ipa-server-install command,
+for example
+
+    --realm=EXAMPLE.TEST
+    --ds-password=The-directory-server-password
+    --admin-password=The-admin-password
+
+and these options will also be used as parameters to `ipa-server-install`.
+
+If you want to instruct the container to create a replica, specify the
+command in the `docker run` parameters:
 
     docker run --name freeipa-server-container -ti \
-       -h ipa.example.test -e PASSWORD=Secret123 \
+       -h ipa.example.test \
        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-       -v /var/lib/ipa-data:/data:Z freeipa-server
+       -v /var/lib/ipa-data:/data:Z \
+       freeipa-server ipa-replica-install [ opts ]
 
-If the above fails with error about invalid value for flag -v
-and bad format for volumes, run
+The options will be passed to `ipa-replica-install` in the container.
+You can also put options to file
+
+    ipa-replica-install-options
+
+in the directory mounted to /data to this directory, for example with
+
+    --password=The-directory-server-password
+    --admin-password=The-admin-password
+
+If your setup is of Domain Level < 1, GPG-encrypted replica information
+file is also needed in the directory mounted to /data.
+
+If the above commands fail with error about invalid value for
+flag -v and bad format for volumes, run
 
     chcon -t svirt_sandbox_file_t /var/lib/ipa-data
 
@@ -71,11 +78,8 @@ later with `docker start`, `docker stop` and other commands.
 Command `ipa-server-install` is invoked non-interactively the first
 time the container is run.
 
-You can pass environment variable IPA_SERVER_INSTALL_OPTS with
-additional options that will be passed to ipa-server-install.
-
-The `-ti` parameters are optional and are used for get a terminal
-(useful for experimenting in the container).
+The `-ti` parameters are optional and are used for get a terminal,
+for interactive configuration sessions.
 
 The container can the be started and stopped:
 
