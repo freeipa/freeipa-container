@@ -40,7 +40,8 @@ if [ -z "$HOSTNAME_PARAM" ] ; then
 	exit 1
 fi
 
-echo "--hostname=$HOSTNAME_PARAM" > "$HOST$DATADIR"/docker-run-opts
+echo "--rm" > "$HOST$DATADIR"/docker-run-opts
+echo "--hostname=$HOSTNAME_PARAM" >> "$HOST$DATADIR"/docker-run-opts
 echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
 
 chroot "$HOST" /usr/bin/docker run -ti --rm \
