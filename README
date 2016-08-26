@@ -105,6 +105,14 @@ address. Starting the server would then be
 	-p 88:88/udp -p 464:464/udp -p 123:123/udp -p 7389:7389 \
 	-p 9443:9443 -p 9444:9444 -p 9445:9445 ...
 
+If you have existing container with data volume, it should be safe
+to shut it down and run new one based on newer image, with the same
+data directory bind-mounted to /data. The container will detect
+that it is running with data produced by different image and attempt
+to upgrade the configuration and data. Of course, keeping backup
+of the data directory for cases when the upgrade process fails
+is recommended.
+
 # Configuring and running with atomic
 
 On platforms with `atomic` command available, the container can be
