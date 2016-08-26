@@ -15,6 +15,10 @@ To build the image, run in the root of the repository:
 
     docker build -t freeipa-server .
 
+The repository contains multiple `Dockerfile`s for various
+operating systems. Use `-f` option to `docker build` to pick
+different than default target.
+
 Create directory which will hold the server data:
 
     mkdir /var/lib/ipa-data
