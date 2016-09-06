@@ -42,6 +42,9 @@ for i in /run/* /tmp/* ; do
 	fi
 done
 
+# Workaround 1373562
+mkdir -p /run/lock
+
 mkdir -p /run/ipa
 
 if [ "$1" == 'exit-on-finished' ] ; then
