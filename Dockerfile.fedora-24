@@ -5,8 +5,6 @@ MAINTAINER Jan Pazdziora
 
 RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
 
-# Workaround 1353956
-RUN sed -i '/my @rdnconditions/a;' /usr/share/dirsrv/updates/91reindex.pl
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
