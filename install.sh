@@ -46,4 +46,4 @@ echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
 
 chroot "$HOST" /usr/bin/docker run -ti --rm \
 	-e NAME="$NAME" -e IMAGE="$IMAGE" \
-	-v "$DATADIR":/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp -h "$HOSTNAME_PARAM" "$IMAGE" exit-on-finished "$@"
+	-v "$DATADIR":/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /dev/urandom:/dev/random:ro --tmpfs /run --tmpfs /tmp -h "$HOSTNAME_PARAM" "$IMAGE" exit-on-finished "$@"
