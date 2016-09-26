@@ -118,12 +118,23 @@ is recommended.
 On platforms with `atomic` command available, the container can be
 configured with
 
-    atomic install freeipa-server --hostname ipa.example.test [opts]
+    atomic install [ --name $THE_NAME ] freeipa-server \
+	[ keywords for docker operation ] \
+	[ ipa-server-install | ipa-replica-install ] \
+	[ opts ]
 
-It will use /var/lib/freeipa-server to store the configuration
-and data. The container then gets started with
+The keywords for docker operations are:
 
-    atomic run freeipa-server
+    hostname $IPA_SERVER_HOSTNAME - docker run -h $IPA_SERVER_HOSTNAME
+    net-host - docker run --net=host, also uses host's hostname
+    publish - docker run -P; publish all ports of the IPA container
+              container on host's interfaces
+    cap-add $CAPABILITY - docker run --cap-add=$CAPAABILITY
+
+The container will use /var/lib/$THE_NAME to store the configuration
+and data. It the gets started with
+
+    atomic run [ --name $THE_NAME ] freeipa-server
 
 Version 1.12 of atomic is needed.
 
