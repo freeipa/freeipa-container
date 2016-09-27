@@ -75,16 +75,15 @@ while [[ "$#" -ne '0' ]] ; do
 	esac
 done
 
-if [ -z "$HOSTNAME_PARAM" ] ; then
+if [ -n "$HOSTNAME_PARAM" ] ; then
+	echo "-h $HOSTNAME_PARAM" >> "$HOST$DATADIR"/docker-run-opts
+	echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
+	OPTS="-h $HOSTNAME_PARAM"
+elif [ -z "$NET_HOST_PARAM" ] ; then
 	echo "Please specify the hostname for the server with --hostname parameter." >&2
 	echo "Usage: atomic install$NAME_PARAM $IMAGE --hostname FQDN.of.the.IPA.server" >&2
 	exit 1
 fi
-
-echo "--rm" > "$HOST$DATADIR"/docker-run-opts
-echo "-h $HOSTNAME_PARAM" >> "$HOST$DATADIR"/docker-run-opts
-echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
-OPTS="-h $HOSTNAME_PARAM"
 
 if $NET_HOST_PARAM ; then
 	echo "--net=host" >> "$HOST$DATADIR"/docker-run-opts
@@ -110,6 +109,8 @@ if [ -n "$IP_ADDRESS_PARAM" ] ; then
 	echo "-e IPA_SERVER_IP=$IP_ADDRESS_PARAM" >> "$HOST$DATADIR"/docker-run-opts
 	OPTS="$OPTS -e IPA_SERVER_IP=$IP_ADDRESS_PARAM"
 fi
+
+echo "--rm" >> "$HOST$DATADIR"/docker-run-opts
 
 set -x
 chroot "$HOST" /usr/bin/docker run -ti --rm $NAME_PARAM \
