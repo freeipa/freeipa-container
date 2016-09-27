@@ -44,6 +44,7 @@ echo "--rm" > "$HOST$DATADIR"/docker-run-opts
 echo "--hostname=$HOSTNAME_PARAM" >> "$HOST$DATADIR"/docker-run-opts
 echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
 
+set -x
 chroot "$HOST" /usr/bin/docker run -ti --rm \
 	-e NAME="$NAME" -e IMAGE="$IMAGE" \
 	-v "$DATADIR":/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /dev/urandom:/dev/random:ro --tmpfs /run --tmpfs /tmp -h "$HOSTNAME_PARAM" "$IMAGE" exit-on-finished "$@"
