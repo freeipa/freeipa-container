@@ -12,6 +12,11 @@ if [ -f "$HOST$DATADIR"/etc/ipa/default.conf ] ; then
 	exit 1
 fi
 
+NAME_PARAM=''
+if [ -n "$NAME" ] ; then
+	NAME_PARAM=" --name $NAME"
+fi
+
 mkdir -p "$HOST$DATADIR"
 
 HOSTNAME_PARAM=
@@ -31,10 +36,6 @@ while [[ $i -lt $# ]] ; do
 done
 
 if [ -z "$HOSTNAME_PARAM" ] ; then
-	NAME_PARAM=''
-	if [ -n "$NAME" ] ; then
-		NAME_PARAM=" --name $NAME"
-	fi
 	echo "Please specify the hostname for the server with --hostname parameter." >&2
 	echo "Usage: atomic install$NAME_PARAM $IMAGE --hostname FQDN.of.the.IPA.server" >&2
 	exit 1
@@ -45,6 +46,6 @@ echo "--hostname=$HOSTNAME_PARAM" >> "$HOST$DATADIR"/docker-run-opts
 echo "$HOSTNAME_PARAM" > "$HOST$DATADIR"/hostname
 
 set -x
-chroot "$HOST" /usr/bin/docker run -ti --rm \
+chroot "$HOST" /usr/bin/docker run -ti --rm $NAME_PARAM \
 	-e NAME="$NAME" -e IMAGE="$IMAGE" \
 	-v "$DATADIR":/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /dev/urandom:/dev/random:ro --tmpfs /run --tmpfs /tmp -h "$HOSTNAME_PARAM" "$IMAGE" exit-on-finished "$@"
