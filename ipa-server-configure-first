@@ -119,6 +119,9 @@ if [ "$1" == upgrade ] ; then
 	fi
 	if [ -f /data/etc/resolv.conf.ipa ] ; then
 		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
+		if ! grep -q "\b$HOSTNAME\b" /etc/hosts ; then
+			echo "127.0.0.2 $HOSTNAME" >> /etc/hosts
+		fi
 	fi
 	# Removing kdcinfo.* which is likely to hold old IP address
 	rm -rf /var/lib/sss/pubconf/kdcinfo.*
