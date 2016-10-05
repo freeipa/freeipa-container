@@ -2,6 +2,11 @@
 
 set -e
 
+if [ "$1" == 'help' ] ; then
+	cat /usr/share/ipa/atomic-install-help
+	exit
+fi
+
 if [ -z "$DATADIR" -o -z "$HOST" ] ; then
 	echo "Not sure where FreeIPA data should be stored." >&2
 	exit 1
