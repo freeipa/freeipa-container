@@ -127,7 +127,7 @@ The keywords for docker operations are:
 
     hostname $IPA_SERVER_HOSTNAME - docker run -h $IPA_SERVER_HOSTNAME
     net-host - docker run --net=host, also uses host's hostname
-    publish - docker run -P; publish all ports of the IPA container
+    publish - docker run -p 443:443 ... ; publish all ports of the IPA
               container on host's interfaces
     cap-add $CAPABILITY - docker run --cap-add=$CAPAABILITY
 
