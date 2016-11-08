@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if setpriv --dump | grep -q sys_admin ; then
+	$0.orig "$@"
+else
+	echo "Skipping invocation of $0 $@ in unprivileged container." >&2
+	exit
+fi
