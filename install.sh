@@ -3,7 +3,11 @@
 set -e
 
 if [ "$1" == 'help' ] ; then
-	cat /usr/share/ipa/atomic-install-help
+	if [ -n "$IMAGE" ] ; then
+		sed "s/\$IMAGE/$IMAGE/" /usr/share/ipa/atomic-install-help
+	else
+		cat /usr/share/ipa/atomic-install-help
+	fi
 	exit
 fi
 

@@ -4,7 +4,7 @@ Configuring and running IPA server with atomic
 On platforms with atomic command available, the container can be
 configured with
 
-    atomic install [ --name $THE_NAME ] freeipa-server \
+    atomic install [ --name $THE_NAME ] $IMAGE \
 	[ keywords for docker operation ] \
 	[ ipa-server-install | ipa-replica-install ] \
 	[ opts ]
