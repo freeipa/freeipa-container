@@ -129,7 +129,7 @@ The keywords for docker operations are:
     net-host - docker run --net=host, also uses host's hostname
     publish - docker run -p 443:443 ... ; publish all ports of the IPA
               container on host's interfaces
-    cap-add $CAPABILITY - docker run --cap-add=$CAPAABILITY
+    cap-add $CAPABILITY - docker run --cap-add=$CAPABILITY
 
 The container will use /var/lib/$THE_NAME to store the configuration
 and data. It the gets started with
