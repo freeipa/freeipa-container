@@ -97,17 +97,58 @@ for i in "$@" ; do
 	printf '%q\n' "$i" >> $OPTIONS_FILE
 done
 
-DATA_TEMPLATE=/data-template
+_HOSTNAME_IN_NEXT=false
+for i in $( cat $OPTIONS_FILE ) ; do
+	if $_HOSTNAME_IN_NEXT ; then
+		IPA_SERVER_HOSTNAME="$i"
+		break
+	fi
+        case "$i" in
+                --hostname)
+			_HOSTNAME_IN_NEXT=true
+                        ;;
+                --hostname=*)
+                        IPA_SERVER_HOSTNAME="${i#--hostname=}"
+                        break
+                        ;;
+	esac
+done
 
 if [ -f "$DATA/hostname" ] ; then
 	STORED_HOSTNAME="$( cat $DATA/hostname )"
-	if [ "$HOSTNAME" != "$STORED_HOSTNAME" ] ; then
-		echo "Invocation error: use -h $STORED_HOSTNAME to match the configured hostname." >&2
+	if ! [ "$HOSTNAME" == "$STORED_HOSTNAME" ] ; then
+		# Attempt to set hostname from within container, this
+		# will pass if the container has SYS_ADMIN capability.
+		if hostname $STORED_HOSTNAME 2> /dev/null ; then
+			HOSTNAME=$( hostname )
+			if [ "$HOSTNAME" == "$STORED_HOSTNAME" ] && ! [ "$IPA_SERVER_HOSTNAME" == "$HOSTNAME" ] ; then
+				echo "Using stored hostname $STORED_HOSTNAME, ignoring $IPA_SERVER_HOSTNAME."
+			fi
+		fi
+	fi
+	IPA_SERVER_HOSTNAME=$STORED_HOSTNAME
+fi
+
+HOSTNAME_SHORT=${HOSTNAME%%.*}
+if [ "$HOSTNAME_SHORT" == "$HOSTNAME" ] ; then
+	if [ -z "$IPA_SERVER_HOSTNAME" ] ; then
+		echo "Container invoked without fully-qualified hostname" >&2
+		echo "   and without specifying hostname to use." >&2
+		echo "Consider using -h FQDN option to docker run." >&2
 		exit 15
 	fi
-else
+	# Container is run without FQDN set, we try to "set" it in /etc/hosts
+	cp /etc/hosts /etc/hosts.dist
+	sed "s/$HOSTNAME/$IPA_SERVER_HOSTNAME $IPA_SERVER_HOSTNAME. &/" /etc/hosts.dist > /etc/hosts
+	rm -f /etc/hosts.dist
+	HOSTNAME=$IPA_SERVER_HOSTNAME
+fi
+
+if ! [ -f "$DATA/hostname" ] ; then
 	echo "$HOSTNAME" > "$DATA/hostname"
 fi
+
+DATA_TEMPLATE=/data-template
 
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
