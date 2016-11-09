@@ -15,13 +15,14 @@ RUN echo LANG=C > /etc/locale.conf
 
 RUN /sbin/ldconfig -X
 
-COPY init-data ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
+COPY init-data /usr/local/sbin/init
+COPY ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
 RUN mv /bin/hostnamectl /bin/hostnamectl.orig
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /bin/hostnamectl
 ADD hostnamectl-wrapper /usr/bin/domainname
-RUN chmod -v +x /usr/sbin/init-data /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
+RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
 COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service kill-tail.service /usr/lib/systemd/system/
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
@@ -52,7 +53,7 @@ EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 944
 VOLUME [ "/tmp", "/run", "/data" ]
 
 STOPSIGNAL RTMIN+3
-ENTRYPOINT [ "/usr/sbin/init-data" ]
+ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 
 # Invocation:
