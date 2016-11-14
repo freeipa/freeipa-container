@@ -16,6 +16,9 @@ The keywords for docker operations are:
     publish - docker run -p 443:443 ... ; publish all ports of the IPA
               container on host's interfaces
     cap-add $CAPABILITY - docker run --cap-add=$CAPABILITY
+    ip-address $IPA_SERVER_EXTERNAL_IP_ADDRESS -
+              docker run -e IPA_SERVER_IP=$IPA_SERVER_EXTERNAL_IP_ADDRESS;
+	      IP address to set in DNS as server's IP address.
 
 The container will use /var/lib/$THE_NAME to store the configuration
 and data. It the gets started with
