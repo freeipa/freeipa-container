@@ -1,0 +1,65 @@
+{
+    "kind": "ImageStreamList",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "freeipa-server",
+                "annotations": {
+                    "openshift.io/display-name": "FreeIPA Server"
+                }
+            },
+            "spec": {
+                "tags": [
+                    {
+                        "name": "latest",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 25",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "name": "fedora-25"
+                        }
+                    },
+                    {
+                        "name": "fedora-25",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 25",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:fedora-25"
+                        }
+                    },
+                    {
+                        "name": "fedora-24",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 24",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:fedora-24"
+                        }
+                    },
+                    {
+                        "name": "centos-7",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on CentOS 7",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:centos-7"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
