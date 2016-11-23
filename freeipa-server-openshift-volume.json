@@ -1,0 +1,20 @@
+{
+    "kind": "PersistentVolume",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "pv0001"
+    },
+    "spec": {
+        "capacity": {
+            "storage": "10Gi"
+        },
+        "accessModes": [
+            "ReadWriteOnce",
+            "ReadWriteMany"
+        ],
+        "persistentVolumeReclaimPolicy": "Reclaim",
+        "hostPath": {
+            "path": "/opt/freeipa-server-data"
+        }
+    }
+}
