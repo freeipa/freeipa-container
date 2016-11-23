@@ -150,12 +150,12 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 	if [ -n "$PASSWORD" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' ] ; then
 			printf '%q\n' "--admin-password='$PASSWORD'" >> $OPTIONS_FILE
-			if ! grep -q '^--ds-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
+			if ! grep -sq '^--ds-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
 				printf '%q\n' "--ds-password='$PASSWORD'" >> $OPTIONS_FILE
 			fi
 		elif [ "$COMMAND" == 'ipa-replica-install' ] ; then
 			printf '%q\n' "--password='$PASSWORD'" >> $OPTIONS_FILE
-			if ! grep -q '^--admin-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
+			if ! grep -sq '^--admin-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
 				printf '%q\n' "--admin-password='$PASSWORD'" >> $OPTIONS_FILE
 			fi
 		else
