@@ -1,0 +1,4 @@
+[Service]
+ExecStart=/bin/true
+Type=oneshot
+RemainAfterExit=yes

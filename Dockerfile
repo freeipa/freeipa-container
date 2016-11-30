@@ -10,6 +10,7 @@ RUN yum install -y ipa-client dbus-python perl 'perl(Data::Dumper)' 'perl(Time::
 
 ADD dbus.service /etc/systemd/system/dbus.service
 RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
+ADD rhel-domainname.service /etc/systemd/system/rhel-domainname.service
 
 ADD systemctl /usr/bin/systemctl
 ADD ipa-client-configure-first /usr/sbin/ipa-client-configure-first
