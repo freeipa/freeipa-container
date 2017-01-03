@@ -208,6 +208,14 @@ else
 			fi
 		done
 		cp /etc/volume-version /data/volume-version
+
+		if ! [ -f /etc/ipa/ca.crt ] && [ -f /root/ipa.csr ] ; then
+			cp -p /root/ipa.csr /data/ipa.csr
+			echo "FreeIPA CA CSR stored in file ipa.csr located in bind-mounted data volume."
+			touch /run/ipa/exit-on-finished
+			exit
+		fi
+
 		if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			while ! host -t A $HOSTNAME > /dev/null ; do
