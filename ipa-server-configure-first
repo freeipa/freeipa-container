@@ -194,6 +194,11 @@ else
 		usage "The container has to have fully-qualified hostname defined."
 	fi
 
+	# Workaround 1409786
+	if grep -q -- --external.cert.file $( for i in /run/ipa /data ; do test -e $i/$COMMAND-options && echo $_ ; done ) ; then
+		/usr/sbin/ipactl --force start || :
+	fi
+
 	STDIN=/dev/stdin
 	STDOUT=/dev/stdout
 	STDERR=/dev/stderr
