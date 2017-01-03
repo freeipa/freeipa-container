@@ -174,7 +174,6 @@ else
 	(
 		cd /data
 		grep '/$' /etc/volume-data-list | sed 's!^!.!' | xargs mkdir -p
-		grep -v '/$' /etc/volume-data-list | xargs dirname | sed 's!^!.!' | xargs mkdir -p
 	)
 
 	# Workaround 1409806
