@@ -178,6 +178,9 @@ else
 		grep -v '/$' /etc/volume-data-list | sed 's!^!.!' | xargs touch
 	)
 
+	# Workaround 1409806
+	rmdir /data/etc/pki/pki-tomcat 2> /dev/null || :
+
 	while read i ; do
 		rm -f "$i"
 		if [ -e "/data$i" ] ; then
