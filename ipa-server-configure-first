@@ -177,7 +177,13 @@ else
 		grep -v '/$' /etc/volume-data-list | xargs dirname | sed 's!^!.!' | xargs mkdir -p
 		grep -v '/$' /etc/volume-data-list | sed 's!^!.!' | xargs touch
 	)
-	xargs rm -f < /etc/volume-data-mv-list
+
+	while read i ; do
+		rm -f "$i"
+		if [ -e "/data$i" ] ; then
+			( cd /data && tar cf - ".$i" ) | tar xf -
+		fi
+	done < /etc/volume-data-mv-list
 
 	HOSTNAME_SHORT=${HOSTNAME%%.*}
 	DOMAIN=${HOSTNAME#*.}
