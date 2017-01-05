@@ -217,8 +217,8 @@ else
 			rm -rf /data$i
 			if [ -e $i ] ; then
 				mv $i /data$i
-				ln -sf /data$i $i
 			fi
+			ln -sf /data$i $i
 		done
 		cp /etc/volume-version /data/volume-version
 
