@@ -37,6 +37,16 @@
             }
         },
         {
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${IPA_SERVER_SERVICE}-password"
+            },
+            "stringData" : {
+                "admin.password" : "${IPA_ADMIN_PASSWORD}"
+            }
+        },
+        {
             "kind": "Service",
             "apiVersion": "v1",
             "metadata": {
@@ -281,7 +291,12 @@
                                     },
                                     {
                                         "name": "PASSWORD",
-                                        "value": "${IPA_ADMIN_PASSWORD}"
+                                        "valueFrom": {
+                                            "secretKeyRef" : {
+                                                "name" : "${IPA_SERVER_SERVICE}-password",
+                                                "key" : "admin.password"
+                                            }
+                                        }
                                     }
                                 ],
                                 "resources": {},
