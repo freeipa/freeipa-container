@@ -12,7 +12,7 @@
             "ReadWriteOnce",
             "ReadWriteMany"
         ],
-        "persistentVolumeReclaimPolicy": "Reclaim",
+        "persistentVolumeReclaimPolicy": "Recycle",
         "hostPath": {
             "path": "/opt/freeipa-server-data"
         }
