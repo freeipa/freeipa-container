@@ -145,6 +145,7 @@
                         "targetPort": 9445
                     }
                 ],
+                "clusterIP": "${IPA_SERVER_IP}",
                 "selector": {
                     "deploymentconfig": "${IPA_SERVER_SERVICE}"
                 }
@@ -286,6 +287,10 @@
                                         "value": "${IPA_SERVER_HOSTNAME}"
                                     },
                                     {
+                                        "name": "IPA_SERVER_IP",
+                                        "value": "${IPA_SERVER_IP}"
+                                    },
+                                    {
                                         "name": "IPA_SERVER_INSTALL_OPTS",
                                         "value": "${IPA_SERVER_INSTALL_OPTS}"
                                     },
@@ -375,6 +380,11 @@
             "displayName": "FreeIPA server hostname",
             "required": true,
             "value": "ipa.example.test"
+        },
+        {
+            "name": "IPA_SERVER_IP",
+            "displayName": "FreeIPA server service IP address",
+            "required": false
         },
         {
             "name": "IPA_SERVER_INSTALL_OPTS",
