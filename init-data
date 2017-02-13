@@ -230,9 +230,8 @@ if [ $SHOW_LOG == 1 ] ; then
 		fi
 	done
 	(
-	trap '' SIGHUP SIGTERM
+	trap '' SIGHUP
 	tail --silent -n 0 -f --retry /var/log/ipa-server-configure-first.log /var/log/ipa-server-run.log 2> /dev/null < /dev/null &
-	echo $! > /run/ipa/tail-log.pid
 	)
 fi
 
