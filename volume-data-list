@@ -1,5 +1,6 @@
 /etc/certmonger/
 /etc/dirsrv/
+/etc/gssproxy/
 /etc/httpd/alias/
 /etc/httpd/conf/
 /etc/httpd/conf.d/
