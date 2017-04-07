@@ -53,6 +53,7 @@ RUN systemctl enable ipa-server-configure-first.service
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+RUN groupadd -r ipaapi ; useradd -g ipaapi -c 'IPA Management Framework User' -d '/var/lib' -s '/sbin/nologin' ipaapi
 
 COPY atomic-install-help /usr/share/ipa/
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
