@@ -4,6 +4,7 @@ FROM fedora:25
 MAINTAINER FreeIPA Developers <freeipa-devel@redhat.com>
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -d / -s '/sbin/nologin' ipaapi
 
 RUN mkdir -p /run/lock \
     && cd /etc/yum.repos.d \
