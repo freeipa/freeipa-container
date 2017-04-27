@@ -162,7 +162,10 @@
             },
             "spec": {
                 "strategy": {
-                    "type": "Recreate"
+                    "type": "Recreate",
+                    "recreateParams": {
+                        "timeoutSeconds": "${TIMEOUT}"
+                    }
                 },
                 "triggers": [
                     {
@@ -411,6 +414,12 @@
             "displayName": "Volume capacity",
             "required": true,
             "value": "1Gi"
+        },
+        {
+            "name": "TIMEOUT",
+            "displayName": "Timeout for pods to become ready (in seconds)",
+            "required": true,
+            "value": "600"
         }
     ]
 }
