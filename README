@@ -23,6 +23,12 @@ Create directory which will hold the server data:
 
     mkdir /var/lib/ipa-data
 
+On SELinux enabled systems,
+
+    setsebool -P container_manage_cgroup 1
+
+might be needed to enable running systemd in the containers.
+
 You then run the container with
 
     docker run --name freeipa-server-container -ti \
