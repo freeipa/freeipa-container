@@ -3,7 +3,9 @@ FROM registry.fedoraproject.org/fedora:24
 
 MAINTAINER Jan Pazdziora
 
-RUN dnf upgrade -y nss && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
+ARG VERSION=
+
+RUN dnf upgrade -y nss && dnf install -y freeipa-server${VERSION:+-${VERSION}.fc24} freeipa-server-dns${VERSION:+-${VERSION}.fc24} freeipa-server-trust-ad${VERSION:+-${VERSION}.fc24} && dnf clean all
 
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py

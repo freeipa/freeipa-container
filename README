@@ -19,6 +19,13 @@ The repository contains multiple `Dockerfile`s for various
 operating systems. Use `-f` option to `docker build` to pick
 different than default target.
 
+If you wish to specify the exact version used, you can pass a build arg
+to do so.  This should only be used if you're trying to lock the version
+of freeipa temporarily, and have accounted for any Dockerfile changes.
+An example invocation for fedora-25, building 4.4.4-1 would be:
+
+    docker build -t freeipa-server -f Dockerfile.fedora-25 --build-arg VERSION=4.4.4-1 .
+
 Create directory which will hold the server data:
 
     mkdir /var/lib/ipa-data

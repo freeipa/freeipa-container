@@ -3,6 +3,8 @@ FROM registry.fedoraproject.org/fedora:25
 
 MAINTAINER FreeIPA Developers <freeipa-devel@redhat.com>
 
+ARG VERSION=
+
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -d / -s '/sbin/nologin' ipaapi
 
@@ -10,9 +12,9 @@ RUN mkdir -p /run/lock \
     && cd /etc/yum.repos.d \
     && curl -O https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-master/repo/fedora-25/group_freeipa-freeipa-master-fedora-25.repo \
     && curl -O https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-master-nightly/repo/fedora-25/group_freeipa-freeipa-master-nightly-fedora-25.repo \
-    && dnf install -y freeipa-server \
-    freeipa-server-dns \
-    freeipa-server-trust-ad \
+    && dnf install -y freeipa-server${VERSION:+-${VERSION}.fc25} \
+    freeipa-server-dns${VERSION:+-${VERSION}.fc25} \
+    freeipa-server-trust-ad${VERSION:+-${VERSION}.fc25} \
     initscripts \
     --best --allowerasing \
     && dnf clean all
