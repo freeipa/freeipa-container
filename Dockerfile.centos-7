@@ -1,6 +1,5 @@
 # Clone from the CentOS 7
-FROM centos:centos7
-
+FROM centos:latest
 MAINTAINER Jan Pazdziora
 
 RUN yum install -y ipa-server ipa-server-dns ipa-server-trust-ad && yum clean all
