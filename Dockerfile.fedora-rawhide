@@ -3,7 +3,9 @@ FROM registry.fedoraproject.org/fedora:rawhide
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf upgrade -y && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
+ARG VERSION=
+
+RUN mkdir -p /run/lock && dnf upgrade -y && dnf install -y freeipa-server${VERSION:+-${VERISON}.fc27} freeipa-server-dns${VERSION:+-${VERISON}.fc27} freeipa-server-trust-ad${VERSION:+-${VERISON}.fc27} initscripts && dnf clean all
 
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
