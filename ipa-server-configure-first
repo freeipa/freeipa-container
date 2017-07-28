@@ -83,7 +83,7 @@ function upgrade_server () {
 	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
 	DIR=/var/libexec/ipa/ipa-upgrade-rpm-scriptlets.$$
 	mkdir -p $DIR
-	for i in 389-ds-base pki-server ; do
+	for i in 389-ds-base pki-server bind-dyndb-ldap ; do
 		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > $DIR/$i.script
 		if [ -s "$DIR/$i.script" ] ; then
 			sed -i '\|/sbin/ldconfig|d' $DIR/$i.script
