@@ -1,5 +1,5 @@
 # Clone from the Fedora 24 image
-FROM fedora:24
+FROM registry.fedoraproject.org/fedora:24
 
 MAINTAINER Jan Pazdziora
 
