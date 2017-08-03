@@ -2,6 +2,9 @@
 FROM rhel7
 
 MAINTAINER Jan Pazdziora
+# Moving groupadd before freeipa installation to ensure uid and guid will be same
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -d / -s '/sbin/nologin' ipaapi
 
 RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns ipa-server-trust-ad && yum clean all
 
@@ -9,10 +12,14 @@ RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server 
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround 1377973
 RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.append(ipautil.CheckedIPAddress(ha, match_local=False))/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
-RUN echo '7fe9c3084d2b8ba846c23458be86c8677693f0eb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
-RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
+# Workaround https://fedorahosted.org/freeipa/ticket/6518
+RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
+
+RUN echo 'd2090704dc077e75a70420a5ee2534b7148bb35d /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target sysinit.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1433050
+RUN sed -i -E 's/(Requires=proc-fs-nfsd.mount)/#\1/'  /usr/lib/systemd/system/gssproxy.service
 
 RUN echo LANG=C > /etc/locale.conf
 
@@ -36,14 +43,11 @@ RUN systemctl enable ipa-server-configure-first.service
 
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
-RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
-
 COPY atomic-install-help /usr/share/ipa/
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
 RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do echo $i ; if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; else mkdir -p /data-template$( dirname $i ) ; fi ; mkdir -p $( dirname $i ) ; if [ "$i" == /var/log/ ] ; then mv /var/log /var/log-removed ; else rm -rf $i ; fi ; ln -sf /data${i%/} ${i%/} ; done
 RUN rm -rf /var/log-removed
 RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
-RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /data-template/etc/dirsrv/schema
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
@@ -67,3 +71,19 @@ LABEL run 'docker run ${RUN_OPTS} --name ${NAME} -v /var/lib/${NAME}:/data:Z -v 
 LABEL RUN_OPTS_FILE '/var/lib/${NAME}/docker-run-opts'
 LABEL stop 'docker stop ${NAME}'
 LABEL uninstall 'docker run --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} ${IMAGE} /bin/uninstall.sh'
+
+LABEL summary="Identity Management (IdM) for Linux provides centralized \
+management of identities and policies for Atomic Host"
+LABEL description="IPA is an integrated solution to provide centrally managed \
+Identity (users, hosts, services), Authentication (SSO, 2FA), and \
+Authorization (host access control, SELinux user roles, services). The \
+solution provides features for further integration with Linux based clients \
+(SUDO, automount) and integration with Active Directory based infrastructures \
+(Trusts)."
+LABEL io.k8s.display-name="Identity Management (IdM) for Linux"
+LABEL io.k8s.description="IPA is an integrated solution to provide centrally \
+managed Identity (users, hosts, services), Authentication (SSO, 2FA), and \
+Authorization (host access control, SELinux user roles, services). The \
+solution provides features for further integration with Linux based clients \
+(SUDO, automount) and integration with Active Directory based infrastructures \
+(Trusts)."
