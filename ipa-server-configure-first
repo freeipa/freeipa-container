@@ -157,6 +157,7 @@ if [ -f /etc/ipa/ca.crt ] ; then
 else
 	COMMAND=ipa-server-install
 	RUN_CMD="/usr/sbin/ipa-server-install"
+	CLIENT_ONLY=false
 	if [ -f /run/ipa/ipa-replica-install-options ] ; then
 		if [ -f /data/ipa-server-install-options ] ; then
 			usage "Too many install options files."
@@ -169,6 +170,15 @@ else
 		if [ -f /data/*.gpg ] ; then
 			RUN_CMD="/usr/sbin/ipa-replica-install /data/*.gpg"
 		fi
+	elif [ -f /run/ipa/ipa-client-install-options ] ; then
+		if [ -f /data/ipa-server-install-options \
+		     -o -f /data/ipa-replica-install-options ] ; then
+			usage "Too many install options files."
+		fi
+		COMMAND=ipa-client-install
+		RUN_CMD="/usr/sbin/ipa-client-install "
+		CLIENT_ONLY=true
+
 	fi
 
 	(
@@ -193,8 +203,18 @@ else
 	fi
 
 	# Workaround 1409786
-	if grep -q -- --external.cert.file $( for i in /run/ipa /data ; do test -e $i/$COMMAND-options && echo $_ ; done ) ; then
+	if ! $CLIENT_ONLY && \
+	    grep -q -- --external.cert.file \
+		$( for i in /run/ipa /data ; do \
+		       test -e $i/$COMMAND-options && echo $_ ; \
+		   done ) ; then
 		/usr/sbin/ipactl --force start || :
+	fi
+
+	if $CLIENT_ONLY; then
+		if [ -n "$IPA_PORT_53_UDP_ADDR" ] ; then
+			echo "nameserver $IPA_PORT_53_UDP_ADDR" > /etc/resolv.conf
+		fi
 	fi
 
 	STDIN=/dev/stdin
@@ -237,8 +257,13 @@ else
 		else
 			echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
 		fi
-		systemctl enable ipa-server-update-self-ip-address.service
-		systemctl enable ipa-server-upgrade.service
+		if ! $CLIENT_ONLY; then
+		    systemctl enable ipa-server-update-self-ip-address.service
+		    systemctl enable ipa-server-upgrade.service
+		else
+		    systemctl disable ipa.service
+		    systemctl enable certmonger.service
+		fi
 		systemctl disable ipa-server-configure-first.service || rm -f /etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service
 		echo "FreeIPA server configured."
 	else
