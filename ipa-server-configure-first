@@ -24,6 +24,8 @@ trap mark_exit_code ERR EXIT
 
 set -e
 
+test ! -f /run/ipa/debug-trace || set -x
+
 HOSTNAME=$( cat /data/hostname )
 
 function update_server_ip_address () {
