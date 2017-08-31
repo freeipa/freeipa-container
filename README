@@ -162,6 +162,23 @@ freeipa-server container directly:
 The first time this container runs, it invokes `ipa-client-install`
 with the given admin password.
 
+# Debugging
+
+The container scripts provide some options for debugging:
+
+- Enable shell script tracing in both the top-level `init-data` script
+  and the `ipa-server-configure-first` script by setting the
+  `$DEBUG_TRACE` environment variable.
+
+- Disable container exit after script failure by setting the
+  `$DEBUG_NO_EXIT` environment variable.  After failure, the
+  container will continue running, and can be entered for debugging
+  with e.g. `docker exec -it freeipa-server-container bash`.
+
+Example usage:
+
+    docker run [...] -e DEBUG_TRACE=1 -e DEBUG_NO_EXIT=1 freeipa-server
+
 # Copyright 2014--2016 Jan Pazdziora
 
 Licensed under the Apache License, Version 2.0 (the "License");
