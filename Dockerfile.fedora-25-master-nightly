@@ -17,6 +17,10 @@ RUN mkdir -p /run/lock \
     --best --allowerasing \
     && dnf clean all
 
+
+# Workaround 1493910
+RUN echo -n > /etc/machine-id && mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
+
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
