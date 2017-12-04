@@ -37,8 +37,6 @@ RUN echo 'disable *' > /usr/lib/systemd/system-preset/10-container-disable.prese
 # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1433050
 RUN sed -i -E 's/(Requires=proc-fs-nfsd.mount)/#\1/'  /usr/lib/systemd/system/gssproxy.service
 
-RUN echo LANG=C > /etc/locale.conf
-
 RUN /sbin/ldconfig -X
 
 COPY init-data /usr/local/sbin/init
