@@ -43,7 +43,11 @@ function update_server_ip_address () {
 	kinit -k
 	(
 		echo "update add $HOSTNAME 180 A $MY_IP"
-		echo "update delete $HOSTNAME A $CURRENT_IP"
+		for i in $CURRENT_IP ; do
+			if [ "$i" != "$MY_IP" ] ; then
+				echo "update delete $HOSTNAME A $i"
+			fi
+		done
 		echo "send"
 		echo "quit"
 	) | nsupdate -g
