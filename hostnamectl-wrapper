@@ -1,7 +1,11 @@
 #!/bin/bash
 
 if setpriv --dump | grep -q sys_admin ; then
-	$0.orig "$@"
+	if [ "$( basename $0 )" == "domainname" ] ; then
+		/usr/bin/hostname -y "$@"
+	else
+		$0.orig "$@"
+	fi
 else
 	echo "Skipping invocation of $0 $@ in unprivileged container." >&2
 	exit
