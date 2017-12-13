@@ -29,8 +29,10 @@ RUN /sbin/ldconfig -X
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
-RUN mv /bin/hostnamectl /bin/hostnamectl.orig
-RUN mv /usr/bin/domainname /usr/bin/domainname.orig
+RUN mkdir /usr/local/ipa
+RUN mv /bin/hostnamectl /usr/local/ipa/hostnamectl
+RUN ln -s /usr/bin/hostname /usr/local/ipa/domainname
+RUN rm /usr/bin/domainname
 ADD hostnamectl-wrapper /bin/hostnamectl
 ADD hostnamectl-wrapper /usr/bin/domainname
 RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
