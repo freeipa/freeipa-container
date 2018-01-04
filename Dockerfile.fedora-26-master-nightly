@@ -28,7 +28,6 @@ RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7
 # Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
 RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
 
-RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
 RUN rm -fv /usr/lib/systemd/system/sysinit.target.wants/*
