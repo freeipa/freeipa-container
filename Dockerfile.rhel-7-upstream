@@ -1,7 +1,7 @@
 # Clone from the RHEL 7
 FROM rhel7
 
-MAINTAINER Jan Pazdziora
+MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 
 RUN cd /etc/yum.repos.d && curl -LO https://copr.fedorainfracloud.org/coprs/g/freeipa/freeipa-4-3-centos-7/repo/epel-7/pvoborni-freeipa-4-3-centos-7-epel-7.repo
 RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms --enablerepo=group_freeipa-freeipa-4-3-centos-7 -y ipa-server ipa-server-dns ipa-server-trust-ad tar && yum clean all
