@@ -15,7 +15,6 @@ RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.app
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
 RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
 
-RUN echo 'd2090704dc077e75a70420a5ee2534b7148bb35d /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
 RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
 RUN for i in basic.target sysinit.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
 # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1433050
