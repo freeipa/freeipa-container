@@ -1,1 +1,1 @@
-Dockerfile.fedora-26
+Dockerfile.fedora-27
