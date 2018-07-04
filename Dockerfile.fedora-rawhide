@@ -24,9 +24,9 @@ COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first ipa-server-status-check exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
 RUN mv /bin/hostnamectl /bin/hostnamectl.orig
-RUN mv /usr/bin/domainname /usr/bin/domainname.orig
+RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /bin/hostnamectl
-ADD hostnamectl-wrapper /usr/bin/domainname
+ADD hostnamectl-wrapper /usr/bin/nisdomainname
 RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/ipa-server-status-check /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
 COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
