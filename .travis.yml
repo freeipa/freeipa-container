@@ -1,0 +1,14 @@
+language: generic
+
+sudo: required
+
+services:
+- docker
+
+script:
+- env | sort
+- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT} && echo -- "$TRAVIS_COMMIT_RANGE"
+- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE/.../..} && echo -- "$TRAVIS_COMMIT_RANGE"
+- DOCKERFILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | grep 'Dockerfile.*' ) && echo -- "$DOCKERFILES_CHANGED"
+- DOCKERFILES_CHANGED=${DOCKERFILES_CHANGED:-Dockerfile} && echo -- "$DOCKERFILES_CHANGED"
+- for i in $DOCKERFILES_CHANGED ; do docker build -f $i . ; done
