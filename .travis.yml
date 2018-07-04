@@ -5,10 +5,35 @@ sudo: required
 services:
 - docker
 
-script:
+install: true
+
+before_script:
+- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT} && echo "$TRAVIS_COMMIT_RANGE"
+- export TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE/.../..} && echo "$TRAVIS_COMMIT_RANGE"
+- export FILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | sort ) && echo "$FILES_CHANGED"
+- export TRAVIS_DOCKERFILES=$( sed 's/^ *env. dockerfile=/Dockerfile./;/^Dockerfile/p;d' .travis.yml | sort ) && echo "$TRAVIS_DOCKERFILES"
+- export BUILD_DOCKERFILES=$( grep '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$BUILD_DOCKERFILES"
+- export BUILD_DOCKERFILES=${BUILD_DOCKERFILES:-$TRAVIS_DOCKERFILES} && echo "$BUILD_DOCKERFILES"
 - env | sort
-- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT} && echo -- "$TRAVIS_COMMIT_RANGE"
-- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE/.../..} && echo -- "$TRAVIS_COMMIT_RANGE"
-- DOCKERFILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | grep 'Dockerfile.*' ) && echo -- "$DOCKERFILES_CHANGED"
-- DOCKERFILES_CHANGED=${DOCKERFILES_CHANGED:-Dockerfile} && echo -- "$DOCKERFILES_CHANGED"
-- for i in $DOCKERFILES_CHANGED ; do docker build -f $i . ; done
+
+stages:
+- sanity
+- build
+
+matrix:
+  include:
+    - stage: sanity
+      script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
+    - stage: build
+      env: dockerfile=fedora-rawhide
+    - stage: build
+      env: dockerfile=fedora-28
+    - stage: build
+      env: dockerfile=fedora-27
+    - stage: build
+      env: dockerfile=fedora-26
+    - stage: build
+      env: dockerfile=centos-7
+
+script:
+- if grep -F "Dockerfile.$dockerfile" <( echo "$BUILD_DOCKERFILES" ) ; then docker build -f Dockerfile.$dockerfile . ; else echo "Skipping, Dockerfile.$dockerfile not modified." ; fi
