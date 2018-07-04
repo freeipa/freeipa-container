@@ -25,7 +25,7 @@ RUN echo LANG=C > /etc/locale.conf
 RUN /sbin/ldconfig -X
 
 COPY init-data /usr/local/sbin/init
-COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
+COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* ipa_container_utils /usr/sbin/
 COPY install.sh uninstall.sh /bin/
 RUN mv /bin/hostnamectl /bin/hostnamectl.orig
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
@@ -44,8 +44,8 @@ COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 COPY atomic-install-help /usr/share/ipa/
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
-RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do echo $i ; if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; else mkdir -p /data-template$( dirname $i ) ; fi ; mkdir -p $( dirname $i ) ; if [ "$i" == /var/log/ ] ; then mv /var/log /var/log-removed ; else rm -rf $i ; fi ; ln -sf /data${i%/} ${i%/} ; done
-RUN rm -rf /var/log-removed
+RUN source /usr/sbin/ipa_container_utils && init_data_template
+RUN rm -rf /var/log-removed /usr/sbin/ipa_container_utils
 RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
