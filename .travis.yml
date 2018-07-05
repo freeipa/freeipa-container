@@ -8,7 +8,7 @@ services:
 install: true
 
 before_script:
-- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT} && echo "$TRAVIS_COMMIT_RANGE"
+- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT~..$TRAVIS_COMMIT} && echo "$TRAVIS_COMMIT_RANGE"
 - export TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE/.../..} && echo "$TRAVIS_COMMIT_RANGE"
 - export FILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | sort ) && echo "$FILES_CHANGED"
 - export TRAVIS_DOCKERFILES=$( sed 's/^ *env. dockerfile=/Dockerfile./;/^Dockerfile/p;d' .travis.yml | sort ) && echo "$TRAVIS_DOCKERFILES"
