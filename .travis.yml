@@ -47,4 +47,4 @@ matrix:
 
 script:
 - if grep -F "Dockerfile.$dockerfile" <( echo "$BUILD_DOCKERFILES" ) ; then docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; else echo "Skipping, Dockerfile.$dockerfile not modified." ; fi
-- if docker images | grep local/freeipa-server ; then docker run -h ipa.example.test --sysctl net.ipv6.conf.all.disable_ipv6=0 --tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro -e PASSWORD=Secret123 local/freeipa-server exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp ; fi
+- if docker images | grep local/freeipa-server ; then docker run --privileged -h ipa.example.test --sysctl net.ipv6.conf.all.disable_ipv6=0 --tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro -e PASSWORD=Secret123 local/freeipa-server exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp ; fi
