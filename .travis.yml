@@ -13,7 +13,8 @@ before_script:
 - export FILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | sort ) && echo "$FILES_CHANGED"
 - export TRAVIS_DOCKERFILES=$( sed 's/^ *env. dockerfile=/Dockerfile./;/^Dockerfile/p;d' .travis.yml | sort ) && echo "$TRAVIS_DOCKERFILES"
 - export BUILD_DOCKERFILES=$( grep '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$BUILD_DOCKERFILES"
-- export BUILD_DOCKERFILES=${BUILD_DOCKERFILES:-$TRAVIS_DOCKERFILES} && echo "$BUILD_DOCKERFILES"
+- export NONDOCKERFILES_CHANGED=$( grep -v '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$NONDOCKERFILES_CHANGED"
+- if test -n "$NONDOCKERFILES_CHANGED" ; then export BUILD_DOCKERFILES=$TRAVIS_DOCKERFILES ; fi ; echo "$BUILD_DOCKERFILES"
 - env | sort
 
 stages:
