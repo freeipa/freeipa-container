@@ -13,8 +13,6 @@ RUN mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py && python3 -m compileall /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py
-# Workaround https://fedorahosted.org/spin-kickstarts/ticket/60
-RUN [ -L /etc/systemd/system/syslog.service ] && ! [ -f /etc/systemd/system/syslog.service ] && rm -f /etc/systemd/system/syslog.service
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
 
