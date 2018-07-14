@@ -220,7 +220,7 @@ else
 		if ! [ -f /etc/ipa/ca.crt ] && [ -f /root/ipa.csr ] ; then
 			cp -p /root/ipa.csr /data/ipa.csr
 			echo "FreeIPA CA CSR stored in file ipa.csr located in bind-mounted data volume."
-			touch /run/ipa/exit-on-finished
+			systemctl poweroff
 			exit
 		fi
 

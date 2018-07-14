@@ -37,6 +37,11 @@ You then run the container with
        --tmpfs /run --tmpfs /tmp \
        -v /var/lib/ipa-data:/data:Z freeipa-server [ opts ]
 
+The list of options [opts] can start with exit-on-finished to stop
+the container after successfully configuring the server in the container
+(useful for testing), or no-exit to keep the container running even
+if the initial configuration fails (useful for debugging).
+
 Standard `ipa-server-install` will be started and you can configure
 the server. The `docker run` invocation also accepts command line
 parameters that will be passed to `ipa-server-install`, so

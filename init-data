@@ -45,29 +45,28 @@ mkdir -p /run/lock
 
 mkdir -p /run/ipa
 
-if [ "$1" == 'exit-on-finished' ] ; then
-	touch /run/ipa/$1
+if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
+	if [ "$1" == 'no-exit' ] ; then
+		shift
+	fi
+	# Debugging:  Don't power off if IPA install/upgrade fails
+	# Create service drop-in to override `FailureAction`
+	for i in ipa-server-configure-first.service ipa-server-upgrade.service; do
+		mkdir -p /run/systemd/system/$i.d
+		echo -e "[Service]\nFailureAction=none" > /run/systemd/system/$i.d/50-no-poweroff.conf
+	done
+elif [ "$1" == 'exit-on-finished' ] ; then
+	for i in ipa-server-configure-first.service ipa-server-upgrade.service; do
+		mkdir -p /run/systemd/system/$i.d
+		# We'd like to use SuccessAction=poweroff here but it's only
+		# available in systemd 236.
+		echo -e "[Service]\nExecStartPost=/usr/bin/systemctl poweroff" > /run/systemd/system/$i.d/50-success-poweroff.conf
+	done
 	shift
-else
-	touch /run/ipa/exit-on-error
 fi
 
 # Debugging:  Turn on tracing of ipa-server-configure-first script
 test -z "$DEBUG_TRACE" || touch /run/ipa/debug-trace
-
-# Debugging:  Don't power off if IPA install/upgrade fails
-for i in ipa-server-configure-first.service ipa-server-upgrade.service; do
-    if [ -n "$DEBUG_NO_EXIT" ]; then
-	# Create service drop-in to override `FailureAction`
-	mkdir -p /data/etc/systemd/system/${i}.d
-	echo -e "[Service]\nFailureAction=none" > \
-	    /data/etc/systemd/system/${i}.d/50-no-poweroff.conf
-    else
-	# Debugging off:  Remove service drop-in
-	rm -f /data/etc/systemd/system/${i}.d/50-no-poweroff.conf
-    fi
-
-done
 
 DATA=/data
 COMMAND=
