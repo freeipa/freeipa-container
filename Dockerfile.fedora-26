@@ -39,6 +39,8 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service
 
+RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
+
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy

@@ -38,6 +38,8 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service
 
+RUN systemd-tmpfiles --remove --create
+
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 COPY atomic-install-help /usr/share/ipa/
