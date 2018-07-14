@@ -45,8 +45,13 @@ if the initial configuration fails (useful for debugging).
 Standard `ipa-server-install` will be started and you can configure
 the server. The `docker run` invocation also accepts command line
 parameters that will be passed to `ipa-server-install`, so
-unattended invocation is possible. Optionally, you can put into the
-directory mounted into /data (/var/lib/ipa-data in this example) a file
+unattended invocation is possible, for example with
+
+    docker run --rm -e PASSWORD=Secret123 -h ipa.example.test \
+        freeipa-server exit-on-finished -U -r EXAMPLE.TEST --no-ntp
+
+Optionally, you can put into the directory mounted into /data
+(/var/lib/ipa-data in this example) a file
 
     ipa-server-install-options
 
@@ -184,7 +189,7 @@ Example usage:
 
     docker run [...] -e DEBUG_TRACE=1 -e DEBUG_NO_EXIT=1 freeipa-server
 
-# Copyright 2014--2016 Jan Pazdziora
+# License
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
