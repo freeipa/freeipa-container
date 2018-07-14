@@ -35,6 +35,15 @@ matrix:
       env: dockerfile=fedora-26
     - stage: build
       env: dockerfile=centos-7
+  exclude:
+    - stage: build
+      env: dockerfile=fedora-25
+    - stage: build
+      env: dockerfile=fedora-24
+    - stage: build
+      env: dockerfile=fedora-23
+    - stage: build
+      env: dockerfile=rhel-7
 
 script:
 - if grep -F "Dockerfile.$dockerfile" <( echo "$BUILD_DOCKERFILES" ) ; then docker build -f Dockerfile.$dockerfile . ; else echo "Skipping, Dockerfile.$dockerfile not modified." ; fi
