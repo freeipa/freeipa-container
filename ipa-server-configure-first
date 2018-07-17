@@ -173,7 +173,7 @@ else
 	)
 
 	# Workaround 1409806
-	rmdir /data/etc/pki/pki-tomcat 2> /dev/null || :
+	rm -rf /data/etc/pki/pki-tomcat 2> /dev/null || :
 
 	while read i ; do
 		rm -f "$i"
