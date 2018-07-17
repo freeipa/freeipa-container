@@ -188,6 +188,19 @@ else
 		usage "The container has to have fully-qualified hostname defined."
 	fi
 
+	if grep -q -- --external.ca $( for i in /run/ipa /data ; do test -e $i/$COMMAND-options && echo $_ ; done ) ; then
+		if [ -f /data/ipa.csr ]; then
+			if [ -s /data/ipa.crt ] ; then
+				echo "--external-cert-file=/data/ipa.crt" >> /run/ipa/$COMMAND-options
+				rm /data/ipa.csr
+			else
+				echo "Awaiting signed FreeIPA CA certificate file ipa.crt located in bind-mounted data volume."
+				touch /run/ipa/exit-on-finished
+				exit
+			fi
+		fi
+	fi
+
 	# Workaround 1409786
 	if grep -q -- --external.cert.file $( for i in /run/ipa /data ; do test -e $i/$COMMAND-options && echo $_ ; done ) ; then
 		/usr/sbin/ipactl --force start || :
