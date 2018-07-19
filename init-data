@@ -165,7 +165,10 @@ fi
 DATA_TEMPLATE=/data-template
 
 if ! [ -f /etc/ipa/ca.crt ] ; then
-	( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
+	if ! [ -f $DATA/ipa.csr ] ; then
+		# Do not refresh $DATA in the second stage of the external CA setup
+		( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
+	fi
 	if [ -n "$PASSWORD" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' ] ; then
 			printf '%q\n' "--admin-password=$PASSWORD" >> $OPTIONS_FILE
