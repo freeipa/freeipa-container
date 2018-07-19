@@ -192,6 +192,11 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 		echo "--debug" >> $OPTIONS_FILE
 	fi
 fi
+
+# Check the volume-version of the bind-mounted volume, upgrade if it's
+# different from the one in this image.
+# The volume-upgrade file names are in format:
+#         ipa-volume-upgrade-$OLDVERSION-$NEWVERSION
 if [ -f "$DATA/volume-version" ] ; then
 	DATA_VERSION=$(cat $DATA/volume-version)
 	IMAGE_VERSION=$(cat /etc/volume-version)
