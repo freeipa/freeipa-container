@@ -14,7 +14,7 @@ before_script:
 - export TRAVIS_DOCKERFILES=$( sed 's/^ *env. dockerfile=/Dockerfile./;s/ .*//;/^Dockerfile/p;d' .travis.yml | sort ) && echo "$TRAVIS_DOCKERFILES"
 - export BUILD_DOCKERFILES=$( grep '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$BUILD_DOCKERFILES"
 - export NONDOCKERFILES_CHANGED=$( grep -v '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$NONDOCKERFILES_CHANGED"
-- if test -n "$NONDOCKERFILES_CHANGED" ; then export BUILD_DOCKERFILES=$TRAVIS_DOCKERFILES ; fi ; echo "$BUILD_DOCKERFILES"
+- if test -z "$FILES_CHANGED" || test -n "$NONDOCKERFILES_CHANGED" ; then export BUILD_DOCKERFILES=$TRAVIS_DOCKERFILES ; fi ; echo "$BUILD_DOCKERFILES"
 - env | sort
 
 stages:
