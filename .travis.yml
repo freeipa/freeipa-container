@@ -5,6 +5,9 @@ sudo: required
 services:
 - docker
 
+before_install:
+- sudo apt-get install -y libnss3-tools
+
 install: true
 
 before_script:
@@ -30,11 +33,17 @@ matrix:
     - stage: build
       env: dockerfile=fedora-28 privileged=--privileged
     - stage: build
+      env: dockerfile=fedora-28 ca=--external-ca privileged=--privileged
+    - stage: build
       env: dockerfile=fedora-27 privileged=--privileged
     - stage: build
       env: dockerfile=fedora-26 privileged=--privileged
     - stage: build
+      env: dockerfile=fedora-26 ca=--external-ca privileged=--privileged
+    - stage: build
       env: dockerfile=centos-7
+    - stage: build
+      env: dockerfile=centos-7 ca=--external-ca
   exclude:
     - stage: build
       env: dockerfile=fedora-25
