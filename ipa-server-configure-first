@@ -100,7 +100,10 @@ function upgrade_server () {
 	rm -rf $DIR
 	systemctl start certmonger.service
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
-		PLATFORM=$(python -c 'import ipaplatform; print ipaplatform.NAME;')
+		PLATFORM=rhel
+		if rpm -q freeipa-server > /dev/null 2>&1 ; then
+			PLATFORM=fedora
+		fi
 		sed -i "s/platform.*/platform = $PLATFORM/" /var/lib/ipa/sysupgrade/sysupgrade.state
 	fi
 	ipa-server-upgrade
