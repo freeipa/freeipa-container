@@ -29,8 +29,6 @@ matrix:
     - stage: sanity
       script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
     - stage: build
-      env: dockerfile=fedora-rawhide
-    - stage: build
       env: dockerfile=fedora-28 privileged=--privileged
     - stage: build
       env: dockerfile=fedora-28 ca=--external-ca privileged=--privileged
@@ -45,6 +43,8 @@ matrix:
     - stage: build
       env: dockerfile=centos-7 ca=--external-ca
   exclude:
+    - stage: build
+      env: dockerfile=fedora-rawhide
     - stage: build
       env: dockerfile=fedora-25
     - stage: build
