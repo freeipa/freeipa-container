@@ -15,7 +15,7 @@ date
 docker run $privileged -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-	-v $(pwd)/data:/data \
+	-v $(pwd)/data:/data:Z \
 	-e PASSWORD=Secret123 local/freeipa-server \
 	exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
 if [ -n "$ca" ] ; then
@@ -25,7 +25,7 @@ if [ -n "$ca" ] ; then
 	docker run $privileged -h ipa.example.test \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-		-v $(pwd)/data:/data \
+		-v $(pwd)/data:/data:Z \
 		-e PASSWORD=Secret123 local/freeipa-server \
 		exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
 			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
@@ -34,7 +34,7 @@ date
 docker run $privileged -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-	-v $(pwd)/data:/data \
+	-v $(pwd)/data:/data:Z \
 	local/freeipa-server \
 	exit-on-finished
 date
@@ -45,6 +45,6 @@ date
 docker run $privileged -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-	-v $(pwd)/data:/data \
+	-v $(pwd)/data:/data:Z \
 	local/freeipa-server \
 	exit-on-finished
