@@ -224,6 +224,10 @@ if [ -f "$DATA/build-id" ] ; then
 				echo "Removing file $DATA/$f, replacing with directory from $DATA_TEMPLATE."
 				rm -f "$DATA/$f"
 			fi
+			if ! [ -L "$DATA_TEMPLATE/$f" ] && [ -d "$DATA_TEMPLATE/$f" ] && [ -L "$DATA/$f" ] ; then
+				echo "Removing symlink $DATA/$f, replacing with directory from $DATA_TEMPLATE."
+				rm -f "$DATA/$f"
+			fi
 			if ! [ -e $DATA/$f ] ; then
 				tar cf - $f | ( cd $DATA && tar xf - )
 			fi
