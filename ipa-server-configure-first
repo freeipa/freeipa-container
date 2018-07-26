@@ -91,7 +91,7 @@ function upgrade_server () {
 	for i in 389-ds-base pki-server bind-dyndb-ldap ; do
 		rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > $DIR/$i.script
 		if [ -s "$DIR/$i.script" ] ; then
-			sed -i '\|/sbin/ldconfig|d' $DIR/$i.script
+			sed -i '\|/sbin/ldconfig|d;s%/etc/named.conf%/data/etc/named.conf%' $DIR/$i.script
 			chmod a+x $DIR/$i.script
 			$DIR/$i.script 2
 		fi
