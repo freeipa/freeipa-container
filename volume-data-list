@@ -51,6 +51,4 @@
 /var/lib/sss/pubconf/
 /var/lib/systemd/
 /var/log/
-/var/named/data/
-/var/named/dynamic/
-/var/named/dyndb-ldap/
+/var/named/
