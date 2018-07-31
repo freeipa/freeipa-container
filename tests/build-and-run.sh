@@ -38,10 +38,7 @@ docker run $privileged -h ipa.example.test \
 	local/freeipa-server \
 	exit-on-finished
 date
-echo "RUN uuidgen > /data-template/build-id" >> Dockerfile.$dockerfile
-echo data >> .dockerignore
-docker build -t local/freeipa-server -f Dockerfile.$dockerfile .
-date
+uuidgen | sudo tee data/build-id
 ( docker run $privileged --name freeipa-master -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
