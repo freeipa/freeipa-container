@@ -242,6 +242,7 @@ if [ -f "$DATA/build-id" ] ; then
 				chmod --reference=$DATA_TEMPLATE$i $DATA$i
 			fi
 		done
+		SYSTEMD_OPTS=--unit=ipa-server-upgrade.service
 	fi
 	if [ -f /etc/ipa/ca.crt ] ; then
 		rm -f "$DATA/etc/systemd/system/multi-user.target.wants/ipa-server-configure-first.service"
@@ -267,6 +268,6 @@ if [ -n "$IPA_SERVER_IP" ] ; then
 	echo "$IPA_SERVER_IP" > /run/ipa/ipa-server-ip
 fi
 
-exec /usr/sbin/init --show-status=false
+exec /usr/sbin/init --show-status=false $SYSTEMD_OPTS
 
 exit 10

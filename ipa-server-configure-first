@@ -85,7 +85,6 @@ exec >> /var/log/ipa-server-configure-first.log 2>&1
 echo "$(date) $0 $@"
 
 function upgrade_server () {
-	systemctl stop dirsrv.target
 	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
 	DIR=/var/libexec/ipa/ipa-upgrade-rpm-scriptlets.$$
 	mkdir -p $DIR
@@ -98,7 +97,6 @@ function upgrade_server () {
 		fi
 	done
 	rm -rf $DIR
-	systemctl start certmonger.service
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
 		PLATFORM=rhel
 		if rpm -q freeipa-server > /dev/null 2>&1 ; then
@@ -109,6 +107,7 @@ function upgrade_server () {
 	ipa-server-upgrade
 	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
 	cp -f /data-template/build-id /data/build-id
+	systemctl default
 }
 
 if [ "$1" == upgrade ] ; then
