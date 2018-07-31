@@ -3,6 +3,7 @@ Description=Upgrade IPA server upon subsequent runs
 Before=ipa.service
 Requires=systemd-tmpfiles-setup.service systemd-journald.service dbus.service
 After=systemd-tmpfiles-setup.service systemd-journald.service dbus.service
+AllowIsolate=yes
 
 [Service]
 Type=oneshot
