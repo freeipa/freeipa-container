@@ -6,6 +6,9 @@ MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -d / -s '/sbin/nologin' ipaapi
 
+# Workaround 1615948
+RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
+
 RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns ipa-server-trust-ad && yum clean all
 
 # Workaround 1364139
