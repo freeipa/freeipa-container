@@ -59,7 +59,7 @@ RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
 # debug: RUN test -z "$container"
-ENV container docker
+ENV container oci
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
