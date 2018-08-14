@@ -40,6 +40,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemctl set-default container-ipa.target
 RUN systemctl enable ipa-server-configure-first.service
 
+# debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
 RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
 
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
@@ -57,6 +58,7 @@ RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/s
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
+# debug: RUN test -z "$container"
 ENV container docker
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445

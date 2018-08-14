@@ -54,5 +54,5 @@ matrix:
       env: dockerfile=rhel-7
 
 script:
-- if test -n "$RUN_DOCKER_BUILD" ; then docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
+- if test -n "$RUN_DOCKER_BUILD" ; then sed 's/^# debug:\s*//' Dockerfile.$dockerfile > Dockerfile.$dockerfile-debug && docker build -t local/freeipa-server -f Dockerfile.$dockerfile-debug . ; fi
 - docker images | grep local/freeipa-server && tests/run-master-and-replica.sh local/freeipa-server
