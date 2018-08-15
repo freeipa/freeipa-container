@@ -18,8 +18,6 @@ RUN for i in basic.target network.service netconsole.service ; do rm -f /usr/lib
 RUN rm -fv /usr/lib/systemd/system/sysinit.target.wants/*
 RUN echo 'disable *' > /usr/lib/systemd/system-preset/10-container-disable.preset
 
-RUN echo LANG=C > /etc/locale.conf
-
 RUN /sbin/ldconfig -X
 
 COPY init-data /usr/local/sbin/init
