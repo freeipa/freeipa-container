@@ -55,4 +55,4 @@ matrix:
 
 script:
 - if test -n "$RUN_DOCKER_BUILD" ; then sed 's/^# debug:\s*//' Dockerfile.$dockerfile > Dockerfile.$dockerfile-debug && docker build -t local/freeipa-server -f Dockerfile.$dockerfile-debug . ; fi
-- docker images | grep local/freeipa-server && tests/run-master-and-replica.sh local/freeipa-server
+- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-master-and-replica.sh local/freeipa-server ; fi
