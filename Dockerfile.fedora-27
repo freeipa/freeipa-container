@@ -11,7 +11,6 @@ RUN mkdir -p /run/lock && dnf upgrade -y && dnf install -y freeipa-server freeip
 # debug: RUN ! test -L /var/lib/dbus/machine-id
 RUN mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
 # Workaround 1364139
-RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py && python3 -m compileall /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
