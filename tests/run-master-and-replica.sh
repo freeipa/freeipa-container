@@ -47,6 +47,9 @@ while ! grep -q 'FreeIPA server started' /tmp/freeipa-master.log ; do
 done
 )
 docker ps
+if [ "$replica" = 'none' ] ; then
+	exit
+fi
 MASTER_IP=$( docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 date
 mkdir data-replica

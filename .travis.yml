@@ -42,7 +42,7 @@ matrix:
     - stage: build
       env: dockerfile=fedora-rawhide
     - stage: build
-      env: dockerfile=fedora-26 privileged=--privileged
+      env: dockerfile=fedora-26 privileged=--privileged replica=none
     - stage: build
       env: dockerfile=fedora-25
     - stage: build
