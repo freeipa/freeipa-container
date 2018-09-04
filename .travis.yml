@@ -46,7 +46,7 @@ matrix:
     - stage: build
       env: dockerfile=fedora-25
     - stage: build
-      env: dockerfile=fedora-24
+      env: dockerfile=fedora-24 replica=none
     - stage: build
       env: dockerfile=fedora-23
   exclude:
