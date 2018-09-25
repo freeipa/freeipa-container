@@ -3,7 +3,7 @@ FROM registry.fedoraproject.org/fedora:25
 
 MAINTAINER Jan Pazdziora
 
-RUN mkdir -p /run/lock && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
+RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
 
 # Workaround 1493910
 # debug: RUN test -s /etc/machine-id && ! test -L /var/lib/dbus/machine-id
