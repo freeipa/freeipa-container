@@ -4,7 +4,7 @@ FROM centos:centos7
 MAINTAINER Jan Pazdziora
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
-RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -d / -s '/sbin/nologin' ipaapi
+RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
