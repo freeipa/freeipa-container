@@ -3,7 +3,8 @@ FROM registry.fedoraproject.org/fedora:26
 
 MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 
-RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
+RUN dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts \
+	&& dnf clean all
 
 # debug: RUN ! test -L /var/lib/dbus/machine-id
 RUN mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id

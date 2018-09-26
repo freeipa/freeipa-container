@@ -6,7 +6,9 @@ MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
-RUN dnf upgrade -y && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
+RUN dnf upgrade -y --setopt=install_weak_deps=False \
+	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts \
+	&& dnf clean all
 
 # debug: RUN ! test -L /var/lib/dbus/machine-id
 RUN mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
