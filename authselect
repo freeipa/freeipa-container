@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$*" == "select sssd with-sudo --force" ] \
+	|| [ "$*" == "select sssd --force" ] ; then
+	echo "Not running authselect, this is the default."
+	exit
+fi
+echo "Running authselect $*" >&2
+exec /usr/bin/authselect.orig "$@"
