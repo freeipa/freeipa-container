@@ -3,6 +3,8 @@ FROM fedora:23
 
 MAINTAINER Jan Pazdziora
 
+# Workaround 1615948
+RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
 
 # Container image which runs systemd
