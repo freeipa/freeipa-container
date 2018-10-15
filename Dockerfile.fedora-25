@@ -5,6 +5,15 @@ MAINTAINER Jan Pazdziora
 
 RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts && dnf clean all
 
+# Container image which runs systemd
+# debug: RUN test -f /etc/machine-id && test -s /etc/machine-id
+RUN echo -n > /etc/machine-id
+# debug: RUN test -z "$container"
+ENV container oci
+ENTRYPOINT [ "/usr/sbin/init" ]
+STOPSIGNAL RTMIN+3
+# test: systemd-container-failed.sh auditd.service var-lib-nfs-rpc_pipefs.mount
+
 # Workaround 1493910
 # debug: RUN test -s /etc/machine-id && ! test -L /var/lib/dbus/machine-id
 RUN echo -n > /etc/machine-id && mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
@@ -59,14 +68,10 @@ RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/s
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
-# debug: RUN test -z "$container"
-ENV container oci
-
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
 VOLUME [ "/tmp", "/run", "/data" ]
 
-STOPSIGNAL RTMIN+3
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 

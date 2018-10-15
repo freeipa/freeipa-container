@@ -10,6 +10,12 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts \
 	&& dnf clean all
 
+# debug: RUN test -z "$container"
+ENV container oci
+ENTRYPOINT [ "/usr/sbin/init" ]
+STOPSIGNAL RTMIN+3
+# test: systemd-container-failed.sh var-lib-nfs-rpc_pipefs.mount
+
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python3.*/site-packages/ipaserver/install/server/replicainstall.py && python3 -m compileall /usr/lib/python3.*/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
@@ -55,14 +61,10 @@ RUN mv /usr/lib/tmpfiles.d/journal-nocow.conf /usr/lib/tmpfiles.d/journal-nocow.
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
-# debug: RUN test -z "$container"
-ENV container oci
-
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
 VOLUME [ "/tmp", "/run", "/data" ]
 
-STOPSIGNAL RTMIN+3
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 

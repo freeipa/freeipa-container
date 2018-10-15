@@ -39,7 +39,6 @@ matrix:
       env: dockerfile=centos-7
     - stage: build
       env: dockerfile=centos-7 ca=--external-ca
-  exclude:
     - stage: build
       env: dockerfile=fedora-rawhide
     - stage: build
@@ -50,9 +49,12 @@ matrix:
       env: dockerfile=fedora-24
     - stage: build
       env: dockerfile=fedora-23
+  exclude:
     - stage: build
       env: dockerfile=rhel-7
 
 script:
-- if test -n "$RUN_DOCKER_BUILD" ; then sed 's/^# debug:\s*//' Dockerfile.$dockerfile > Dockerfile.$dockerfile-debug && docker build -t local/freeipa-server -f Dockerfile.$dockerfile-debug . ; fi
+- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-partial-tests.sh Dockerfile.$dockerfile ; fi
+- docker ps -aq | while read i ; do docker rm -f $i ; done
+- if test -n "$RUN_DOCKER_BUILD" ; then docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
 - if test -n "$RUN_DOCKER_BUILD" ; then tests/run-master-and-replica.sh local/freeipa-server ; fi

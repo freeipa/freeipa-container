@@ -8,8 +8,14 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-
 RUN yum install -y ipa-server ipa-server-dns ipa-server-trust-ad && yum clean all
+
+# Container image which runs systemd
+# debug: RUN test -z "$container"
+ENV container oci
+ENTRYPOINT [ "/usr/sbin/init" ]
+STOPSIGNAL RTMIN+3
+# test: systemd-container-failed.sh network.service TRAVIS:sys-fs-fuse-connections.mount var-lib-nfs-rpc_pipefs.mount
 
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
@@ -52,14 +58,10 @@ RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
-# debug: RUN test -z "$container"
-ENV container oci
-
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
 VOLUME [ "/tmp", "/run", "/data" ]
 
-STOPSIGNAL RTMIN+3
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+# set -x
+
+C="$1"
+shift
+
+docker exec $C systemctl status --no-pager -l
+docker exec $C systemctl is-system-running --no-pager -l | grep degraded
+docker exec $C journalctl --no-pager -l
+
+FAILED=$( docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend | tee /dev/stderr | sed 's/ .*//' | sort )
+for s in $FAILED ; do
+	docker exec $C systemctl status $s --no-pager -l || :
+done
+
+diff <( for i in "$@" ; do
+		if ! [ "$i" == "${i#TRAVIS:}" ] ; then
+			if [ -n "$TRAVIS" ] ; then
+				echo "${i#TRAVIS:}"
+			fi
+		else
+			echo $i
+		fi
+	done ) <( for s in $FAILED ; do echo $s ; done )
+
+echo OK $0.
+

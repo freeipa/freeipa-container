@@ -5,6 +5,14 @@ MAINTAINER Jan Pazdziora
 
 RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad && dnf clean all
 
+# Container image which runs systemd
+# debug: RUN ! test -f /etc/machine-id
+# debug: RUN test -z "$container"
+ENV container oci
+ENTRYPOINT [ "/usr/sbin/init" ]
+STOPSIGNAL RTMIN+3
+# test: systemd-container-failed.sh auditd.service proc-fs-nfsd.mount TRAVIS:systemd-firstboot.service var-lib-nfs-rpc_pipefs.mount
+
 RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 RUN echo '0b6f62258de66f74328b0cf45cc937fae6a30e62 /etc/systemd/system/dbus.service' | sha1sum --quiet -c && rm -vf /etc/systemd/system/dbus.service
 RUN echo '5a70f1f3db0608c156d5b6629d4cbc3b304fc045 /etc/systemd/system/sssd.service.d/journal.conf' | sha1sum --quiet -c && rm -vf /etc/systemd/system/sssd.service.d/journal.conf
@@ -48,14 +56,10 @@ RUN mv /data-template/etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/s
 RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
-# debug: RUN test -z "$container"
-ENV container oci
-
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
 VOLUME [ "/tmp", "/run", "/data" ]
 
-STOPSIGNAL RTMIN+3
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 
