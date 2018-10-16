@@ -8,12 +8,15 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns ipa-server-trust-ad && yum clean all
+RUN yum install --disablerepo='*' --enablerepo=rhel-7-server-rpms -y ipa-server ipa-server-dns ipa-server-trust-ad patch && yum clean all
 
 # Container image which runs systemd
 # debug: RUN test "$container" = oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
+# Workaround 1373833
+COPY patches/basic-centos-7.patch /root
+RUN patch --verbose -p0 --fuzz=0 < /root/basic-centos-7.patch
 # test: systemd-container-failed.sh network.service TRAVIS:sys-fs-fuse-connections.mount var-lib-nfs-rpc_pipefs.mount
 
 # Workaround 1364139
