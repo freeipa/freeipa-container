@@ -16,7 +16,7 @@ function run_and_wait_for () {
 	set +x
 	local IMAGE="$1"
 	local NAME="$2"
-	docker run $privileged --name $NAME --rm -d -h ipa.example.test \
+	docker run --name $NAME --rm -d -h ipa.example.test \
 		--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
 	for j in $( seq 1 30 ) ; do
