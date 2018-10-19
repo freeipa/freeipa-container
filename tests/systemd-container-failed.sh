@@ -7,7 +7,7 @@ C="$1"
 shift
 
 docker exec $C systemctl status --no-pager -l
-docker exec $C systemctl is-system-running --no-pager -l | grep degraded
+docker exec $C systemctl is-system-running --no-pager -l | grep -E 'degraded|starting'
 docker exec $C journalctl --no-pager -l
 
 FAILED=$( docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend | tee /dev/stderr | sed 's/ .*//' | sort )

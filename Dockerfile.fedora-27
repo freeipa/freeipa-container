@@ -7,7 +7,7 @@ RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d 
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
-	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad initscripts \
+	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad patch \
 	&& dnf clean all
 
 # Container image which runs systemd
@@ -18,17 +18,25 @@ ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
 # test: systemd-container-failed.sh auditd.service var-lib-nfs-rpc_pipefs.mount
 
-# debug: RUN ! test -L /var/lib/dbus/machine-id
-RUN mkdir -p /var/lib/dbus && ln -s /etc/machine-id /var/lib/dbus/machine-id
+# Minimize the systemd setup
+RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
+COPY patches/minimal-fedora-25.patch /root/
+RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-25.patch
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
+
+COPY container-ipa.target /usr/lib/systemd/system/
+RUN systemctl set-default container-ipa.target
+RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
+	&& mkdir /etc/systemd/system/container-ipa.target.wants \
+	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
+RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
+# debug: RUN ! test -f /var/lib/systemd/random-seed
+# test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-27.exceptions docker-diff-minimal-fedora-23.out
+
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py && python3 -m compileall /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
-
-RUN find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf
-RUN for i in basic.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done
-RUN rm -fv /usr/lib/systemd/system/sysinit.target.wants/*
-RUN echo 'disable *' > /usr/lib/systemd/system-preset/10-container-disable.preset
 
 RUN /sbin/ldconfig -X
 
@@ -40,16 +48,8 @@ RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /bin/hostnamectl
 ADD hostnamectl-wrapper /usr/bin/domainname
 RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/systemctl-exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
-COPY container-ipa.target ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
-RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
-	&& mkdir /etc/systemd/system/container-ipa.target.wants \
-	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
-
-RUN systemctl set-default container-ipa.target
+COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
-
-# debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
-RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
 
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
@@ -60,7 +60,6 @@ RUN rm -rf /var/log-removed
 RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
 # Workaround 1286602
 RUN mv /usr/lib/tmpfiles.d/journal-nocow.conf /usr/lib/tmpfiles.d/journal-nocow.conf.disabled
-RUN rm -f /data-template/var/lib/systemd/random-seed
 RUN echo 1.1 > /etc/volume-version
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445

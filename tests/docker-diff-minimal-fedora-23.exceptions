@@ -1,0 +1,5 @@
+# When oci-systemd-hook is not used, the journal gets created in the overlay
+^C /var/log/journal$
+^A /var/log/journal/
+# Workaround 1611623
+^C /var/log/[bw]tmp$
