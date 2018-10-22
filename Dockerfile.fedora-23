@@ -30,20 +30,22 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 RUN rm -v /var/lib/systemd/random-seed
 # test: systemd-container-diff.sh list-dependencies-fedora-23.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
+# Prepare for basic ipa-server-install in container
+RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+
+# Address failing fedora-domainname.service in the ipa-client-install step
+RUN mv /usr/bin/domainname /usr/bin/domainname.orig
+ADD hostnamectl-wrapper /usr/bin/domainname
+# test: systemd-container-ipa-server-install.sh
+
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
-RUN mv /bin/hostnamectl /bin/hostnamectl.orig
-RUN mv /usr/bin/domainname /usr/bin/domainname.orig
-ADD hostnamectl-wrapper /bin/hostnamectl
-ADD hostnamectl-wrapper /usr/bin/domainname
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
-
-RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
-RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 
 COPY atomic-install-help /usr/share/ipa/
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/

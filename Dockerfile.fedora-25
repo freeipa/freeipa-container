@@ -29,27 +29,24 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 # test: systemd-container-diff.sh list-dependencies-fedora-24.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
-# Workaround 1364139
-RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py
-# Workaround 1377973
-RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.append(ipautil.CheckedIPAddress(ha, match_local=False))/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
-RUN sed -i "s/(list, 'ip-local')/(list, 'ip')/" /usr/lib/python2.7/site-packages/ipaserver/install/server/common.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/common.py
-# Workaround https://fedorahosted.org/freeipa/ticket/6518
-RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
+# Prepare for basic ipa-server-install in container
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+
+# Address failing fedora-domainname.service in the ipa-client-install step
+RUN mv /usr/bin/domainname /usr/bin/domainname.orig
+ADD hostnamectl-wrapper /usr/bin/domainname
+
+COPY patches/ipa-fedora-25.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-25.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
+# test: systemd-container-ipa-server-install.sh
 
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
-RUN mv /bin/hostnamectl /bin/hostnamectl.orig
-RUN mv /usr/bin/domainname /usr/bin/domainname.orig
-ADD hostnamectl-wrapper /bin/hostnamectl
-ADD hostnamectl-wrapper /usr/bin/domainname
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
-
-RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 
 COPY atomic-install-help /usr/share/ipa/
 COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
