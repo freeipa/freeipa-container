@@ -18,7 +18,7 @@ STOPSIGNAL RTMIN+3
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
 COPY patches/minimal-fedora-25.patch /root/
 RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-25.patch
-# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target
@@ -36,8 +36,6 @@ RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.app
 RUN sed -i "s/(list, 'ip-local')/(list, 'ip')/" /usr/lib/python2.7/site-packages/ipaserver/install/server/common.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/server/common.py
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
 RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
-
-RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 
 RUN /sbin/ldconfig -X
 

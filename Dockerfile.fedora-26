@@ -16,9 +16,9 @@ STOPSIGNAL RTMIN+3
 
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
-COPY patches/minimal-fedora-25.patch /root/
-RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-25.patch
-# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
+COPY patches/minimal-fedora-26.patch /root/
+RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-26.patch
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target

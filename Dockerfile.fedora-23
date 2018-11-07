@@ -19,7 +19,7 @@ STOPSIGNAL RTMIN+3
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
 COPY patches/minimal-fedora-23.patch /root/
 RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-23.patch
-# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target
@@ -29,8 +29,6 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
 RUN rm -v /var/lib/systemd/random-seed
 # test: systemd-container-diff.sh list-dependencies-fedora-23.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
-
-RUN echo 'd0a98590c74bfe36af0ce006f7b25fa60246aecb /etc/tmpfiles.d/opendnssec.conf' | sha1sum --quiet -c && mv -v /etc/tmpfiles.d/opendnssec.conf /usr/lib/tmpfiles.d/opendnssec.conf
 
 RUN /sbin/ldconfig -X
 

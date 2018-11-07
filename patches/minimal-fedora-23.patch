@@ -50,6 +50,17 @@
 +ExecStartPre=/usr/libexec/ipa/ipa-httpd-kdcproxy
 +ExecStopPost=-/usr/bin/kdestroy -A
 #
+# Move /etc/tmpfiles.d content to /usr/lib/tmpfiles.d
+#
+--- /etc/tmpfiles.d/opendnssec.conf    2016-02-01 12:14:52.000000000 +0000
++++ /dev/null  2018-09-17 08:06:53.663641878 +0000
+@@ -1 +0,0 @@
+-D /var/run/opendnssec 0755 ods ods -
+--- /dev/null  2018-09-17 08:06:53.663641878 +0000
++++ /usr/lib/tmpfiles.d/opendnssec.conf        2016-02-01 12:14:52.000000000 +0000
+@@ -0,0 +1 @@
++D /var/run/opendnssec 0755 ods ods -
+#
 # Avoid any default dependencies for targets that will be used.
 #
 --- /usr/lib/systemd/system/sysinit.target	2016-02-01 14:04:05.000000000 +0000

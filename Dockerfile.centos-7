@@ -25,7 +25,7 @@ RUN patch --verbose -p0 --fuzz=0 < /root/basic-centos-7.patch
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
 COPY patches/minimal-centos-7.patch /root/
 RUN patch --verbose -p0 --fuzz=0 < /root/minimal-centos-7.patch
-# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target
