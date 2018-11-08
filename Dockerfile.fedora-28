@@ -40,8 +40,6 @@ RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_d
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
 
-RUN /sbin/ldconfig -X
-
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/

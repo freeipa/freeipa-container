@@ -37,8 +37,6 @@ RUN sed -i "s/(list, 'ip-local')/(list, 'ip')/" /usr/lib/python2.7/site-packages
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
 RUN sed -i 's/getaddrinfo(fqdn/getaddrinfo(fqdn.rstrip(".")/' /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py && python -m compileall /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py
 
-RUN /sbin/ldconfig -X
-
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/

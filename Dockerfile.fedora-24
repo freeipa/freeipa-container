@@ -38,8 +38,6 @@ RUN sed -i 's/ips.append(ipautil.CheckedIPAddress(ha, match_local=True))/ips.app
 # Avoid /usr/lib/python3.5/site-packages/SSSDConfig/__pycache__ changes in runtime
 RUN python3 -c 'import SSSDConfig'
 
-RUN /sbin/ldconfig -X
-
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/

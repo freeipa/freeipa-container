@@ -30,8 +30,6 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 RUN rm -v /var/lib/systemd/random-seed
 # test: systemd-container-diff.sh list-dependencies-fedora-23.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
-RUN /sbin/ldconfig -X
-
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
