@@ -49,7 +49,6 @@ RUN mv /bin/hostnamectl /bin/hostnamectl.orig
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /bin/hostnamectl
 ADD hostnamectl-wrapper /usr/bin/domainname
-RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 

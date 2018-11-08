@@ -46,7 +46,6 @@ RUN mv /bin/hostnamectl /bin/hostnamectl.orig
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /bin/hostnamectl
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
-RUN chmod -v +x /usr/local/sbin/init /usr/sbin/ipa-server-configure-first /usr/sbin/systemctl-exit-with-status /usr/sbin/ipa-volume-upgrade-* /bin/install.sh /bin/uninstall.sh /bin/hostnamectl /usr/bin/domainname
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 
