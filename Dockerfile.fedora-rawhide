@@ -24,6 +24,7 @@ COPY patches/minimal-fedora-25.patch /root/
 RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-25.patch
 # debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type f | grep .
 
+RUN ln -s /usr/lib/systemd/system/dbus-daemon.service /usr/lib/systemd/system/dbus.service
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
@@ -31,7 +32,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN systemd-tmpfiles --remove --create
 # debug: RUN ! test -f /var/lib/systemd/random-seed
-# test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
+# test: systemd-container-diff.sh list-dependencies-fedora-30.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Workaround 1364139
 RUN sed -i '/installutils.verify_fqdn(config.master_host_name, options.no_host_dns)/s/)/, local_hostname=False)/' /usr/lib/python3.*/site-packages/ipaserver/install/server/replicainstall.py && python3 -m compileall /usr/lib/python3.*/site-packages/ipaserver/install/server/replicainstall.py
