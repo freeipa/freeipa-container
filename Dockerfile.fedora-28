@@ -40,8 +40,8 @@ RUN systemd-tmpfiles --remove --create
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname
 
-COPY patches/ipa-fedora-27.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-27.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
+COPY patches/ipa-fedora-28.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-28.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
 
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf

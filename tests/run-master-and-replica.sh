@@ -7,7 +7,7 @@ IMAGE="$1"
 
 date
 mkdir data
-docker run $privileged -h ipa.example.test \
+docker run -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 	-v $(pwd)/data:/data:Z \
@@ -17,7 +17,7 @@ if [ -n "$ca" ] ; then
 	date
 	sudo tests/generate-external-ca.sh data
 	date
-	docker run $privileged -h ipa.example.test \
+	docker run -h ipa.example.test \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		-v $(pwd)/data:/data:Z \
@@ -26,7 +26,7 @@ if [ -n "$ca" ] ; then
 			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
 fi
 date
-docker run $privileged -h ipa.example.test \
+docker run -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 	-v $(pwd)/data:/data:Z \
@@ -35,7 +35,7 @@ docker run $privileged -h ipa.example.test \
 date
 uuidgen | sudo tee data/build-id
 touch /tmp/freeipa-master.log
-( docker run $privileged --name freeipa-master -h ipa.example.test \
+( docker run --name freeipa-master -h ipa.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 	-v $(pwd)/data:/data:Z \
@@ -53,7 +53,7 @@ fi
 MASTER_IP=$( docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 date
 mkdir data-replica
-docker run $privileged --name freeipa-replica -h replica.example.test \
+docker run --name freeipa-replica -h replica.example.test \
 	--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 	--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 	-v $(pwd)/data-replica:/data:Z \
