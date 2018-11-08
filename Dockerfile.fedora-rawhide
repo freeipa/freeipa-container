@@ -16,7 +16,7 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 ENV container oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
-# test: systemd-container-failed.sh var-lib-nfs-rpc_pipefs.mount
+# test: systemd-container-failed.sh nfs-convert.service var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
