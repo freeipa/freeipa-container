@@ -57,10 +57,11 @@ RUN authconfig --help > /dev/null
 COPY patches/ipa-data-fedora-27.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-27.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
 
-COPY utils/prepare-volume-template utils/populate-volume-from-template /usr/local/bin/
+COPY utils/prepare-volume-template utils/populate-volume-from-template utils/extract-rpm-upgrade-scriptlets /usr/local/bin/
 COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
 RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
 RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
+RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
 VOLUME [ "/tmp", "/run", "/data" ]

@@ -57,10 +57,11 @@ COPY ipa-join /usr/sbin/ipa-join
 RUN authselect select sssd with-sudo --force && mv /usr/bin/authselect /usr/bin/authselect.orig
 COPY authselect /usr/bin/authselect
 
-COPY utils/prepare-volume-template utils/populate-volume-from-template /usr/local/bin/
+COPY utils/prepare-volume-template utils/populate-volume-from-template utils/extract-rpm-upgrade-scriptlets /usr/local/bin/
 COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
 RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
 RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
+RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
 VOLUME [ "/tmp", "/run", "/data" ]

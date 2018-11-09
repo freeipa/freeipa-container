@@ -58,10 +58,11 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-24.pa
 
 RUN mv /etc/dirsrv/schema /usr/share/dirsrv/schema && ln -s /usr/share/dirsrv/schema /etc/dirsrv/schema
 
-COPY utils/prepare-volume-template utils/populate-volume-from-template /usr/local/bin/
+COPY utils/prepare-volume-template utils/populate-volume-from-template utils/extract-rpm-upgrade-scriptlets /usr/local/bin/
 COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
 RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
 RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
+RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
 VOLUME [ "/tmp", "/run", "/data" ]
