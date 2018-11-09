@@ -43,6 +43,11 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-27.patch |
 
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
+
+# Workaround 1601180
+# debug: RUN ! test -f /usr/share/authconfig/__pycache__/dnsclient.cpython-36.pyc
+RUN authconfig --help > /dev/null
+# debug: RUN test -f /usr/share/authconfig/__pycache__/dnsclient.cpython-36.pyc
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume

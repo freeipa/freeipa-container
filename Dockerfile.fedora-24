@@ -42,6 +42,11 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-24.patch |
 
 # Avoid /usr/lib/python3.5/site-packages/SSSDConfig/__pycache__ changes in runtime
 RUN python3 -c 'import SSSDConfig'
+
+# Workaround 1601180
+# debug: RUN ! test -f /usr/share/authconfig/__pycache__/authinfo.cpython-35.pyc
+RUN authconfig --help > /dev/null
+# debug: RUN test -f /usr/share/authconfig/__pycache__/authinfo.cpython-35.pyc
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
