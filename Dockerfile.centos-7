@@ -52,12 +52,6 @@ COPY install.sh uninstall.sh /bin/
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN systemctl enable ipa-server-configure-first.service
 
-COPY init-data /usr/local/sbin/init
-COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
-COPY install.sh uninstall.sh /bin/
-COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
-RUN systemctl enable ipa-server-configure-first.service
-
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 COPY atomic-install-help /usr/share/ipa/
