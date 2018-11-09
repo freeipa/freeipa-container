@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+VOLUME="$1"
+shift
+if [ -z "$VOLUME" ] ; then
+	echo "Usage: $0 /volume-path [ /other-volume-paths ]" >&2
+	exit 1
+fi
+
+while [ -n "$VOLUME" ] ; do
+	# echo "Populating $VOLUME ..."
+	cd "$VOLUME-template"
+
+	find * | while read f ; do
+		if [ -d "$VOLUME-template/$f" ] ; then
+			if [ -L "$VOLUME/$f" ] && ! [ -L "$VOLUME-template/$f" ] ; then
+				echo "Removing symlink $VOLUME/$f, replacing with directory from $VOLUME-template."
+				rm -f "$VOLUME/$f"
+			elif [ -f "$VOLUME/$f" ] ; then
+				echo "Removing file $VOLUME/$f, replacing with directory from $VOLUME-template."
+				rm -f "$VOLUME/$f"
+			fi
+		fi
+		if ! [ -e "$VOLUME/$f" ] ; then
+			tar cf - "$f" | ( cd "$VOLUME" && tar xf - )
+		fi
+	done
+
+	VOLUME="$1"
+	shift || :
+done
+
+exit 0

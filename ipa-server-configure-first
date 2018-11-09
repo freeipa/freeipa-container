@@ -174,16 +174,6 @@ else
 		grep '/$' /etc/volume-data-list | sed 's!^!.!' | xargs mkdir -p
 	)
 
-	# Workaround 1409806
-	rmdir /data/etc/pki/pki-tomcat 2> /dev/null || :
-
-	while read i ; do
-		rm -f "$i"
-		if [ -e "/data$i" ] ; then
-			( cd /data && tar cf - ".$i" ) | tar xf -
-		fi
-	done < /etc/volume-data-mv-list
-
 	HOSTNAME_SHORT=${HOSTNAME%%.*}
 	DOMAIN=${HOSTNAME#*.}
 	if [ "$HOSTNAME_SHORT.$DOMAIN" != "$HOSTNAME" ] ; then
@@ -209,13 +199,6 @@ else
 		fi
 		cat /run/ipa/$COMMAND-options
 		) $RUN_CMD < $STDIN > $STDOUT 2> $STDERR ; then
-		cat /etc/volume-data-mv-list | while read i ; do
-			rm -rf /data$i
-			if [ -e $i ] ; then
-				mv $i /data$i
-			fi
-			ln -sf /data$i $i
-		done
 		cp /etc/volume-version /data/volume-version
 
 		if ! [ -f /etc/ipa/ca.crt ] && [ -f /root/ipa.csr ] ; then

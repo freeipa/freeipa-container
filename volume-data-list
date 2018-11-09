@@ -15,7 +15,7 @@
 /etc/pam.d/
 /etc/pki/ca-trust/
 /etc/pki/nssdb/
-/etc/pki/pki-tomcat/
+/etc/pki/pki-tomcat
 /etc/rndc.key
 /etc/samba/
 /etc/sssd/

@@ -40,6 +40,8 @@ for i in /run/* /tmp/* ; do
 	fi
 done
 
+/usr/local/bin/populate-volume-from-template /tmp
+
 # Workaround 1373562
 mkdir -p /run/lock
 
@@ -167,7 +169,7 @@ DATA_TEMPLATE=/data-template
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	if ! [ -f $DATA/ipa.csr ] ; then
 		# Do not refresh $DATA in the second stage of the external CA setup
-		( cd $DATA_TEMPLATE && tar cf - . ) | ( cd $DATA && tar xf - )
+		/usr/local/bin/populate-volume-from-template /data
 	fi
 	if [ -n "$PASSWORD" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' ] ; then
@@ -219,20 +221,7 @@ fi
 if [ -f "$DATA/build-id" ] ; then
 	if ! cmp -s $DATA/build-id $DATA_TEMPLATE/build-id ; then
 		echo "FreeIPA server is already configured but with different version, volume update."
-		( cd $DATA_TEMPLATE && find * | while read f ; do
-			if [ -d "$DATA_TEMPLATE/$f" ] && [ -f "$DATA/$f" ] ; then
-				echo "Removing file $DATA/$f, replacing with directory from $DATA_TEMPLATE."
-				rm -f "$DATA/$f"
-			fi
-			if ! [ -L "$DATA_TEMPLATE/$f" ] && [ -d "$DATA_TEMPLATE/$f" ] && [ -L "$DATA/$f" ] ; then
-				echo "Removing symlink $DATA/$f, replacing with directory from $DATA_TEMPLATE."
-				rm -f "$DATA/$f"
-			fi
-			if ! [ -e $DATA/$f ] ; then
-				tar cf - $f | ( cd $DATA && tar xf - )
-			fi
-			done
-		)
+		/usr/local/bin/populate-volume-from-template /data
 		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
 			| while read f ; do
 				rm -f "$DATA/$f"

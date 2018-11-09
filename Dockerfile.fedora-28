@@ -45,33 +45,39 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-28.patch |
 
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
-# test: systemd-container-ipa-server-install.sh
+## # test: systemd-container-ipa-server-install.sh
+
+# Move configuration and data to data volume
+COPY patches/ipa-data-fedora-28.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-28.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
+
+RUN authselect select sssd with-sudo --force && mv /usr/bin/authselect /usr/bin/authselect.orig
+COPY authselect /usr/bin/authselect
+
+COPY utils/prepare-volume-template utils/populate-volume-from-template /usr/local/bin/
+COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
+RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
+RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
+
+RUN echo 2.0 > /etc/volume-version
+VOLUME [ "/tmp", "/run", "/data" ]
+
+COPY init-data-minimal /usr/local/sbin/init
+ENTRYPOINT [ "/usr/local/sbin/init" ]
+# test: systemd-container-ipa-server-install-data.sh docker-diff-minimal-fedora-23.out
 
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY install.sh uninstall.sh /bin/
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
-RUN systemctl enable ipa-server-configure-first.service
-
-RUN authselect select sssd with-sudo --force && mv /usr/bin/authselect /usr/bin/authselect.orig
-COPY authselect /usr/bin/authselect
+RUN ln -sv /usr/lib/systemd/system/ipa-server-configure-first.service /data-template/etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
 
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
 COPY atomic-install-help /usr/share/ipa/
-COPY volume-data-list volume-data-mv-list volume-data-autoupdate /etc/
-RUN set -e ; cd / ; mkdir /data-template ; cat /etc/volume-data-list | while read i ; do echo $i ; if [ -e $i ] ; then tar cf - .$i | ( cd /data-template && tar xf - ) ; else mkdir -p /data-template$( dirname $i ) ; fi ; mkdir -p $( dirname $i ) ; if [ "$i" == /var/log/ ] ; then mv /var/log /var/log-removed ; else rm -rf $i ; fi ; ln -sf /data${i%/} ${i%/} ; done
-RUN rm -rf /var/log-removed
-RUN sed -i 's!^d /var/log.*!L /var/log - - - - /data/var/log!' /usr/lib/tmpfiles.d/var.conf
-# Workaround 1286602
-RUN mv /usr/lib/tmpfiles.d/journal-nocow.conf /usr/lib/tmpfiles.d/journal-nocow.conf.disabled
-RUN echo 1.1 > /etc/volume-version
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
-VOLUME [ "/tmp", "/run", "/data" ]
-
-ENTRYPOINT [ "/usr/local/sbin/init" ]
 RUN uuidgen > /data-template/build-id
 
 # Invocation:

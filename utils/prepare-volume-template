@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+LIST="$1"
+VOLUME="$2"
+
+if [ -z "$LIST" -o -z "$VOLUME" ] ; then
+	echo "Usage: $0 volume-list-file /volume-path" >&2
+	exit 1
+fi
+
+mkdir -p "$VOLUME" "$VOLUME-template"
+while read i ; do
+	parent=$( dirname "$i" )
+	if [ -e "$i" ] ; then
+		tar cf - ".$i" | ( cd "$VOLUME-template" && tar xf - )
+	elif [ -z "${i/*\//}" ] ; then
+		mkdir -p "$VOLUME-template"/"$i"
+	else
+		mkdir -p "$VOLUME-template"/"$parent"
+	fi
+	mkdir -p "$parent"
+	rm -rf "$i"
+	ln -sv "$VOLUME${i%/}" "${i%/}"
+done < "$LIST"
