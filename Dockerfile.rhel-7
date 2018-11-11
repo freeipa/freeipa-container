@@ -36,7 +36,7 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 # test: systemd-container-diff.sh list-dependencies-centos-7.out docker-diff-minimal-centos-7.exceptions docker-diff-minimal-centos-7.out
 
 # Prepare for basic ipa-server-install in container
-# Address failing fedora-domainname.service in the ipa-client-install step
+# Address failing rhel-domainname.service in the ipa-client-install step
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname
 
