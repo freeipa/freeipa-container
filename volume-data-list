@@ -28,6 +28,7 @@
 /root/ca-agent.p12
 /root/cacert.p12
 /root/.dogtag/
+/root/ipa.csr
 /usr/share/ipa/html/ca.crt
 /usr/share/ipa/html/configure.jar
 /usr/share/ipa/html/kerberosauth.xpi
