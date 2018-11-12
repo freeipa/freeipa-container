@@ -44,6 +44,9 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-27.patch |
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
 
+RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
+COPY ipa-join /usr/sbin/ipa-join
+
 # Workaround 1601180
 # debug: RUN ! test -f /usr/share/authconfig/__pycache__/dnsclient.cpython-36.pyc
 RUN authconfig --help > /dev/null

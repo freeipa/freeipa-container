@@ -39,6 +39,9 @@ ADD hostnamectl-wrapper /usr/bin/domainname
 COPY patches/ipa-fedora-25.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-25.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
 
+RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
+COPY ipa-join /usr/sbin/ipa-join
+
 # Workaround 1601180
 # debug: RUN ! test -f /usr/share/authconfig/__pycache__/authinfo.cpython-35.pyc
 RUN authconfig --help > /dev/null

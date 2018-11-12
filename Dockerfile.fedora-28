@@ -51,6 +51,9 @@ COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d
 COPY patches/ipa-data-fedora-28.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-28.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
 
+RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
+COPY ipa-join /usr/sbin/ipa-join
+
 RUN authselect select sssd with-sudo --force && mv /usr/bin/authselect /usr/bin/authselect.orig
 COPY authselect /usr/bin/authselect
 
