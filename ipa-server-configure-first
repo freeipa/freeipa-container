@@ -209,7 +209,6 @@ else
 		fi
 		cat /run/ipa/$COMMAND-options
 		) $RUN_CMD < $STDIN > $STDOUT 2> $STDERR ; then
-		sed -i 's/default_ccache_name/# default_ccache_name/' /data/etc/krb5.conf
 		cat /etc/volume-data-mv-list | while read i ; do
 			rm -rf /data$i
 			if [ -e $i ] ; then

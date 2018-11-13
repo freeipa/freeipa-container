@@ -37,6 +37,9 @@ RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d 
 # Address failing fedora-domainname.service in the ipa-client-install step
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname
+
+COPY patches/ipa-fedora-23.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-23.patch
 # test: systemd-container-ipa-server-install.sh
 
 COPY init-data /usr/local/sbin/init
