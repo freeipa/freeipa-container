@@ -39,7 +39,7 @@ RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname
 
 COPY patches/ipa-fedora-23.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-23.patch
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-23.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
 # test: systemd-container-ipa-server-install.sh
 
 COPY init-data /usr/local/sbin/init
