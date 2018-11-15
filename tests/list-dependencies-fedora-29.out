@@ -1,0 +1,10 @@
+default.target
+● ├─dbus-daemon.service
+● │ ├─dbus.socket
+● │ │ └─sysinit.target
+● │ └─sysinit.target
+● ├─systemd-journald.service
+● │ ├─systemd-journald-audit.socket
+● │ ├─systemd-journald-dev-log.socket
+● │ └─systemd-journald.socket
+● └─systemd-tmpfiles-setup.service

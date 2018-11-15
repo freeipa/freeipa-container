@@ -28,6 +28,7 @@ COPY patches/minimal-fedora-26.patch /root/
 RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-26.patch
 # debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
+RUN ln -s /usr/lib/systemd/system/dbus-daemon.service /usr/lib/systemd/system/dbus.service
 COPY container-ipa.target /usr/lib/systemd/system/
 RUN systemctl set-default container-ipa.target
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
@@ -36,7 +37,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 RUN systemd-tmpfiles --remove --create
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 # test-addon: VOLUME [ "/var/log/journal" ]
-# test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
+# test: systemd-container-diff.sh list-dependencies-fedora-29.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
 # Address failing nis-domainname.service in the ipa-client-install step
