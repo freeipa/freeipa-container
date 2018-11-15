@@ -47,3 +47,20 @@
  AUTH_PAM_SERVICE = "system-auth"
  AUTH_PAM_SERVICE_AC = "system-auth-ac"
  
+#
+# Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
+# being created in runtime
+#
+--- /usr/lib/python3.6/site-packages/ipaplatform/fedora/paths.py	2018-08-20 07:05:54.000000000 +0000
++++ /usr/lib/python3.6/site-packages/ipaplatform/fedora/paths.py	2018-11-15 21:51:40.271519349 +0000
+@@ -29,9 +29,7 @@
+ 
+ 
+ class FedoraPathNamespace(RedHatPathNamespace):
+-    HTTPD_IPA_WSGI_MODULES_CONF = (
+-        "/etc/httpd/conf.modules.d/02-ipa-wsgi.conf"
+-    )
++    HTTPD_IPA_WSGI_MODULES_CONF = None
+ 
+ 
+ paths = FedoraPathNamespace()
