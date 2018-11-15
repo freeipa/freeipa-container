@@ -6,6 +6,7 @@
 /etc/httpd/conf.d/
 /etc/ipa/
 /etc/krb5.conf
+/etc/krb5.conf.d/
 /etc/krb5.keytab
 /etc/named.conf
 /etc/named.keytab
