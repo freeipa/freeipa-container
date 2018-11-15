@@ -13,7 +13,7 @@ fi
 mkdir -p "$VOLUME" "$VOLUME-template"
 while read i ; do
 	parent=$( dirname "$i" )
-	if [ -e "$i" ] ; then
+	if [ -e "$i" -o -L "$i" ] ; then
 		tar cf - ".$i" | ( cd "$VOLUME-template" && tar xf - )
 	elif [ -z "${i/*\//}" ] ; then
 		mkdir -p "$VOLUME-template"/"$i"
