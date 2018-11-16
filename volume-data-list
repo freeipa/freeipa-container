@@ -46,6 +46,7 @@
 /var/lib/ipa-client/
 /var/lib/pki/
 /var/lib/samba/
+/var/lib/softhsm/tokens/
 /var/lib/sss/db/
 /var/lib/sss/keytabs/
 /var/lib/sss/mc/
