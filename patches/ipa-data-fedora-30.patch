@@ -38,3 +38,14 @@
  pki_registry_path=/etc/sysconfig/pki
  pki_instance_path=%(pki_path)s/%(pki_instance_name)s
  pki_instance_log_path=%(pki_log_path)s/%(pki_instance_name)s
+--- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
++++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
+@@ -13,7 +13,7 @@
+ fi
+ 
+ fname=${1/:/-}-$2
+-pwdpath=/var/lib/ipa/passwds/$fname
++pwdpath=/data/var/lib/ipa/passwds/$fname
+ 
+ # Make sure the values passed in do not contain path information
+ checkpath=$(/usr/bin/realpath -e ${pwdpath} 2>/dev/null)
