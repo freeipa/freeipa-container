@@ -50,7 +50,7 @@ RUN authconfig --help > /dev/null
 
 # Move configuration and data to data volume
 COPY patches/ipa-data-fedora-25.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-25.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-25.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | while read i ; do if test -z "${i##*/authconfig/*}" ; then python3 -m compileall $i ; else python -m compileall $i ; fi ; done
 
 COPY utils/prepare-volume-template utils/populate-volume-from-template /usr/local/bin/
 COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
