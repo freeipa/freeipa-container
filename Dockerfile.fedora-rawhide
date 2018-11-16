@@ -36,7 +36,7 @@ RUN systemd-tmpfiles --remove --create
 # test: systemd-container-diff.sh list-dependencies-fedora-30.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
-# Address failing fedora-domainname.service in the ipa-client-install step
+# Address failing nis-domainname.service in the ipa-client-install step
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
 
