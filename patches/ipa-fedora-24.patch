@@ -64,3 +64,17 @@
  
  def has_key(key):
      """
+#
+# Avoid /custodia.audit.log on master when replica is being setup
+#
+--- /usr/lib/python2.7/site-packages/custodia/log.py   2015-07-09 13:52:57.000000000 +0000
++++ /usr/lib/python2.7/site-packages/custodia/log.py   2018-09-17 18:25:50.255500752 +0000
+@@ -59,7 +59,7 @@
+     def __init__(self, config):
+         if config is None:
+             config = {}
+-        self.logfile = config.get('auditlog', 'custodia.audit.log')
++        self.logfile = config.get('auditlog', '/var/log/custodia.audit.log')
+
+     def _log(self, message):
+         with open(self.logfile, 'a+') as f:
