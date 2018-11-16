@@ -1,0 +1,43 @@
+#
+# Workaround 1364139
+#
+--- /usr/lib/python3.7/site-packages/ipaserver/install/server/replicainstall.py	2018-10-05 18:31:57.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipaserver/install/server/replicainstall.py	2018-11-08 13:45:48.223578505 +0000
+@@ -1115,7 +1115,7 @@
+                            "certificate")
+ 
+     installutils.verify_fqdn(config.host_name, options.no_host_dns)
+-    installutils.verify_fqdn(config.master_host_name, options.no_host_dns)
++    installutils.verify_fqdn(config.master_host_name, options.no_host_dns, local_hostname=False)
+ 
+     ccache = os.environ['KRB5CCNAME']
+     kinit_keytab('host/{env.host}@{env.realm}'.format(env=api.env),
+#
+# Do not use kernel keyring, it is not namespaced
+#
+--- /etc/krb5.conf      2018-10-09 20:59:16.000000000 +0000
++++ /etc/krb5.conf      2018-11-15 14:50:31.177469217 +0000
+@@ -16,7 +16,7 @@
+     pkinit_anchors = /etc/pki/tls/certs/ca-bundle.crt
+     spake_preauth_groups = edwards25519
+ #    default_realm = EXAMPLE.COM
+-    default_ccache_name = KEYRING:persistent:%{uid}
++#    default_ccache_name = KEYRING:persistent:%{uid}
+
+ [realms]
+ # EXAMPLE.COM = {
+#
+# Prevent the default_ccache_name = KEYRING:persistent:%{uid} from
+# being put back in during ipa-server-install/ipa-replica-install.
+#
+--- /usr/lib/python3.7/site-packages/ipapython/kernel_keyring.py	2018-07-19 16:58:12.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipapython/kernel_keyring.py	2018-11-15 15:28:57.989157597 +0000
+@@ -75,7 +75,7 @@
+     except ValueError:
+         return False
+
+-    return True
++    return False
+
+
+ def has_key(key):
