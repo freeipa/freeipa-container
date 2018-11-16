@@ -1,3 +1,13 @@
 ^C /etc$
 ^[CD] /etc/machine-id$
 ^C /etc/mtab$
+^C /usr$
+^[AD] /usr/dev$
+^[AD] /usr/etc$
+^[AD] /usr/mnt$
+^[AD] /usr/proc$
+^[AD] /usr/root$
+^[AD] /usr/run$
+^[AD] /usr/sys$
+^[AD] /usr/usr$
+^[AD] /usr/var$
