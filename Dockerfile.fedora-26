@@ -6,6 +6,9 @@ MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 RUN dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad patch \
 	&& dnf clean all
 
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 3
+
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
 # debug: RUN test -z "$container"
@@ -30,8 +33,6 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 # test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
-RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
-
 # Address failing fedora-domainname.service in the ipa-client-install step
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname

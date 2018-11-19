@@ -7,6 +7,10 @@ MAINTAINER Jan Pazdziora
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad patch && dnf clean all
 
+RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 3
+
 # Container image which runs systemd
 # debug: RUN ! test -f /etc/machine-id
 # debug: RUN test -z "$container"
@@ -31,9 +35,6 @@ RUN rm -v /var/lib/systemd/random-seed
 # test: systemd-container-diff.sh list-dependencies-fedora-23.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
-RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'DS System User' -d '/var/lib/dirsrv' --no-create-home -s '/sbin/nologin' dirsrv
-RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
-
 # Address failing fedora-domainname.service in the ipa-client-install step
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname

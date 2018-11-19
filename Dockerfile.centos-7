@@ -10,6 +10,8 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN yum install -y ipa-server ipa-server-dns ipa-server-trust-ad patch && yum clean all
 
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
+
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
 # debug: RUN test -z "$container"
