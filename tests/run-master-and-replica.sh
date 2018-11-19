@@ -28,7 +28,12 @@ function run_ipa_container() {
 	docker logs -f "$N" &
 	while true ; do
 		sleep 10
-		if ! docker exec "$N" systemctl is-system-running 2> /dev/null | grep -Eq 'starting|initializing' ; then
+		if [ "$1" == exit-on-finished ] ; then
+			if [ "$( docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
+				echo "The container has exited, presumably because of exit-on-finished."
+				break
+			fi
+		elif ! docker exec "$N" systemctl is-system-running 2> /dev/null | grep -Eq 'starting|initializing' ; then
 			break
 		fi
 	done
