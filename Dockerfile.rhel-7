@@ -1,5 +1,5 @@
 # Clone from the RHEL 7
-FROM rhel7
+FROM registry.access.redhat.com/rhel7
 
 MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
