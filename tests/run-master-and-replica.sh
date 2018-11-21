@@ -3,10 +3,9 @@
 set -e
 set -x
 
-IMAGE="$1"
-
 function run_ipa_container() {
 	set +x
+	IMAGE="$1" ; shift
 	N="$1" ; shift
 	set -e
 	date
@@ -47,26 +46,34 @@ function run_ipa_container() {
 	fi
 }
 
+IMAGE="$1"
+
 # Initial setup of the FreeIPA server
-run_ipa_container freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
+run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
 
 if [ -n "$ca" ] ; then
 	docker rm -f freeipa-master
 	date
 	sudo tests/generate-external-ca.sh /tmp/freeipa-test-$$/data
 	# For external CA, provide the certificate for the second stage
-	run_ipa_container freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
+	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
 		--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
 fi
 
-docker rm -f freeipa-master
-# Start the already-setup master server
-run_ipa_container freeipa-master exit-on-finished
+while [ -n "$1" ] ; do
+	IMAGE="$1"
+	docker rm -f freeipa-master
+	# Start the already-setup master server, or upgrade to next image
+	run_ipa_container $IMAGE freeipa-master exit-on-finished
+	shift
+done
 
 docker rm -f freeipa-master
 # Force "upgrade" path by simulating image change
+sudo mv /tmp/freeipa-test-$$/data/build-id /tmp/freeipa-test-$$/data/build-id.initial
 uuidgen | sudo tee /tmp/freeipa-test-$$/data/build-id
-run_ipa_container freeipa-master
+sudo touch -r /tmp/freeipa-test-$$/data/build-id.initial /tmp/freeipa-test-$$/data/build-id
+run_ipa_container $IMAGE freeipa-master
 
 if [ "$replica" = 'none' ] ; then
 	echo OK $0.
@@ -76,7 +83,7 @@ fi
 # Setup replica
 MASTER_IP=$( docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test --dns=$MASTER_IP"
-run_ipa_container freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
+run_ipa_container $IMAGE freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
 date
 if docker diff freeipa-master | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 	exit 1
