@@ -41,7 +41,8 @@ function run_ipa_container() {
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
-	if docker diff "$N" | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
+	if docker exec "$N" grep '^2' /data/volume-version \
+		&& docker diff "$N" | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 		exit 1
 	fi
 }
