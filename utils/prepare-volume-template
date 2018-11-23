@@ -24,3 +24,26 @@ while read i ; do
 	rm -rf "$i"
 	ln -sv "$VOLUME${i%/}" "${i%/}"
 done < "$LIST"
+
+mkdir -p "$VOLUME-template/.rpm-owned"
+( rpm -qla | sort -u ;
+	cd "$VOLUME-template" && find * | sed 's#^#/#' | sort -u ) | sort | uniq -d | while read i ; do
+		if [ -f "$VOLUME-template$i" ] ; then
+			mkdir -p $( dirname "$VOLUME-template/.rpm-owned$i" )
+			ln "$VOLUME-template$i" "$VOLUME-template/.rpm-owned$i"
+		fi
+	done
+
+mkdir -p "$VOLUME-template/.configfiles"
+( rpm -qa --qf '[%{filenames} %{fileflags:hex}\n]' | awk '/[ 1][19]$/ { print $1 }' | sort -u ;
+	cd "$VOLUME-template" && find * | sed 's#^#/#' | sort -u ) | sort | uniq -d | while read i ; do
+		mkdir -p $( dirname "$VOLUME-template/.configfiles$i" )
+		ln "$VOLUME-template$i" "$VOLUME-template/.configfiles$i"
+	done
+
+mkdir -p "$VOLUME-template/.configfiles-noreplace"
+( rpm -qa --qf '[%{filenames} %{fileflags:hex}\n]' | awk '/ 1[19]$/ { print $1 }' | sort -u ;
+	cd "$VOLUME-template" && find * | sed 's#^#/#' | sort -u ) | sort | uniq -d | while read i ; do
+		mkdir -p $( dirname "$VOLUME-template/.configfiles-noreplace$i" )
+		ln "$VOLUME-template/.configfiles$i" "$VOLUME-template/.configfiles-noreplace$i"
+	done

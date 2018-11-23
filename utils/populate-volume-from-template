@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+# set -x
 
 VOLUME="$1"
 shift
@@ -11,6 +12,10 @@ fi
 
 while [ -n "$VOLUME" ] ; do
 	# echo "Populating $VOLUME ..."
+	OLDEST_BUILD_ID=""
+	if [ -f "$VOLUME/build-id" ] ; then
+		OLDEST_BUILD_ID=$( ls -t "$VOLUME"/build-id* | tail -1 )
+	fi
 	cd "$VOLUME-template"
 
 	find * | while read f ; do
@@ -25,8 +30,51 @@ while [ -n "$VOLUME" ] ; do
 		fi
 		if ! [ -e "$VOLUME/$f" ] ; then
 			tar cf - "$f" | ( cd "$VOLUME" && tar xf - )
+		elif [ "$f" == "build-id" ] ; then
+			true
+		elif [ -f "$VOLUME/$f" ] && ! cmp -s "$VOLUME/$f" "$VOLUME-template/$f" ; then
+			if [ -f "$VOLUME-template/.configfiles/$f" ] ; then
+				if [ -d "$VOLUME/.configfiles" ] ; then
+					if cmp -s "$VOLUME/.configfiles/$f" "$VOLUME/$f" ; then
+						echo -n "Config file with no local change updated from rpm: "
+						cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
+					elif cmp -s "$VOLUME/.configfiles/$f" "$VOLUME-template/.configfiles/$f" ; then
+						echo "Config file with local changes not updated in rpm, keeping local changes: $f"
+					else
+						if [ -f "$VOLUME-template/.configfiles-noreplace/$f" ] ; then
+							echo -n "Config noreplace file with local changes, keeping local changes: "
+							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
+						else
+							echo -n "Config yes-replace file with local changes overwritten from rpm update: "
+							mv -vf "$VOLUME/$f" "$VOLUME/$f.rpmsave"
+							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
+						fi
+					fi
+				else
+					# older volumes did not have .configfiles
+					# use the oldest build-id* to guesstimate modified files
+					if [ "$OLDEST_BUILD_ID" -ot "$VOLUME/$f" ] ; then
+						if [ -f "$VOLUME-template/.configfiles-noreplace/$f" ] ; then
+							echo -n "Config noreplace file with local changes (based on $OLDEST_BUILD_ID), keeping local changes: "
+							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
+						else
+							echo -n "Config yes-replace file with local changes (based on $OLDEST_BUILD_ID) overwritten from rpm update: "
+							mv -vf "$VOLUME/$f" "$VOLUME/$f.rpmsave"
+							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
+						fi
+					else
+						echo -n "Config file with no local change (based on $OLDEST_BUILD_ID) updated from rpm: "
+						cp -vfp "$VOLUME-template/.configfiles-noreplace/$f" "$VOLUME/$f"
+					fi
+				fi
+			elif [ -f "$VOLUME/.rpm-owned/$f" ] ; then
+				echo -n "Non-config file updated from rpm: "
+				cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
+			fi
 		fi
 	done
+	rm -rf "$VOLUME/.configfiles" "$VOLUME/.configfiles-noreplace"
+	tar cf - .configfiles .configfiles-noreplace | ( cd "$VOLUME" && tar xf - )
 
 	VOLUME="$1"
 	shift || :
