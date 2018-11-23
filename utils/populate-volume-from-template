@@ -39,11 +39,11 @@ while [ -n "$VOLUME" ] ; do
 						echo -n "Config file with no local change updated from rpm: "
 						cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
 					elif cmp -s "$VOLUME/.configfiles/$f" "$VOLUME-template/.configfiles/$f" ; then
-						echo "Config file with local changes not updated in rpm, keeping local changes: $f"
+						: # echo "Config file with local changes not updated in rpm, keeping local changes: $f"
 					else
 						if [ -f "$VOLUME-template/.configfiles-noreplace/$f" ] ; then
-							echo -n "Config noreplace file with local changes, keeping local changes: "
-							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
+							# echo -n "Config noreplace file with local changes, keeping local changes: "
+							cp -fp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
 						else
 							echo -n "Config yes-replace file with local changes overwritten from rpm update: "
 							mv -vf "$VOLUME/$f" "$VOLUME/$f.rpmsave"
@@ -55,8 +55,8 @@ while [ -n "$VOLUME" ] ; do
 					# use the oldest build-id* to guesstimate modified files
 					if [ "$OLDEST_BUILD_ID" -ot "$VOLUME/$f" ] ; then
 						if [ -f "$VOLUME-template/.configfiles-noreplace/$f" ] ; then
-							echo -n "Config noreplace file with local changes (based on $OLDEST_BUILD_ID), keeping local changes: "
-							cp -vfp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
+							# echo -n "Config noreplace file with local changes (based on $OLDEST_BUILD_ID), keeping local changes: "
+							cp -fp "$VOLUME-template/$f" "$VOLUME/$f.rpmnew"
 						else
 							echo -n "Config yes-replace file with local changes (based on $OLDEST_BUILD_ID) overwritten from rpm update: "
 							mv -vf "$VOLUME/$f" "$VOLUME/$f.rpmsave"
