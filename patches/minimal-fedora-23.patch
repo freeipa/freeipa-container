@@ -83,3 +83,17 @@
  After=sysinit.target sockets.target paths.target slices.target
  
  # We support /var, /tmp, /var/tmp, being on NFS, but we don't pull in
+#
+# Workaround 1390191 in read-only container.
+#
+--- /usr/lib/tmpfiles.d/etc.conf	2016-10-01 15:43:35.000000000 +0000
++++ /usr/lib/tmpfiles.d/etc.conf	2018-11-27 22:54:08.703114939 +0000
+@@ -9,7 +9,7 @@
+ 
+ L /etc/os-release - - - - ../usr/lib/os-release
+ L /etc/localtime - - - - ../usr/share/zoneinfo/UTC
+-L+ /etc/mtab - - - - ../proc/self/mounts
++L /etc/mtab - - - - ../proc/self/mounts
+ L! /etc/resolv.conf - - - - ../run/systemd/resolve/resolv.conf
+ C /etc/nsswitch.conf - - - -
+ C /etc/pam.d - - - -

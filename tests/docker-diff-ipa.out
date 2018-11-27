@@ -1,6 +1,4 @@
-^C /etc$
 ^[CD] /etc/machine-id$
-^C /etc/mtab$
 ^C /usr$
 ^[AD] /usr/dev$
 ^[AD] /usr/etc$
