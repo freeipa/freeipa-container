@@ -76,6 +76,9 @@ while [ -n "$VOLUME" ] ; do
 	rm -rf "$VOLUME/.configfiles" "$VOLUME/.configfiles-noreplace"
 	tar cf - .configfiles .configfiles-noreplace | ( cd "$VOLUME" && tar xf - )
 
+	chown --reference="$VOLUME-template" "$VOLUME"
+	chmod --reference="$VOLUME-template" "$VOLUME"
+
 	VOLUME="$1"
 	shift || :
 done

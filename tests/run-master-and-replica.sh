@@ -3,6 +3,8 @@
 set -e
 set -x
 
+umask 0007
+
 function run_ipa_container() {
 	set +x
 	IMAGE="$1" ; shift
