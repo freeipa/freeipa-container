@@ -67,7 +67,7 @@ while [ -n "$VOLUME" ] ; do
 						cp -vfp "$VOLUME-template/.configfiles-noreplace/$f" "$VOLUME/$f"
 					fi
 				fi
-			elif [ -f "$VOLUME/.rpm-owned/$f" ] ; then
+			elif [ -f "$VOLUME-template/.rpm-owned/$f" ] ; then
 				echo -n "Non-config file updated from rpm: "
 				cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
 			fi
