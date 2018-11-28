@@ -17,6 +17,7 @@ RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d 
 ENV container oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
+# debug: RUN systemctl mask dnf-makecache.service
 # test: systemd-container-failed.sh auditd.service proc-fs-nfsd.mount TRAVIS:systemd-firstboot.service var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
