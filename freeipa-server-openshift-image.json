@@ -26,6 +26,28 @@
                         }
                     },
                     {
+                        "name": "fedora-29",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 29",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:fedora-29"
+                        }
+                    },
+                    {
+                        "name": "fedora-28",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 28",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:fedora-25"
+                        }
+                    },
+                    {
                         "name": "fedora-27",
                         "annotations": {
                             "openshift.io/display-name": "FreeIPA Server on Fedora 27",
@@ -48,14 +70,14 @@
                         }
                     },
                     {
-                        "name": "fedora-25",
+                        "name": "fedora-rawhide",
                         "annotations": {
-                            "openshift.io/display-name": "FreeIPA Server on Fedora 25",
+                            "openshift.io/display-name": "FreeIPA Server on Fedora rawhide",
                             "tags": "freeipa, identity management"
                         },
                         "from": {
                             "kind": "DockerImage",
-                            "name": "freeipa/freeipa-server:fedora-25"
+                            "name": "freeipa/freeipa-server:fedora-rawhide"
                         }
                     },
                     {
