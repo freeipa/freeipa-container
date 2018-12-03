@@ -31,7 +31,7 @@
      # but there is no way to do this using getaddrinfo parameters
      try:
 -        addrinfos = socket.getaddrinfo(fqdn, None,
-+        addrinfos = socket.getaddrinfo(fqdn.rstrip(".").rstrip("."), None,
++        addrinfos = socket.getaddrinfo(fqdn.rstrip("."), None,
                                         socket.AF_UNSPEC, socket.SOCK_STREAM)
      except socket.error as ex:
          if ex.errno == socket.EAI_NODATA or ex.errno == socket.EAI_NONAME:
