@@ -67,15 +67,12 @@ COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]
 # test: systemd-container-ipa-server-install-data.sh docker-diff-minimal-centos-7.out
 
+# Configure master/replica upon the first invocation
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first exit-with-status ipa-volume-upgrade-* /usr/sbin/
-COPY install.sh uninstall.sh /bin/
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
 RUN ln -sv /usr/lib/systemd/system/ipa-server-configure-first.service /data-template/etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
-
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
-
-COPY atomic-install-help /usr/share/ipa/
 
 EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
 
@@ -83,6 +80,10 @@ RUN uuidgen > /data-template/build-id
 
 # Invocation:
 # docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
+
+# Atomic specific bits
+COPY install.sh uninstall.sh /bin/
+COPY atomic-install-help /usr/share/ipa/
 
 # For atomic, we run INSTALL --privileged but install.sh will start another unprivileged container.
 # We do it this way to be able to set hostname for the unprivileged container.
