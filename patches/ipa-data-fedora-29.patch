@@ -29,7 +29,7 @@
      NTP_STEP_TICKERS = "/etc/ntp/step-tickers"
 --- /usr/share/pki/server/etc/default.cfg	2018-08-13 23:33:33.000000000 +0000
 +++ /usr/share/pki/server/etc/default.cfg	2018-09-12 10:21:02.634596425 +0000
-@@ -193,7 +193,7 @@
+@@ -203,7 +203,7 @@
  pki_source_subsystem_path=/usr/share/pki/%(pki_subsystem_type)s
  pki_path=/var/lib/pki
  pki_log_path=/var/log/pki
@@ -38,17 +38,17 @@
  pki_registry_path=/etc/sysconfig/pki
  pki_instance_path=%(pki_path)s/%(pki_instance_name)s
  pki_instance_log_path=%(pki_log_path)s/%(pki_instance_name)s
---- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-06-29 12:48:09.000000000 +0000
-+++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 17:35:05.687267673 +0000
-@@ -21,7 +21,7 @@
-         # Read IPA password
-         # IPA expects the password filename format to be
-         # <hostname>-<port>-<ecryption_algorithm>
--        IPA_PASSWD_PATH="/var/lib/ipa/passwds/${1/:/-}-$2"
-+        IPA_PASSWD_PATH="/data/var/lib/ipa/passwds/${1/:/-}-$2"
-         cat $IPA_PASSWD_PATH
-         ;;
- # ================
+--- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
++++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
+@@ -13,7 +13,7 @@
+ fi
+ 
+ fname=${1/:/-}-$2
+-pwdpath=/var/lib/ipa/passwds/$fname
++pwdpath=/data/var/lib/ipa/passwds/$fname
+ 
+ # Make sure the values passed in do not contain path information
+ checkpath=$(/usr/bin/realpath -e ${pwdpath} 2>/dev/null)
 #
 # Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
 # being created in runtime
