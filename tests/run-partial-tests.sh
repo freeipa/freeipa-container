@@ -11,6 +11,8 @@ if [ -z "$DOCKERFILE" ] ; then
 	exit 1
 fi
 
+export docker=${docker:-docker}
+
 function run_and_wait_for () {
 	(
 	set +x
@@ -20,14 +22,14 @@ function run_and_wait_for () {
 	if [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
-	docker run --name $NAME --rm -d -h ipa.example.test \
+	$docker run --name $NAME --rm -d -h ipa.example.test \
 		--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
 	for j in $( seq 1 30 ) ; do
-		if docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -q -E 'running|degraded' ; then
+		if $docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -q -E 'running|degraded' ; then
 			return
 		fi
-		if ! docker ps | grep -q "\b$NAME$" ; then
+		if ! $docker ps | grep -q "\b$NAME$" ; then
 			return
 		fi
 		sleep 2
@@ -51,11 +53,11 @@ while [ "$START" -lt "$END" ] ; do
 
 	TEST_SCRIPT=$( sed -n '$s/^# test:\s*//;T;s/\( \|$\)/ 'freeipa-server-container-$SUFFIX' /;p' "$DOCKERFILE.part" )
 	if [ -n "$TEST_SCRIPT" ] ; then
-		docker build -t "local/freeipa-server-test:$SUFFIX" -f "$DOCKERFILE.part" .
+		$docker build -t "local/freeipa-server-test:$SUFFIX" -f "$DOCKERFILE.part" .
 		echo "FROM local/freeipa-server-test:$SUFFIX" > "$DOCKERFILE.part.addons"
 		sed -n 's/# test-addon:\s*//;T;p' "$DOCKERFILE.part" >> "$DOCKERFILE.part.addons"
-		docker build -t "local/freeipa-server-test-addons:$SUFFIX" -f "$DOCKERFILE.part.addons" .
-		docker rm -f freeipa-server-container-$SUFFIX > /dev/null 2>&1 || :
+		$docker build -t "local/freeipa-server-test-addons:$SUFFIX" -f "$DOCKERFILE.part.addons" .
+		$docker rm -f freeipa-server-container-$SUFFIX > /dev/null 2>&1 || :
 		# Starting systemd container
 		run_and_wait_for local/freeipa-server-test-addons:$SUFFIX freeipa-server-container-$SUFFIX
 		echo Executing $DIR/$TEST_SCRIPT

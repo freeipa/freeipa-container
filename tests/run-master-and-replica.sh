@@ -5,25 +5,27 @@ set -x
 
 umask 0007
 
+docker=${docker:-docker}
+
 function wait_for_ipa_container() {
 	set +x
 	N="$1" ; shift
 	set -e
 	MACHINE_ID=''
-	docker logs -f "$N" &
+	$docker logs -f "$N" &
 	EXIT_STATUS=999
 	while true ; do
 		sleep 10
 		if [ -z "$MACHINE_ID" ] ; then
-			MACHINE_ID=$( docker exec "$N" cat /etc/machine-id || : )
+			MACHINE_ID=$( $docker exec "$N" cat /etc/machine-id || : )
 		fi
-		if [ "$( docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
-			EXIT_STATUS=$( docker inspect "$N" --format='{{.State.ExitCode}}' )
+		if [ "$( $docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
+			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
 			break
 		elif [ "$1" != "exit-on-finished" ] ; then
 			# With exit-on-finished, we expect the container to exit, seeing it exited above
-			STATUS=$( docker exec "$N" systemctl is-system-running 2> /dev/null || : )
+			STATUS=$( $docker exec "$N" systemctl is-system-running 2> /dev/null || : )
 			if [ "$STATUS" == 'running' ] ; then
 				echo "The container systemctl is-system-running [$STATUS]."
 				EXIT_STATUS=0
@@ -39,8 +41,8 @@ function wait_for_ipa_container() {
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
-	if docker exec "$N" grep '^2' /data/volume-version \
-		&& docker diff "$N" | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
+	if $docker exec "$N" grep '^2' /data/volume-version \
+		&& $docker diff "$N" | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 		exit 1
 	fi
 	if [ -n "$MACHINE_ID" ] ; then
@@ -82,7 +84,7 @@ function run_ipa_container() {
 	(
 	set -x
 	umask 0
-	docker run $readonly -d --name "$N" -h $HOSTNAME \
+	$docker run $readonly -d --name "$N" -h $HOSTNAME \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		-v $VOLUME:/data:Z $VOLUME_OPTS $DOCKER_RUN_OPTS \
@@ -101,7 +103,7 @@ fi
 run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
 
 if [ -n "$ca" ] ; then
-	docker rm -f freeipa-master
+	$docker rm -f freeipa-master
 	date
 	sudo tests/generate-external-ca.sh /tmp/freeipa-test-$$/data
 	# For external CA, provide the certificate for the second stage
@@ -111,7 +113,7 @@ fi
 
 while [ -n "$1" ] ; do
 	IMAGE="$1"
-	docker rm -f freeipa-master
+	$docker rm -f freeipa-master
 	# Start the already-setup master server, or upgrade to next image
 	run_ipa_container $IMAGE freeipa-master exit-on-finished
 	shift
@@ -120,13 +122,13 @@ done
 (
 set -x
 date
-docker stop freeipa-master
+$docker stop freeipa-master
 date
-docker start freeipa-master
+$docker start freeipa-master
 )
 wait_for_ipa_container freeipa-master
 
-docker rm -f freeipa-master
+$docker rm -f freeipa-master
 # Force "upgrade" path by simulating image change
 sudo mv /tmp/freeipa-test-$$/data/build-id /tmp/freeipa-test-$$/data/build-id.initial
 uuidgen | sudo tee /tmp/freeipa-test-$$/data/build-id
@@ -139,11 +141,11 @@ if [ "$replica" = 'none' ] ; then
 fi
 
 # Setup replica
-MASTER_IP=$( docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
+MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test --dns=$MASTER_IP"
 run_ipa_container $IMAGE freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
 date
-if docker diff freeipa-master | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
+if $docker diff freeipa-master | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 	exit 1
 fi
 echo OK $0.

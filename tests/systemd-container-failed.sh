@@ -6,13 +6,15 @@ set -e
 C="$1"
 shift
 
-docker exec $C systemctl status --no-pager -l
-docker exec $C systemctl is-system-running --no-pager -l | grep -E 'degraded|starting'
-docker exec $C journalctl --no-pager -l
+docker=${docker:-docker}
 
-FAILED=$( docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend | tee /dev/stderr | sed 's/ .*//' | sort )
+$docker exec $C systemctl status --no-pager -l
+$docker exec $C systemctl is-system-running --no-pager -l | grep -E 'degraded|starting'
+$docker exec $C journalctl --no-pager -l
+
+FAILED=$( $docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend | tee /dev/stderr | sed 's/ .*//' | sort )
 for s in $FAILED ; do
-	docker exec $C systemctl status $s --no-pager -l || :
+	$docker exec $C systemctl status $s --no-pager -l || :
 done
 
 diff <( for i in "$@" ; do
