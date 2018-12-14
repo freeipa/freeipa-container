@@ -4,8 +4,7 @@ default.target
 ● │ │ └─sysinit.target
 ● │ └─basic.target
 ● │   └─sysinit.target
-● ├─systemd-journal-flush.service
-● │ └─systemd-journald.service
-● │   ├─systemd-journald.socket
-● │   └─systemd-journald.socket
+● ├─systemd-journald.service
+● │ ├─systemd-journald.socket
+● │ └─systemd-journald.socket
 ● └─systemd-tmpfiles-setup.service

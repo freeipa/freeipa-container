@@ -15,6 +15,7 @@ RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d 
 ENV container oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
+# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh auditd.service var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
@@ -30,6 +31,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles --remove --create && echo -n > /etc/machine-id
 # debug: RUN ! test -f /var/lib/systemd/random-seed
+# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
@@ -47,6 +49,7 @@ COPY ipa-join /usr/sbin/ipa-join
 # debug: RUN ! test -f /usr/share/authconfig/__pycache__/authinfo.cpython-36.pyc
 RUN authconfig --help > /dev/null
 # debug: RUN test -f /usr/share/authconfig/__pycache__/authinfo.cpython-36.pyc
+# test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
@@ -60,7 +63,7 @@ RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
-VOLUME [ "/tmp", "/run", "/data" ]
+VOLUME [ "/tmp", "/run", "/data", "/var/log/journal" ]
 
 COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]

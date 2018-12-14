@@ -21,6 +21,7 @@ RUN dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-serve
 ENV container oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
+# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
@@ -36,6 +37,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN systemd-tmpfiles --remove --create
 RUN rm -v /var/lib/systemd/random-seed
+# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-diff.sh list-dependencies-fedora-26.out docker-diff-minimal-fedora-23.exceptions docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
@@ -48,6 +50,7 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-29.patch |
 
 # Workaround https://github.com/freeipa/freeipa-container/issues/187
 COPY certmonger-wait-for-ready.conf /usr/lib/systemd/system/certmonger.service.d/wait-for-ready.conf
+# test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
@@ -67,7 +70,7 @@ RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
-VOLUME [ "/tmp", "/run", "/data" ]
+VOLUME [ "/tmp", "/run", "/data", "/var/log/journal" ]
 
 COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]

@@ -17,6 +17,7 @@
 set -e
 
 /usr/local/bin/populate-volume-from-template /tmp /data
-test -e /run/log/journal && mv /run/log/journal /run/log/journal.removed
+mkdir -p /run/log /data/var/log/journal
+ln -s /data/var/log/journal /run/log/journal
 exec /usr/sbin/init
 exit 10

@@ -45,7 +45,8 @@ done
 # Workaround 1373562
 mkdir -p /run/lock
 
-mkdir -p /run/ipa
+mkdir -p /run/ipa /run/log /data/var/log/journal
+ln -s /data/var/log/journal /run/log/journal
 
 if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
 	if [ "$1" == 'no-exit' ] ; then

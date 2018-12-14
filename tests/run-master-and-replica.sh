@@ -26,9 +26,13 @@ function run_ipa_container() {
 		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
 		-e PASSWORD=Secret123 "$IMAGE" "$@"
 	)
+	MACHINE_ID=''
 	docker logs -f "$N" &
 	while true ; do
 		sleep 10
+		if [ -z "$MACHINE_ID" ] ; then
+			MACHINE_ID=$( docker exec "$N" cat /etc/machine-id || : )
+		fi
 		if [ "$1" == exit-on-finished ] ; then
 			if [ "$( docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
 				echo "The container has exited, presumably because of exit-on-finished."
@@ -46,6 +50,13 @@ function run_ipa_container() {
 	if docker exec "$N" grep '^2' /data/volume-version \
 		&& docker diff "$N" | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 		exit 1
+	fi
+	if [ -n "$MACHINE_ID" ] ; then
+		# Check that journal landed on volume and not in host's /var/log/journal
+		sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
+		if ls -la /var/log/journal/$MACHINE_ID ; then
+			exit 1
+		fi
 	fi
 }
 
