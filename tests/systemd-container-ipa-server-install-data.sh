@@ -30,7 +30,7 @@ if ls -la /var/log/journal/$MACHINE_ID ; then
 	exit 1
 fi
 
-docker diff $C | tee /dev/stderr | sort | diff tests/$D /dev/stdin
+docker diff $C | tee /dev/stderr | grep -v '^C /etc$' | sort | diff tests/$D /dev/stdin
 
 echo OK $0.
 

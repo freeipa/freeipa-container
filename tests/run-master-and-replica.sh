@@ -40,7 +40,7 @@ function wait_for_ipa_container() {
 		exit "$EXIT_STATUS"
 	fi
 	if docker exec "$N" grep '^2' /data/volume-version \
-		&& docker diff "$N" | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
+		&& docker diff "$N" | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 		exit 1
 	fi
 	if [ -n "$MACHINE_ID" ] ; then
@@ -128,7 +128,7 @@ MASTER_IP=$( docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-
 DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test --dns=$MASTER_IP"
 run_ipa_container $IMAGE freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
 date
-if docker diff freeipa-master | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
+if docker diff freeipa-master | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 	exit 1
 fi
 echo OK $0.
