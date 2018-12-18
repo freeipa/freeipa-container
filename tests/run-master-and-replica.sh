@@ -5,27 +5,10 @@ set -x
 
 umask 0007
 
-function run_ipa_container() {
+function wait_for_ipa_container() {
 	set +x
-	IMAGE="$1" ; shift
 	N="$1" ; shift
 	set -e
-	date
-	VOLUME=/tmp/freeipa-test-$$/data
-	HOSTNAME=ipa.example.test
-	if [ "$N" == "freeipa-replica" ] ; then
-		HOSTNAME=replica.example.test
-		VOLUME=/tmp/freeipa-test-$$/data-replica
-	fi
-	mkdir -p $VOLUME
-	(
-	set -x
-	docker run -d --name "$N" -h $HOSTNAME \
-		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
-		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
-		-e PASSWORD=Secret123 "$IMAGE" "$@"
-	)
 	MACHINE_ID=''
 	docker logs -f "$N" &
 	while true ; do
@@ -60,6 +43,30 @@ function run_ipa_container() {
 	fi
 }
 
+function run_ipa_container() {
+	set +x
+	IMAGE="$1" ; shift
+	N="$1" ; shift
+	set -e
+	date
+	VOLUME=/tmp/freeipa-test-$$/data
+	HOSTNAME=ipa.example.test
+	if [ "$N" == "freeipa-replica" ] ; then
+		HOSTNAME=replica.example.test
+		VOLUME=/tmp/freeipa-test-$$/data-replica
+	fi
+	mkdir -p $VOLUME
+	(
+	set -x
+	docker run -d --name "$N" -h $HOSTNAME \
+		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
+		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
+		-e PASSWORD=Secret123 "$IMAGE" "$@"
+	)
+	wait_for_ipa_container "$N"
+}
+
 IMAGE="$1"
 
 # Initial setup of the FreeIPA server
@@ -81,6 +88,15 @@ while [ -n "$1" ] ; do
 	run_ipa_container $IMAGE freeipa-master exit-on-finished
 	shift
 done
+
+(
+set -x
+date
+docker stop freeipa-master
+date
+docker start freeipa-master
+)
+wait_for_ipa_container freeipa-master
 
 docker rm -f freeipa-master
 # Force "upgrade" path by simulating image change
