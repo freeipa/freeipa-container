@@ -33,7 +33,7 @@ esac
 for i in /run/* /tmp/* ; do
 	if [ "$i" == '/run/secrets' ] ; then
 		:
-	elif [ -f "$i" ] ; then
+	elif [ -L "$i" -o -f "$i" ] ; then
 		rm -f "$i"
 	else
 		rm -rf "$i/*"
