@@ -46,11 +46,11 @@ matrix:
     - stage: build
       env: dockerfile=fedora-26 replica=none
     - stage: build
-      env: dockerfile=fedora-25
+      env: dockerfile=fedora-25 seccomp=unconfined
     - stage: build
-      env: dockerfile=fedora-24 replica=none
+      env: dockerfile=fedora-24 replica=none seccomp=unconfined
     - stage: build
-      env: dockerfile=fedora-23 replica=none
+      env: dockerfile=fedora-23 replica=none seccomp=unconfined
   exclude:
     - stage: build
       env: dockerfile=rhel-7

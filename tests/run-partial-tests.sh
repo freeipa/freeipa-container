@@ -16,9 +16,13 @@ function run_and_wait_for () {
 	set +x
 	local IMAGE="$1"
 	local NAME="$2"
+	SEC_OPTS=
+	if [ -n "$seccomp" ] ; then
+		SEC_OPTS="--security-opt=seccomp:$seccomp"
+	fi
 	docker run --name $NAME --rm -d -h ipa.example.test \
 		--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-		--sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
+		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
 	for j in $( seq 1 30 ) ; do
 		if docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -q -E 'running|degraded' ; then
 			return
