@@ -11,22 +11,31 @@ function wait_for_ipa_container() {
 	set -e
 	MACHINE_ID=''
 	docker logs -f "$N" &
+	EXIT_STATUS=999
 	while true ; do
 		sleep 10
 		if [ -z "$MACHINE_ID" ] ; then
 			MACHINE_ID=$( docker exec "$N" cat /etc/machine-id || : )
 		fi
-		if [ "$1" == exit-on-finished ] ; then
-			if [ "$( docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
-				echo "The container has exited, presumably because of exit-on-finished."
+		if [ "$( docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
+			EXIT_STATUS=$( docker inspect "$N" --format='{{.State.ExitCode}}' )
+			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
+			break
+		elif [ "$1" != "exit-on-finished" ] ; then
+			# With exit-on-finished, we expect the container to exit, seeing it exited above
+			STATUS=$( docker exec "$N" systemctl is-system-running 2> /dev/null || : )
+			if [ "$STATUS" == 'running' ] ; then
+				echo "The container systemctl is-system-running [$STATUS]."
+				EXIT_STATUS=0
+				break
+			elif [ "$STATUS" == 'degraded' ] ; then
+				echo "The container systemctl is-system-running [$STATUS]."
+				EXIT_STATUS=1
 				break
 			fi
-		elif ! docker exec "$N" systemctl is-system-running 2> /dev/null | grep -Eq 'starting|initializing' ; then
-			break
 		fi
 	done
 	date
-	EXIT_STATUS=$( docker inspect "$N" --format='{{.State.ExitCode}}' )
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
