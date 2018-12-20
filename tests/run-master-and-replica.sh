@@ -64,7 +64,7 @@ function run_ipa_container() {
 		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
 		-e PASSWORD=Secret123 "$IMAGE" "$@"
 	)
-	wait_for_ipa_container "$N"
+	wait_for_ipa_container "$N" "$@"
 }
 
 IMAGE="$1"
