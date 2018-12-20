@@ -22,7 +22,7 @@ function run_and_wait_for () {
 	if [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
-	$docker run --name $NAME --rm -d -h ipa.example.test \
+	$docker run --name $NAME -d -h ipa.example.test \
 		--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
 	for j in $( seq 1 30 ) ; do
