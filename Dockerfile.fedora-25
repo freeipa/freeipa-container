@@ -3,7 +3,7 @@ FROM registry.fedoraproject.org/fedora:25
 
 MAINTAINER Jan Pazdziora
 
-RUN dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad patch && dnf clean all
+RUN mkdir /run/lock && dnf install -y freeipa-server freeipa-server-dns freeipa-server-trust-ad patch && dnf clean all
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 3
