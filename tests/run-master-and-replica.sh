@@ -71,7 +71,7 @@ function run_ipa_container() {
 	fi
 	(
 	set -x
-	docker run -d --name "$N" -h $HOSTNAME \
+	docker run $readonly -d --name "$N" -h $HOSTNAME \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
