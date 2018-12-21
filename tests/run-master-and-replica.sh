@@ -82,6 +82,10 @@ function run_ipa_container() {
 
 IMAGE="$1"
 
+if [ "$readonly" == "--read-only" ] ; then
+	readonly="$readonly --dns=127.0.0.1"
+fi
+
 # Initial setup of the FreeIPA server
 run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
 
