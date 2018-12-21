@@ -7,6 +7,8 @@ services:
 
 before_install:
 - if test -n "$ca" ; then sudo apt-get install -y libnss3-tools ; fi
+- export docker=${docker:-docker}
+- if test "$docker" == "sudo podman" ; then . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman ; fi
 
 install: true
 
@@ -36,6 +38,8 @@ matrix:
     - stage: build
       env: dockerfile=fedora-32
     - stage: build
+      env: dockerfile=fedora-32 docker='sudo podman'
+    - stage: build
       env: dockerfile=fedora-31
     - stage: build
       env: dockerfile=centos-8 readonly=--read-only
@@ -47,6 +51,8 @@ matrix:
       env: dockerfile=centos-7
     - stage: build
       env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
+    - stage: build
+      env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only docker='sudo podman'
   exclude:
     - stage: build
       env: dockerfile=rhel-7
@@ -70,9 +76,9 @@ matrix:
       env: dockerfile=fedora-24 replica=none seccomp=unconfined
 
 script:
-- if test -n "$RUN_DOCKER_BUILD" ; then docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
+- if test -n "$RUN_DOCKER_BUILD" ; then $docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
 - if test -n "$RUN_DOCKER_BUILD" ; then tests/run-master-and-replica.sh local/freeipa-server ; fi
 
 after_failure:
-- docker ps -aq | while read i ; do docker rm -f $i ; done
+- $docker ps -aq | while read i ; do $docker rm -f $i ; done
 - if test -n "$RUN_DOCKER_BUILD" ; then tests/run-partial-tests.sh Dockerfile.$dockerfile ; fi
