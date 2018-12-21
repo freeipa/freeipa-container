@@ -29,13 +29,26 @@ On SELinux enabled systems,
 
 might be needed to enable running systemd in the containers.
 
-You then run the container with
+On systems where oci-systemd-hook is available on the host, the
+FreeIPA server container can be created with
+
+    docker run --name freeipa-server-container -ti \
+       -h ipa.example.test \
+       --read-only \
+       -v /var/lib/ipa-data:/data:Z freeipa-server [ opts ]
+
+Without oci-systemd-hook, `/run`, `/tmp`, and `/sys/fs/cgroup`
+need to be mounted explicitly:
 
     docker run --name freeipa-server-container -ti \
        -h ipa.example.test \
        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
        --tmpfs /run --tmpfs /tmp \
        -v /var/lib/ipa-data:/data:Z freeipa-server [ opts ]
+
+Also, without oci-systemd-hook, running the container as
+`--read-only` will typically only work when `/etc/machine-id`
+is pre-created on the host and bind-mounted to the container with `-v`.
 
 The list of options [opts] can start with exit-on-finished to stop
 the container after successfully configuring the server in the container
@@ -47,7 +60,7 @@ the server. The `docker run` invocation also accepts command line
 parameters that will be passed to `ipa-server-install`, so
 unattended invocation is possible, for example with
 
-    docker run --rm -e PASSWORD=Secret123 -h ipa.example.test \
+    docker run --rm -e PASSWORD=Secret123 -h ipa.example.test --read-only \
         freeipa-server exit-on-finished -U -r EXAMPLE.TEST --no-ntp
 
 Optionally, you can put into the directory mounted into /data
