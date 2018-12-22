@@ -32,6 +32,10 @@ while [ -n "$VOLUME" ] ; do
 			tar cf - "$f" | ( cd "$VOLUME" && tar xf - )
 		elif [ "$f" == "build-id" ] ; then
 			true
+		elif [ -L "$f" ] && [ -L "$VOLUME/$f" ] ; then
+			if [ "$( readlink $f )" != "$( readlink $VOLUME/$f )" ] ; then
+				echo "There are symlinks $f in both $VOLUME-template $VOLUME, with different targets, leaving in $VOLUME as is."
+			fi
 		elif [ -L "$f" ] && ! [ -L "$VOLUME/$f" ] ; then
 			echo "There is symlink $f in $VOLUME-template and not on $VOLUME, leaving in $VOLUME as is."
 		elif ! [ -L "$f" ] && [ -L "$VOLUME/$f" ] ; then
