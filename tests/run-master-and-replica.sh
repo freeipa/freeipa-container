@@ -81,6 +81,7 @@ function run_ipa_container() {
 	fi
 	(
 	set -x
+	umask 0
 	docker run $readonly -d --name "$N" -h $HOSTNAME \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
