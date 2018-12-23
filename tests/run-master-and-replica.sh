@@ -142,7 +142,10 @@ fi
 
 # Setup replica
 MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
-DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test --dns=$MASTER_IP"
+DOCKER_RUN_OPTS="--dns=$MASTER_IP"
+if [ "$docker" != "sudo podman" ] ; then
+	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
+fi
 run_ipa_container $IMAGE freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
 date
 if $docker diff freeipa-master | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
