@@ -1,5 +1,5 @@
 # Clone from the CentOS 7
-FROM centos:centos7
+FROM registry.centos.org/centos:7
 
 MAINTAINER Jan Pazdziora
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
