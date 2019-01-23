@@ -9,6 +9,12 @@ shift
 docker=${docker:-docker}
 
 $docker exec $C systemctl status --no-pager -l
+if [ "$#" -eq 0 ] ; then
+	$docker exec $C systemctl is-system-running --no-pager -l | grep running
+	echo OK $0.
+	exit
+fi
+
 $docker exec $C systemctl is-system-running --no-pager -l | grep -E 'degraded|starting'
 $docker exec $C journalctl --no-pager -l
 
