@@ -16,8 +16,6 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
-# Workaround 1668836
-RUN systemctl mask nfs-convert.service
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
 RUN systemctl mask rpc-gssd.service
 
