@@ -8,8 +8,6 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-# Workaround 1676946
-RUN cd /etc/yum.repos.d && curl -O https://copr.fedorainfracloud.org/coprs/sbose/sssd-rawhide/repo/fedora-rawhide/sbose-sssd-rawhide-fedora-rawhide.repo
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad patch \
 	&& dnf clean all
