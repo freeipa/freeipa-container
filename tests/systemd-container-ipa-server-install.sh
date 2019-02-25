@@ -22,8 +22,13 @@ fi
 if $EXIT ; then
 	exit 1
 fi
+$docker exec $C ls -la /var/log/ipaserver-install.log
 MACHINE_ID=$( $docker exec $C cat /etc/machine-id )
-$docker exec $C ls -la /var/log/journal/$MACHINE_ID/system.journal /var/log/ipaserver-install.log
+if $docker exec $C test -d /data ; then
+	$docker exec $C ls -la /var/log/journal/$MACHINE_ID/system.journal
+else
+	$docker exec $C ls -la /run/log/journal/$MACHINE_ID/system.journal
+fi
 
 echo OK $0.
 
