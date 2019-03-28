@@ -9,6 +9,3 @@
 ^[AD] /usr/sys$
 ^[AD] /usr/usr$
 ^[AD] /usr/var$
-# Workaround 1668230
-^A /lextab\.py$
-^A /yacctab\.py$
