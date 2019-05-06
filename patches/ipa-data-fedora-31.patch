@@ -1,0 +1,98 @@
+--- /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-07-26 12:56:12.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-09-12 10:09:32.450630323 +0000
+@@ -74,14 +74,14 @@
+     IPA_NSSDB_DIR = "/etc/ipa/nssdb"
+     IPA_NSSDB_PWDFILE_TXT = "/etc/ipa/nssdb/pwdfile.txt"
+     COMMON_KRB5_CONF_DIR = "/etc/krb5.conf.d/"
+-    KRB5_CONF = "/etc/krb5.conf"
++    KRB5_CONF = "/data/etc/krb5.conf"
+     KRB5_FREEIPA = COMMON_KRB5_CONF_DIR + "freeipa"
+-    KRB5_KEYTAB = "/etc/krb5.keytab"
++    KRB5_KEYTAB = "/data/etc/krb5.keytab"
+     LDAP_CONF = "/etc/ldap.conf"
+     LIBNSS_LDAP_CONF = "/etc/libnss-ldap.conf"
+     NAMED_CONF = "/etc/named.conf"
+     NAMED_VAR_DIR = "/var/named"
+-    NAMED_KEYTAB = "/etc/named.keytab"
++    NAMED_KEYTAB = "/data/etc/named.keytab"
+     NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
+     NAMED_ROOT_KEY = "/etc/named.root.key"
+     NAMED_BINDKEYS_FILE = "/etc/named.iscdlv.key"
+@@ -89,7 +89,7 @@
+     NAMED_CRYPTO_POLICY_FILE = None
+     NSLCD_CONF = "/etc/nslcd.conf"
+     NSS_LDAP_CONF = "/etc/nss_ldap.conf"
+-    NSSWITCH_CONF = "/etc/nsswitch.conf"
++    NSSWITCH_CONF = "/data/etc/nsswitch.conf"
+     CHRONY_CONF = "/etc/chrony.conf"
+     NTP_CONF = "/etc/ntp.conf"
+     NTP_STEP_TICKERS = "/etc/ntp/step-tickers"
+--- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
++++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
+@@ -24,7 +24,7 @@
+ 
+ # Dogtag defaults
+ pki_instance_name=pki-tomcat
+-pki_configuration_path=/etc/pki
++pki_configuration_path=/data/etc/pki
+ pki_instance_configuration_path=%(pki_configuration_path)s/%(pki_instance_name)s
+ 
+ pki_admin_cert_file=%(pki_client_dir)s/ca_admin.cert
+--- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
++++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
+@@ -13,7 +13,7 @@
+ fi
+ 
+ fname=${1/:/-}-$2
+-pwdpath=/var/lib/ipa/passwds/$fname
++pwdpath=/data/var/lib/ipa/passwds/$fname
+ 
+ # Make sure the values passed in do not contain path information
+ checkpath=$(/usr/bin/realpath -e ${pwdpath} 2>/dev/null)
+#
+# Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
+# being created in runtime
+#
+--- /usr/lib/python3.7/site-packages/ipaplatform/fedora/paths.py.orig	2019-02-28 13:06:33.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipaplatform/fedora/paths.py	2019-03-04 09:01:28.728711145 +0000
+@@ -30,9 +30,7 @@
+ 
+ 
+ class FedoraPathNamespace(RedHatPathNamespace):
+-    HTTPD_IPA_WSGI_MODULES_CONF = (
+-        "/etc/httpd/conf.modules.d/02-ipa-wsgi.conf"
+-    )
++    HTTPD_IPA_WSGI_MODULES_CONF = None
+     NAMED_CRYPTO_POLICY_FILE = "/etc/crypto-policies/back-ends/bind.config"
+     if HAS_NFS_CONF:
+         SYSCONFIG_NFS = '/etc/nfs.conf'
+--- /usr/lib/tmpfiles.d/var.conf	2018-10-29 00:59:14.000000000 +0000
++++ /usr/lib/tmpfiles.d/var.conf	2018-12-14 10:37:58.607898037 +0000
+@@ -12,9 +12,9 @@
+ L /var/run - - - - ../run
+ 
+ d /var/log 0755 - - -
+-f /var/log/wtmp 0664 root utmp -
+-f /var/log/btmp 0660 root utmp -
+-f /var/log/lastlog 0664 root utmp -
++L /var/log/wtmp - - - - /data/var/log/wtmp
++L /var/log/btmp - - - - /data/var/log/btmp
++L /var/log/lastlog - - - - /data/var/log/lastlog
+ 
+ d /var/cache 0755 - - -
+
+#
+# Force writing journal to /run/log/journal which we symlink to
+# /data/var/log/journal
+#
+--- /etc/systemd/journald.conf	2016-02-01 14:04:05.000000000 +0000
++++ /etc/systemd/journald.conf	2018-12-14 08:49:25.189295557 +0000
+@@ -12,7 +12,7 @@
+ # See journald.conf(5) for details.
+ 
+ [Journal]
+-#Storage=auto
++Storage=volatile
+ #Compress=yes
+ #Seal=yes
+ #SplitMode=uid
