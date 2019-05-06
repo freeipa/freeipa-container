@@ -27,17 +27,17 @@
      CHRONY_CONF = "/etc/chrony.conf"
      NTP_CONF = "/etc/ntp.conf"
      NTP_STEP_TICKERS = "/etc/ntp/step-tickers"
---- /usr/share/pki/server/etc/default.cfg	2018-08-13 23:33:33.000000000 +0000
-+++ /usr/share/pki/server/etc/default.cfg	2018-09-12 10:21:02.634596425 +0000
-@@ -203,7 +203,7 @@
- pki_source_subsystem_path=/usr/share/pki/%(pki_subsystem_type)s
- pki_path=/var/lib/pki
- pki_log_path=/var/log/pki
+--- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
++++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
+@@ -24,7 +24,7 @@
+ 
+ # Dogtag defaults
+ pki_instance_name=pki-tomcat
 -pki_configuration_path=/etc/pki
 +pki_configuration_path=/data/etc/pki
- pki_registry_path=/etc/sysconfig/pki
- pki_instance_path=%(pki_path)s/%(pki_instance_name)s
- pki_instance_log_path=%(pki_log_path)s/%(pki_instance_name)s
+ pki_instance_configuration_path=%(pki_configuration_path)s/%(pki_instance_name)s
+ 
+ pki_admin_cert_file=%(pki_client_dir)s/ca_admin.cert
 --- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
 +++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
 @@ -13,7 +13,7 @@
