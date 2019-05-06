@@ -85,7 +85,9 @@ exec >> /var/log/ipa-server-configure-first.log 2>&1
 echo "$(date) $0 $@"
 
 function upgrade_server () {
-	/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
+	if [ -x /usr/sbin/setup-ds.pl ] ; then
+		/usr/sbin/setup-ds.pl -u -s General.UpdateMode=offline
+	fi
 	for i in /usr/sbin/ipa-upgrade-rpm-scriptlets* ; do $i 2 ; done
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
 		PLATFORM=rhel
