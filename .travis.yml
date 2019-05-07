@@ -30,15 +30,13 @@ matrix:
     - stage: sanity
       script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
     - stage: build
+      env: dockerfile=fedora-30 readonly=--read-only
+    - stage: build
+      env: dockerfile=fedora-30 ca=--external-ca readonly=--read-only
+    - stage: build
       env: dockerfile=fedora-30
     - stage: build
-      env: dockerfile=fedora-29 readonly=--read-only
-    - stage: build
-      env: dockerfile=fedora-29 ca=--external-ca readonly=--read-only
-    - stage: build
       env: dockerfile=fedora-29
-    - stage: build
-      env: dockerfile=fedora-28
     - stage: build
       env: dockerfile=centos-7 readonly=--read-only
     - stage: build
@@ -52,6 +50,8 @@ matrix:
   exclude:
     - stage: build
       env: dockerfile=rhel-7
+    - stage: build
+      env: dockerfile=fedora-28
     - stage: build
       env: dockerfile=fedora-27
     - stage: build
