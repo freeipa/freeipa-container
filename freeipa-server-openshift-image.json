@@ -17,12 +17,12 @@
                     {
                         "name": "latest",
                         "annotations": {
-                            "openshift.io/display-name": "FreeIPA Server on Fedora 25",
+                            "openshift.io/display-name": "FreeIPA Server on Fedora",
                             "tags": "freeipa, identity management"
                         },
                         "from": {
                             "kind": "ImageStreamTag",
-                            "name": "fedora-25"
+                            "name": "fedora-29"
                         }
                     },
                     {
@@ -44,7 +44,7 @@
                         },
                         "from": {
                             "kind": "DockerImage",
-                            "name": "freeipa/freeipa-server:fedora-25"
+                            "name": "freeipa/freeipa-server:fedora-28"
                         }
                     },
                     {
