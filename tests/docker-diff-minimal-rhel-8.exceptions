@@ -1,0 +1,2 @@
+^C /var/log$
+^D /var/log/journal$
