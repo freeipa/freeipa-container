@@ -26,18 +26,3 @@
  
  [realms]
  # EXAMPLE.COM = {
-#
-# Prevent the default_ccache_name = KEYRING:persistent:%{uid} from
-# being put back in during ipa-server-install/ipa-replica-install.
-#
---- /usr/lib/python3.7/site-packages/ipapython/kernel_keyring.py	2018-07-19 16:58:12.000000000 +0000
-+++ /usr/lib/python3.7/site-packages/ipapython/kernel_keyring.py	2018-11-15 15:28:57.989157597 +0000
-@@ -75,7 +75,7 @@
-     except ValueError:
-         return False
-
--    return True
-+    return False
-
-
- def has_key(key):
