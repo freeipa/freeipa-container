@@ -1,0 +1,37 @@
+#
+# Avoid any default dependencies for targets that will be used.
+#
+--- /usr/lib/systemd/system/sysinit.target	2016-02-01 14:04:05.000000000 +0000
++++ /usr/lib/systemd/system/sysinit.target	2018-10-19 20:05:31.937494953 +0000
+@@ -9,5 +9,5 @@
+ Description=System Initialization
+ Documentation=man:systemd.special(7)
+ Conflicts=emergency.service emergency.target
+-Wants=local-fs.target swap.target
++### Wants=local-fs.target swap.target
+ After=local-fs.target swap.target emergency.service emergency.target
+--- /usr/lib/systemd/system/basic.target	2016-05-30 04:23:03.000000000 +0000
++++ /usr/lib/systemd/system/basic.target	2018-10-21 06:23:01.878251807 +0000
+@@ -9,7 +9,7 @@
+ Description=Basic System
+ Documentation=man:systemd.special(7)
+ Requires=sysinit.target
+-Wants=sockets.target timers.target paths.target slices.target
++### Wants=sockets.target timers.target paths.target slices.target
+ After=sysinit.target sockets.target paths.target slices.target tmp.mount
+ 
+ # We support /var, /tmp, /var/tmp, being on NFS, but we don't pull in
+#
+# Workaround 1390191 in read-only container.
+#
+--- /usr/lib/tmpfiles.d/etc.conf	2019-07-30 20:10:20.000000000 +0000
++++ /usr/lib/tmpfiles.d/etc.conf	2019-08-09 08:43:44.150345399 +0000
+@@ -8,7 +8,7 @@
+ # See tmpfiles.d(5) for details
+ 
+ L /etc/os-release - - - - ../usr/lib/os-release
+-L+ /etc/mtab - - - - ../proc/self/mounts
++L /etc/mtab - - - - ../proc/self/mounts
+ C! /etc/nsswitch.conf - - - -
+ C! /etc/pam.d - - - -
+ C! /etc/issue - - - -
