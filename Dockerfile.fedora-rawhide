@@ -22,6 +22,7 @@ RUN systemctl mask rpc-gssd.service
 # debug: RUN test "$container" = oci
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
+RUN mkdir /var/log/journal
 # test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh
 
