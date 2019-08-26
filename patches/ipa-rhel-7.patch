@@ -53,14 +53,14 @@
 # Prevent the default_ccache_name = KEYRING:persistent:%{uid} from
 # being put back in during ipa-server-install/ipa-replica-install.
 #
---- /usr/lib/python2.7/site-packages/ipapython/kernel_keyring.py       2017-10-18 13:41:28.000000000 +0000
-+++ /usr/lib/python2.7/site-packages/ipapython/kernel_keyring.py       2018-09-19 06:54:09.654029061 +0000
-@@ -68,7 +68,7 @@
+--- /usr/lib/python2.7/site-packages/ipapython/kernel_keyring.py	2019-08-26 07:09:35.398825862 +0000
++++ /usr/lib/python2.7/site-packages/ipapython/kernel_keyring.py	2019-08-26 07:10:21.626456952 +0000
+@@ -75,7 +75,7 @@
      except ValueError:
          return False
  
 -    return True
 +    return False
  
+ 
  def has_key(key):
-     """
