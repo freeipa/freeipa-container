@@ -1,0 +1,28 @@
+#
+# Workaround 1364139
+#
+--- /usr/lib/python3.8/site-packages/ipaserver/install/server/replicainstall.py	2018-10-05 18:31:57.000000000 +0000
++++ /usr/lib/python3.8/site-packages/ipaserver/install/server/replicainstall.py	2018-11-08 13:45:48.223578505 +0000
+@@ -877,7 +877,7 @@
+                            "certificate")
+ 
+     installutils.verify_fqdn(config.host_name, options.no_host_dns)
+-    installutils.verify_fqdn(config.master_host_name, options.no_host_dns)
++    installutils.verify_fqdn(config.master_host_name, options.no_host_dns, local_hostname=False)
+ 
+     ccache = os.environ['KRB5CCNAME']
+     kinit_keytab('host/{env.host}@{env.realm}'.format(env=api.env),
+#
+# Do not use kernel keyring, it is not namespaced
+#
+--- /etc/krb5.conf	2018-12-20 23:01:57.000000000 +0000
++++ /etc/krb5.conf	2018-12-26 09:57:23.802153146 +0000
+@@ -16,7 +16,7 @@
+     pkinit_anchors = FILE:/etc/pki/tls/certs/ca-bundle.crt
+     spake_preauth_groups = edwards25519
+ #    default_realm = EXAMPLE.COM
+-    default_ccache_name = KEYRING:persistent:%{uid}
++#    default_ccache_name = KEYRING:persistent:%{uid}
+ 
+ [realms]
+ # EXAMPLE.COM = {
