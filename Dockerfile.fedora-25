@@ -13,6 +13,10 @@ RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d 
 RUN echo -n > /etc/machine-id
 # debug: RUN test -z "$container"
 ENV container oci
+
+# Establish reasonably low open files limit in the container
+RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
+
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
 # test-addon: VOLUME [ "/var/log/journal" ]
