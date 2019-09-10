@@ -1,5 +1,5 @@
---- /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-07-26 12:56:12.000000000 +0000
-+++ /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-09-12 10:09:32.450630323 +0000
+--- /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2018-07-26 12:56:12.000000000 +0000
++++ /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2018-09-12 10:09:32.450630323 +0000
 @@ -74,14 +74,14 @@
      IPA_NSSDB_DIR = "/etc/ipa/nssdb"
      IPA_NSSDB_PWDFILE_TXT = "/etc/ipa/nssdb/pwdfile.txt"
@@ -53,8 +53,8 @@
 # Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
 # being created in runtime
 #
---- /usr/lib/python3.7/site-packages/ipaplatform/fedora/paths.py.orig	2019-02-28 13:06:33.000000000 +0000
-+++ /usr/lib/python3.7/site-packages/ipaplatform/fedora/paths.py	2019-03-04 09:01:28.728711145 +0000
+--- /usr/lib/python3.8/site-packages/ipaplatform/fedora/paths.py.orig	2019-02-28 13:06:33.000000000 +0000
++++ /usr/lib/python3.8/site-packages/ipaplatform/fedora/paths.py	2019-03-04 09:01:28.728711145 +0000
 @@ -30,9 +30,7 @@
  
  
