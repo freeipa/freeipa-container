@@ -63,6 +63,13 @@ unattended invocation is possible, for example with
     docker run --rm -e PASSWORD=Secret123 -h ipa.example.test --read-only \
         freeipa-server exit-on-finished -U -r EXAMPLE.TEST --no-ntp
 
+To allow for unprivileged container operation, use the `docker run -h ...`
+option to set the hostname for the FreeIPA server in the container.
+If it's not possible to set the hostname for the container, specify it
+with `IPA_SERVER_HOSTNAME` environment variable, for example with
+`docker run -e IPA_SERVER_HOSTNAME=...`.
+Do not use the `ipa-server-install --hostname ...` option.
+
 Optionally, you can put into the directory mounted into /data
 (/var/lib/ipa-data in this example) a file
 
