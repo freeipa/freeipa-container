@@ -119,30 +119,6 @@
                         "protocol": "TCP",
                         "port": 636,
                         "targetPort": 636
-                    },
-                    {
-                        "name": "ldap-replication",
-                        "protocol": "TCP",
-                        "port": 7389,
-                        "targetPort": 7389
-                    },
-                    {
-                        "name": "ca-webui",
-                        "protocol": "TCP",
-                        "port": 9443,
-                        "targetPort": 9443
-                    },
-                    {
-                        "name": "ca-https",
-                        "protocol": "TCP",
-                        "port": 9444,
-                        "targetPort": 9444
-                    },
-                    {
-                        "name": "ca-admin",
-                        "protocol": "TCP",
-                        "port": 9445,
-                        "targetPort": 9445
                     }
                 ],
                 "clusterIP": "${IPA_SERVER_IP}",
@@ -265,22 +241,6 @@
                                     },
                                     {
                                         "containerPort": 636,
-                                        "protocol": "TCP"
-                                    },
-                                    {
-                                        "containerPort": 7389,
-                                        "protocol": "TCP"
-                                    },
-                                    {
-                                        "containerPort": 9443,
-                                        "protocol": "TCP"
-                                    },
-                                    {
-                                        "containerPort": 9444,
-                                        "protocol": "TCP"
-                                    },
-                                    {
-                                        "containerPort": 9445,
                                         "protocol": "TCP"
                                     }
                                 ],

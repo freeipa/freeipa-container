@@ -83,7 +83,7 @@ COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-up
 RUN ln -sv /usr/lib/systemd/system/ipa-server-configure-first.service /data-template/etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
 COPY exit-via-chroot.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
-EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp 7389 9443 9444 9445
+EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp
 
 RUN uuidgen > /data-template/build-id
 
