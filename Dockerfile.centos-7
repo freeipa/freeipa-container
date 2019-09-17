@@ -5,7 +5,6 @@ MAINTAINER Jan Pazdziora
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
-RUN groupadd -g 389 dirsrv ; useradd -u 389 -g 389 -c 'user for 389-ds-base' -r -d '/usr/share/dirsrv' -s '/sbin/nologin' dirsrv
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
@@ -23,9 +22,6 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
-# Workaround 1373833
-COPY patches/basic-centos-7.patch /root
-RUN patch --verbose -p0 --fuzz=0 < /root/basic-centos-7.patch
 # test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh network.service TRAVIS:sys-fs-fuse-connections.mount var-lib-nfs-rpc_pipefs.mount
 
@@ -51,8 +47,8 @@ RUN echo 0123456789abcdef0000000000000000 > /etc/machine-id && systemd-tmpfiles 
 RUN mv /usr/bin/domainname /usr/bin/domainname.orig
 ADD hostnamectl-wrapper /usr/bin/domainname
 
-COPY patches/ipa-centos-7.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-centos-7.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
+COPY patches/ipa-rhel-7.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-rhel-7.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python -m compileall
 # test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
