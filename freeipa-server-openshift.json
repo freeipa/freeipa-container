@@ -164,7 +164,7 @@
                 "strategy": {
                     "type": "Recreate",
                     "recreateParams": {
-                        "timeoutSeconds": "${TIMEOUT}"
+                        "timeoutSeconds": "${{TIMEOUT}}"
                     }
                 },
                 "triggers": [
