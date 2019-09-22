@@ -267,6 +267,7 @@
                                         }
                                     }
                                 ],
+                                "args": [ "${COMMAND}" ],
                                 "resources": {},
                                 "volumeMounts": [
                                     {
@@ -354,6 +355,12 @@
             "displayName": "Options to ipa-server-install command",
             "required": true,
             "value": "-U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp"
+        },
+        {
+            "name": "COMMAND",
+            "displayName": "The initial command to run",
+            "required": false,
+            "value": "ipa-server-install"
         },
         {
             "name": "IPA_ADMIN_PASSWORD",
