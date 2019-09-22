@@ -100,8 +100,8 @@ if [ -z "$COMMAND" ] ; then
 	fi
 fi
 
-if [ -n "$IPA_SERVER_INSTALL_OPTS" -a "$COMMAND" != 'ipa-server-install' ] ; then
-	echo "Invocation error: IPA_SERVER_INSTALL_OPTS should only be used with ipa-server-install." >&2
+if [ -n "$IPA_SERVER_INSTALL_OPTS" -a "$COMMAND" != 'ipa-server-install' -a "$COMMAND" != 'ipa-replica-install' ] ; then
+	echo "Invocation error: IPA_SERVER_INSTALL_OPTS should only be used with ipa-server-install or ipa-replica-install." >&2
 	exit 7
 fi
 
