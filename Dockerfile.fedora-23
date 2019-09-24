@@ -1,5 +1,5 @@
 # Clone from the Fedora 23 image
-FROM fedora:23
+FROM docker.io/library/fedora:23
 
 MAINTAINER Jan Pazdziora
 
