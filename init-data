@@ -30,13 +30,17 @@ case "$1" in
 	;;
 esac
 
-for i in /run/* /tmp/* ; do
+for i in /run/* /tmp/var/tmp/* /tmp/* ; do
 	if [ "$i" == '/run/secrets' ] ; then
 		:
 	elif [ -L "$i" -o -f "$i" ] ; then
 		rm -f "$i"
 	else
-		rm -rf "$i"/*
+		for j in "$i"/* ; do
+			if [ "$j" != '/tmp/var/tmp' ] ; then
+				rm -rf "$j"
+			fi
+		done
 	fi
 done
 
