@@ -22,7 +22,7 @@ fi
 if $EXIT ; then
 	exit 1
 fi
-echo Secret123 | $docker exec -i $C kinit admin
+$docker exec $C bash -c 'echo Secret123 | kinit admin'
 $docker exec $C ipa user-add --first Bob --last Nowak bob
 $docker exec $C id bob
 
