@@ -68,7 +68,7 @@ function run_ipa_container() {
 	fi
 	mkdir -p $VOLUME
 	SEC_OPTS=
-	if [ -n "$seccomp" ] ; then
+	if [ "$docker" != "sudo podman" ] && [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
 	VOLUME_OPTS=

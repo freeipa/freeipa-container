@@ -19,7 +19,7 @@ function run_and_wait_for () {
 	local IMAGE="$1"
 	local NAME="$2"
 	SEC_OPTS=
-	if [ -n "$seccomp" ] ; then
+	if [ "$docker" != "sudo podman" ] && [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
 	$docker run --name $NAME -d -h ipa.example.test \
