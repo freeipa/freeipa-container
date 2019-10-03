@@ -12,17 +12,3 @@
  
      ccache = os.environ['KRB5CCNAME']
      kinit_keytab('host/{env.host}@{env.realm}'.format(env=api.env),
-#
-# Do not use kernel keyring, it is not namespaced
-#
---- /etc/krb5.conf	2018-12-20 23:01:57.000000000 +0000
-+++ /etc/krb5.conf	2018-12-26 09:57:23.802153146 +0000
-@@ -16,7 +16,7 @@
-     pkinit_anchors = FILE:/etc/pki/tls/certs/ca-bundle.crt
-     spake_preauth_groups = edwards25519
- #    default_realm = EXAMPLE.COM
--    default_ccache_name = KEYRING:persistent:%{uid}
-+#    default_ccache_name = KEYRING:persistent:%{uid}
- 
- [realms]
- # EXAMPLE.COM = {
