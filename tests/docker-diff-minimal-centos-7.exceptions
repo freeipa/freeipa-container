@@ -1,2 +1,2 @@
-# Workaround 1611623
+# Older systemd-tmpfiles recreated files even if they existed.
 ^C /var/log/[bw]tmp$

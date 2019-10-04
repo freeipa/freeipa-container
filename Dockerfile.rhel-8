@@ -40,7 +40,7 @@ RUN mkdir /var/log/journal
 RUN systemd-tmpfiles --remove --create
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 # test-addon: VOLUME [ "/var/log/journal" ]
-# test: systemd-container-diff.sh list-dependencies-rhel-8.out docker-diff-minimal-rhel-8.exceptions docker-diff-minimal-rhel-8.out
+# test: systemd-container-diff.sh list-dependencies-rhel-8.out /dev/null docker-diff-minimal-rhel-8.out
 
 # Prepare for basic ipa-server-install in container
 # Address failing nis-domainname.service in the ipa-client-install step
