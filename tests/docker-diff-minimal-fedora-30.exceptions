@@ -1,6 +1,0 @@
-# Workaround 1611623
-^C /var/log/[bw]tmp$
-# This is new in Fedora rawhide (30)
-^C /var$
-^C /var/tmp$
-^[AD] /var/tmp/systemd-private-.*-dbus-broker.service-
