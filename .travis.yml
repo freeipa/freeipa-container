@@ -66,7 +66,9 @@ matrix:
       env: dockerfile=fedora-24 replica=none seccomp=unconfined
 
 script:
-- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-partial-tests.sh Dockerfile.$dockerfile ; fi
-- docker ps -aq | while read i ; do docker rm -f $i ; done
 - if test -n "$RUN_DOCKER_BUILD" ; then docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
 - if test -n "$RUN_DOCKER_BUILD" ; then tests/run-master-and-replica.sh local/freeipa-server ; fi
+
+after_failure:
+- docker ps -aq | while read i ; do docker rm -f $i ; done
+- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-partial-tests.sh Dockerfile.$dockerfile ; fi
