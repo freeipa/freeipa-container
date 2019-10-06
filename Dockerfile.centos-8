@@ -1,9 +1,5 @@
-# Build on top of the RHEL 8 image as CentOS 8 image has not been released yet
-FROM registry.access.redhat.com/ubi8
-
-RUN rm -f /etc/yum.repos.d/ubi.repo
-# Pull in CentOS repository definitions
-RUN rpm -Uvh --force http://mirror.centos.org/centos/8/BaseOS/x86_64/os/Packages/centos-release-8.0-0.1905.0.9.el8.x86_64.rpm
+# Build on top of CentOS 8 image from docker hub since registry.centos.org/centos:8 has not been released yet
+FROM docker.io/library/centos
 
 MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 
@@ -19,7 +15,8 @@ RUN yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:D
 
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
-# debug: RUN test "$container" = oci
+# debug: RUN test -z "$container"
+ENV container oci
 
 # Establish reasonably low open files limit in the container
 RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
