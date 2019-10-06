@@ -38,6 +38,12 @@ matrix:
     - stage: build
       env: dockerfile=fedora-29
     - stage: build
+      env: dockerfile=centos-8 readonly=--read-only
+    - stage: build
+      env: dockerfile=centos-8 ca=--external-ca readonly=--read-only
+    - stage: build
+      env: dockerfile=centos-8
+    - stage: build
       env: dockerfile=centos-7 readonly=--read-only
     - stage: build
       env: dockerfile=centos-7 ca=--external-ca readonly=--read-only
