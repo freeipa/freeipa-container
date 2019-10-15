@@ -24,7 +24,7 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
 # test-addon: VOLUME [ "/var/log/journal" ]
-# test: systemd-container-failed.sh var-lib-nfs-rpc_pipefs.mount
+# test: systemd-container-failed.sh kdump.service var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
