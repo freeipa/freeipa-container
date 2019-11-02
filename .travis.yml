@@ -32,9 +32,9 @@ matrix:
     - stage: build
       env: dockerfile=fedora-31 readonly=--read-only
     - stage: build
-      env: dockerfile=fedora-30 readonly=--read-only
+      env: dockerfile=fedora-31 ca=--external-ca readonly=--read-only
     - stage: build
-      env: dockerfile=fedora-30 ca=--external-ca readonly=--read-only
+      env: dockerfile=fedora-31
     - stage: build
       env: dockerfile=fedora-30
     - stage: build
