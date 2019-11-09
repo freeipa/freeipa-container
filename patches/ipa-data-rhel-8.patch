@@ -18,26 +18,28 @@
      NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
      NAMED_ROOT_KEY = "/etc/named.root.key"
      NAMED_BINDKEYS_FILE = "/etc/named.iscdlv.key"
-@@ -89,7 +89,7 @@
-     NAMED_CRYPTO_POLICY_FILE = None
-     NSLCD_CONF = "/etc/nslcd.conf"
-     NSS_LDAP_CONF = "/etc/nss_ldap.conf"
--    NSSWITCH_CONF = "/etc/nsswitch.conf"
-+    NSSWITCH_CONF = "/data/etc/nsswitch.conf"
-     CHRONY_CONF = "/etc/chrony.conf"
-     NTP_CONF = "/etc/ntp.conf"
-     NTP_STEP_TICKERS = "/etc/ntp/step-tickers"
---- /usr/share/pki/server/etc/default.cfg	2018-08-13 23:33:33.000000000 +0000
-+++ /usr/share/pki/server/etc/default.cfg	2018-09-12 10:21:02.634596425 +0000
-@@ -203,7 +203,7 @@
- pki_source_subsystem_path=/usr/share/pki/%(pki_subsystem_type)s
- pki_path=/var/lib/pki
- pki_log_path=/var/log/pki
+--- /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-09-23 09:28:23.000000000 +0000
++++ /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-11-09 05:54:47.896060575 +0000
+@@ -39,7 +39,7 @@
+     AUTHCONFIG = '/usr/sbin/authconfig'
+     AUTHSELECT = '/usr/bin/authselect'
+     SYSCONF_NETWORK = '/etc/sysconfig/network'
+-    NSSWITCH_CONF = '/etc/authselect/user-nsswitch.conf'
++    NSSWITCH_CONF = '/data/etc/authselect/user-nsswitch.conf'
+ 
+ 
+ paths = RedHatPathNamespace()
+--- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
++++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
+@@ -24,7 +24,7 @@
+ 
+ # Dogtag defaults
+ pki_instance_name=pki-tomcat
 -pki_configuration_path=/etc/pki
 +pki_configuration_path=/data/etc/pki
- pki_registry_path=/etc/sysconfig/pki
- pki_instance_path=%(pki_path)s/%(pki_instance_name)s
- pki_instance_log_path=%(pki_log_path)s/%(pki_instance_name)s
+ pki_instance_configuration_path=%(pki_configuration_path)s/%(pki_instance_name)s
+ 
+ pki_admin_cert_file=%(pki_client_dir)s/ca_admin.cert
 --- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
 +++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
 @@ -13,7 +13,7 @@

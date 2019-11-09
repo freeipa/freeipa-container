@@ -1,4 +1,5 @@
 /etc/authselect/nsswitch.conf
+/etc/authselect/user-nsswitch.conf
 /etc/certmonger/
 /etc/dirsrv/
 /etc/gssproxy/
