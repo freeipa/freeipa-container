@@ -49,15 +49,15 @@ RUN systemd-tmpfiles --remove --create
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
 
-COPY patches/ipa-rhel-8.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-rhel-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
+COPY patches/ipa-centos-8.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-centos-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
 
 # test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
-COPY patches/ipa-data-rhel-8.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-rhel-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
+COPY patches/ipa-data-centos-8.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-centos-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
 
 RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
 COPY ipa-join /usr/sbin/ipa-join
