@@ -11,7 +11,6 @@ RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad patch \
 	&& dnf clean all
-RUN dnf upgrade --enablerepo=updates-testing -y sssd-common
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
