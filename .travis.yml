@@ -48,14 +48,14 @@ matrix:
     - stage: build
       env: dockerfile=centos-7
     - stage: build
-      env: dockerfile=fedora-rawhide
-    - stage: build
       env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
   exclude:
     - stage: build
       env: dockerfile=rhel-7
     - stage: build
       env: dockerfile=rhel-8
+    - stage: build
+      env: dockerfile=fedora-rawhide
     - stage: build
       env: dockerfile=fedora-28
     - stage: build
