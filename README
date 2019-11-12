@@ -212,6 +212,22 @@ Example usage:
 
     docker run [...] -e DEBUG_TRACE=1 -e DEBUG_NO_EXIT=1 freeipa-server
 
+You can also try to run
+
+    tests/run-partial-tests.sh Dockerfile
+
+or
+
+    docker='sudo podman' tests/run-partial-tests.sh Dockerfile
+
+which can uncover the general issues with running systemd in containers.
+
+# Travis CI
+
+To check the general health of the project, you can check
+https://travis-ci.org/freeipa/freeipa-container/ where tests are run
+for various OSes (in the container).
+
 # License
 
 Licensed under the Apache License, Version 2.0 (the "License");
