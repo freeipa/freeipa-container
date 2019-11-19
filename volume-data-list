@@ -73,6 +73,7 @@
 /var/log/krb5kdc.log
 /var/log/lastlog
 /var/log/pki/
+/var/log/samba/
 /var/log/sssd/
 /var/log/wtmp
 /var/named/

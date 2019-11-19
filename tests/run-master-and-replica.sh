@@ -150,6 +150,8 @@ set -x
 $docker exec freeipa-master bash -c 'echo Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob
 $docker exec freeipa-master id bob
+
+$docker exec freeipa-master ipa-adtrust-install -a Secret123 --netbios-name=EXAMPLE -U
 )
 
 if [ "$replica" = 'none' ] ; then

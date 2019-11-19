@@ -94,3 +94,29 @@
  #Compress=yes
  #Seal=yes
  #SplitMode=uid
+#
+# Support /var/lib/samba on /data volume
+#
+--- /etc/samba/smb.conf	2019-11-06 11:57:25.000000000 +0000
++++ /etc/samba/smb.conf	2019-11-19 08:54:22.264738866 +0000
+@@ -4,6 +4,7 @@
+ # you modified it.
+ 
+ [global]
++	state directory = /data/var/lib/samba
+ 	workgroup = SAMBA
+ 	security = user
+ 
+--- /usr/lib/python3.6/site-packages/ipaserver/install/adtrustinstance.py	2019-08-14 15:37:23.000000000 +0000
++++ /usr/lib/python3.6/site-packages/ipaserver/install/adtrustinstance.py	2019-11-19 08:34:09.065235181 +0000
+@@ -465,7 +465,9 @@
+         conf_fd.write('### Added by IPA Installer ###\n')
+         conf_fd.write('[global]\n')
+         conf_fd.write('debug pid = yes\n')
+-        conf_fd.write('config backend = registry\n')
++        conf_fd.write('state directory = /data/var/lib/samba\n')
++        conf_fd.write('cache directory = /data/var/lib/samba\n')
++        conf_fd.write('include = registry\n')
+         conf_fd.close()
+ 
+     def __add_plugin_conf(self, name, plugin_cn, ldif_file):
