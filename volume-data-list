@@ -12,6 +12,7 @@
 /etc/krb5.keytab
 /etc/named.conf
 /etc/named.keytab
+/etc/named/ipa-ext.conf
 /etc/nsswitch.conf
 /etc/ntp.conf
 /etc/openldap/
