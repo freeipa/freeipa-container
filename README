@@ -1,7 +1,8 @@
-# FreeIPA server in Docker
+# FreeIPA server container
 
-This repository contains the Dockerfile and associated assets for
-building a FreeIPA server Docker image from the official yum repo.
+This repository contains Dockerfiles and associated assets for
+building a FreeIPA server container images from the official yum/dnf
+repositories.
 
 Install docker 1.10+:
 
