@@ -1,32 +1,38 @@
---- /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-07-26 12:56:12.000000000 +0000
-+++ /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2018-09-12 10:09:32.450630323 +0000
-@@ -74,14 +74,14 @@
+--- /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2019-11-12 18:52:42.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipaplatform/base/paths.py	2019-11-20 14:05:40.088387763 +0000
+@@ -72,17 +72,17 @@
      IPA_NSSDB_DIR = "/etc/ipa/nssdb"
      IPA_NSSDB_PWDFILE_TXT = "/etc/ipa/nssdb/pwdfile.txt"
      COMMON_KRB5_CONF_DIR = "/etc/krb5.conf.d/"
 -    KRB5_CONF = "/etc/krb5.conf"
 +    KRB5_CONF = "/data/etc/krb5.conf"
      KRB5_FREEIPA = COMMON_KRB5_CONF_DIR + "freeipa"
+     KRB5_FREEIPA_SERVER = COMMON_KRB5_CONF_DIR + "freeipa-server"
 -    KRB5_KEYTAB = "/etc/krb5.keytab"
 +    KRB5_KEYTAB = "/data/etc/krb5.keytab"
      LDAP_CONF = "/etc/ldap.conf"
      LIBNSS_LDAP_CONF = "/etc/libnss-ldap.conf"
      NAMED_CONF = "/etc/named.conf"
+-    NAMED_CUSTOM_CONFIG = "/etc/named/ipa-ext.conf"
++    NAMED_CUSTOM_CONFIG = "/data/etc/named/ipa-ext.conf"
+     NAMED_CUSTOM_CFG_SRC = '/usr/share/ipa/bind.ipa-ext.conf'
      NAMED_VAR_DIR = "/var/named"
 -    NAMED_KEYTAB = "/etc/named.keytab"
 +    NAMED_KEYTAB = "/data/etc/named.keytab"
      NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
      NAMED_ROOT_KEY = "/etc/named.root.key"
      NAMED_BINDKEYS_FILE = "/etc/named.iscdlv.key"
-@@ -89,7 +89,7 @@
-     NAMED_CRYPTO_POLICY_FILE = None
-     NSLCD_CONF = "/etc/nslcd.conf"
-     NSS_LDAP_CONF = "/etc/nss_ldap.conf"
--    NSSWITCH_CONF = "/etc/nsswitch.conf"
-+    NSSWITCH_CONF = "/data/etc/nsswitch.conf"
-     CHRONY_CONF = "/etc/chrony.conf"
-     NTP_CONF = "/etc/ntp.conf"
-     NTP_STEP_TICKERS = "/etc/ntp/step-tickers"
+--- /usr/lib/python3.7/site-packages/ipaplatform/redhat/paths.py	2019-11-12 18:52:42.000000000 +0000
++++ /usr/lib/python3.7/site-packages/ipaplatform/redhat/paths.py	2019-11-20 14:05:40.088387763 +0000
+@@ -39,7 +39,7 @@
+     AUTHCONFIG = '/usr/sbin/authconfig'
+     AUTHSELECT = '/usr/bin/authselect'
+     SYSCONF_NETWORK = '/etc/sysconfig/network'
+-    NSSWITCH_CONF = '/etc/authselect/user-nsswitch.conf'
++    NSSWITCH_CONF = '/data/etc/authselect/user-nsswitch.conf'
+ 
+ 
+ paths = RedHatPathNamespace()
 --- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
 +++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
 @@ -24,7 +24,7 @@
