@@ -119,6 +119,8 @@ if [ "$1" == upgrade ] ; then
 		echo "FreeIPA server is already configured, starting the services."
 	else
 		echo "FreeIPA server is already configured but with different version, starting upgrade."
+		# Workaround Lower version of database is expected
+		rm -rf /var/lib/sss/db/*
 		for d in /usr/share/java/resteasy* ; do
 			sed -i 's#^\(JAVA_OPTS=".*-DRESTEASY_LIB=\)/usr/share/java/resteasy[a-z-]*\(.*"\)#\1'$d'\2#' /etc/sysconfig/pki-tomcat
 		done
