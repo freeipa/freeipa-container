@@ -128,3 +128,16 @@
          conf_fd.close()
  
      def __add_plugin_conf(self, name, plugin_cn, ldif_file):
+#
+# Workaround 1781131
+#
+--- /usr/sbin/ipa-upgrade-rpm-scriptlets-1-389-ds-base	2019-12-09 12:10:43.000000000 +0000
++++ /usr/sbin/ipa-upgrade-rpm-scriptlets-1-389-ds-base	2019-12-09 12:18:22.236389738 +0000
+@@ -1,7 +1,5 @@
+ #!/bin/sh
+ set -x
+-# activate arg completion for CLI tools
+-activate-global-python-argcomplete > /dev/null
+
+ if [ -n "$DEBUGPOSTTRANS" ] ; then
+     output=$DEBUGPOSTTRANS

@@ -47,3 +47,5 @@ mkdir -p "$VOLUME-template/.configfiles-noreplace"
 		mkdir -p $( dirname "$VOLUME-template/.configfiles-noreplace$i" )
 		ln "$VOLUME-template/.configfiles$i" "$VOLUME-template/.configfiles-noreplace$i"
 	done
+
+rm -f /var/lib/rpm/__db.*
