@@ -59,6 +59,17 @@
                         }
                     },
                     {
+                        "name": "centos-8",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on CentOS 8",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:centos-8"
+                        }
+                    },
+                    {
                         "name": "centos-7",
                         "annotations": {
                             "openshift.io/display-name": "FreeIPA Server on CentOS 7",
