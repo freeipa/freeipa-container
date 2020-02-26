@@ -31,7 +31,7 @@ ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
 RUN mkdir /var/log/journal
 # test-addon: VOLUME [ "/var/log/journal" ]
-# test: systemd-container-failed.sh
+# test: systemd-container-failed.sh systemd-homed.service
 
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l | xargs rm -v
