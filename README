@@ -47,6 +47,14 @@ need to be mounted explicitly:
        --tmpfs /run --tmpfs /tmp \
        -v /var/lib/ipa-data:/data:Z freeipa-server [ opts ]
 
+When running DNS server (the `--setup-dns` option to
+`ipa-server-install`) in a container with read-only root filesystem
+(the `--read-only` option to `docker run`), the setup code in the
+container won't be able to edit `/etc/resolv.conf` in the container
+to point it to itself. Add `--dns=127.0.0.1` option to the
+`docker run` invocation to allow the FreeIPA server to reach its own
+DNS server.
+
 Also, without oci-systemd-hook, running the container as
 `--read-only` will typically only work when `/etc/machine-id`
 is pre-created on the host and bind-mounted to the container with `-v`.
