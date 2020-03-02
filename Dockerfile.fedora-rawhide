@@ -12,9 +12,6 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad patch \
 	&& dnf clean all
 
-# Workaround 1758738
-RUN python3 -c 'import usb'
-
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
