@@ -7,6 +7,8 @@ umask 0007
 
 docker=${docker:-docker}
 
+sudo=sudo
+
 function wait_for_ipa_container() {
 	set +x
 	N="$1" ; shift
@@ -38,6 +40,9 @@ function wait_for_ipa_container() {
 		fi
 	done
 	date
+	if test -O $VOLUME/build-id ; then
+		sudo=
+	fi
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
@@ -47,7 +52,7 @@ function wait_for_ipa_container() {
 	fi
 	if [ -n "$MACHINE_ID" ] ; then
 		# Check that journal landed on volume and not in host's /var/log/journal
-		sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
+		$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
 		if ls -la /var/log/journal/$MACHINE_ID ; then
 			exit 1
 		fi
@@ -105,7 +110,7 @@ run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --se
 if [ -n "$ca" ] ; then
 	$docker rm -f freeipa-master
 	date
-	sudo tests/generate-external-ca.sh /tmp/freeipa-test-$$/data
+	$sudo tests/generate-external-ca.sh /tmp/freeipa-test-$$/data
 	# For external CA, provide the certificate for the second stage
 	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
 		--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
@@ -130,9 +135,9 @@ wait_for_ipa_container freeipa-master
 
 $docker rm -f freeipa-master
 # Force "upgrade" path by simulating image change
-sudo mv /tmp/freeipa-test-$$/data/build-id /tmp/freeipa-test-$$/data/build-id.initial
-uuidgen | sudo tee /tmp/freeipa-test-$$/data/build-id
-sudo touch -r /tmp/freeipa-test-$$/data/build-id.initial /tmp/freeipa-test-$$/data/build-id
+$sudo mv /tmp/freeipa-test-$$/data/build-id /tmp/freeipa-test-$$/data/build-id.initial
+uuidgen | $sudo tee /tmp/freeipa-test-$$/data/build-id
+$sudo touch -r /tmp/freeipa-test-$$/data/build-id.initial /tmp/freeipa-test-$$/data/build-id
 run_ipa_container $IMAGE freeipa-master
 
 # Wait for the services to start to the point when SSSD is operational
