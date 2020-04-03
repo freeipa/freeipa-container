@@ -33,10 +33,18 @@ function update_server_ip_address () {
 	MY_IP=''
 	if [ -f /run/ipa/ipa-server-ip ] ; then
 		MY_IP=$( cat /run/ipa/ipa-server-ip )
-	fi
-	MY_IP=${MY_IP:-$( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' | head -1 )}
-	if [ "$CURRENT_IP" == "$MY_IP" ] ; then
-		return
+		if [ "$CURRENT_IP" == "$MY_IP" ] ; then
+			return
+		fi
+	else
+		for i in $( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' ) ; do
+			if [ "$CURRENT_IP" == "$i" ] ; then
+				return
+			fi
+			if [ -z "$MY_IP" ] ; then
+				MY_IP="$i"
+			fi
+		done
 	fi
 
 	kdestroy -A
