@@ -1,5 +1,5 @@
-# Build on top of CentOS 8 image from docker hub since registry.centos.org/centos:8 has not been released yet
-FROM docker.io/library/centos
+# Build on top of base CentOS 8 image
+FROM registry.centos.org/centos:8
 
 MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
 
