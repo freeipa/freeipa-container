@@ -1,27 +1,4 @@
 #
-# Workaround 1364139
-#
---- /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py	2018-09-18 15:47:56.000000000 +0000
-+++ /usr/lib/python2.7/site-packages/ipaserver/install/server/replicainstall.py	2018-11-08 14:12:51.888386198 +0000
-@@ -735,7 +735,7 @@
-     api.bootstrap(in_server=True, context='installer', confdir=paths.ETC_IPA)
-     api.finalize()
- 
--    installutils.verify_fqdn(config.master_host_name, options.no_host_dns)
-+    installutils.verify_fqdn(config.master_host_name, options.no_host_dns, local_hostname=False)
- 
-     cafile = os.path.join(config.dir, "ca.crt")
-     if not os.path.isfile(cafile):
-@@ -1117,7 +1117,7 @@
-                            "certificate")
- 
-     installutils.verify_fqdn(config.host_name, options.no_host_dns)
--    installutils.verify_fqdn(config.master_host_name, options.no_host_dns)
-+    installutils.verify_fqdn(config.master_host_name, options.no_host_dns, local_hostname=False)
- 
-     ccache = os.environ['KRB5CCNAME']
-     kinit_keytab('host/{env.host}@{env.realm}'.format(env=api.env),
-#
 # Workaround https://fedorahosted.org/freeipa/ticket/6518
 #
 --- /usr/lib/python2.7/site-packages/ipaserver/install/installutils.py	2018-09-18 15:47:56.000000000 +0000
