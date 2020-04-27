@@ -19,7 +19,7 @@
 +++ /etc/krb5.conf	2018-11-19 10:47:57.752696130 +0000
 @@ -14,7 +14,7 @@
   rdns = false
-  pkinit_anchors = /etc/pki/tls/certs/ca-bundle.crt
+  pkinit_anchors = FILE:/etc/pki/tls/certs/ca-bundle.crt
  # default_realm = EXAMPLE.COM
 - default_ccache_name = KEYRING:persistent:%{uid}
 +# default_ccache_name = KEYRING:persistent:%{uid}
