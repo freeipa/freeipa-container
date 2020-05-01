@@ -77,7 +77,7 @@ function run_ipa_container() {
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
 	VOLUME_OPTS=
-	if [ -n "$readonly" -a -n "$TRAVIS" ] ; then
+	if [ -n "$readonly_run" -a -n "$TRAVIS" ] ; then
 		if ! [ -f $VOLUME/etc/machine-id ] ; then
 			mkdir -p $VOLUME/etc
 			chmod o+rx $VOLUME/etc
@@ -89,7 +89,7 @@ function run_ipa_container() {
 	(
 	set -x
 	umask 0
-	$docker run $readonly -d --name "$N" -h $HOSTNAME \
+	$docker run $readonly_run -d --name "$N" -h $HOSTNAME \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 		-v $VOLUME:/data:Z $VOLUME_OPTS $DOCKER_RUN_OPTS \
@@ -101,11 +101,15 @@ function run_ipa_container() {
 IMAGE="$1"
 
 if [ "$readonly" == "--read-only" ] ; then
-	readonly="$readonly --dns=127.0.0.1"
+	readonly_run="$readonly --dns=127.0.0.1"
 fi
 
 # Initial setup of the FreeIPA server
-run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp $ca
+dns_opts="--auto-reverse --allow-zone-overlap"
+if [ "$replica" = 'none' ] ; then
+	dns_opts=""
+fi
+run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts --no-ntp $ca
 
 if [ -n "$ca" ] ; then
 	$docker rm -f freeipa-master
@@ -165,12 +169,13 @@ if [ "$replica" = 'none' ] ; then
 fi
 
 # Setup replica
+readonly_run="$readonly"
 MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 DOCKER_RUN_OPTS="--dns=$MASTER_IP"
 if [ "$docker" != "sudo podman" ] ; then
 	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
 fi
-run_ipa_container $IMAGE freeipa-replica ipa-replica-install -U --skip-conncheck --principal admin --setup-ca --no-ntp
+run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin --setup-ca --no-ntp
 date
 if $docker diff freeipa-master | tee /dev/stderr | grep -v '^C /etc$' | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 	exit 1
