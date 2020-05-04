@@ -1,0 +1,135 @@
+name: Build and test FreeIPA containers
+
+on: [push]
+
+env:
+  TRAVIS: yes-similar-ubuntu-environment
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        os: [ fedora-rawhide, fedora-33, fedora-32, fedora-31, fedora-23, centos-8, centos-7 ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t local/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+      - name: Save image
+        run: docker save local/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}.tar.gz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+          path: freeipa-server-${{ matrix.os }}.tar.gz
+
+  test-docker:
+    name: Run with docker
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: fedora-32
+          - os: fedora-32
+            readonly: --read-only
+          - os: fedora-32
+            readonly: --read-only
+            ca: --external-ca
+          - os: centos-8
+          - os: centos-8
+            readonly: --read-only
+          - os: centos-8
+            readonly: --read-only
+            ca: --external-ca
+          - os: centos-7
+            protected_regular: unset
+          - os: fedora-23
+            readonly: --read-only
+            seccomp: unconfined
+            replica: none
+            protected_regular: unset
+        os: [ fedora-33, fedora-31, fedora-rawhide ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Install certutil
+        if: ${{ matrix.ca == '--external-ca' }}
+        run: sudo apt-get update -y && sudo apt-get install -y libnss3-tools
+      - name: Disable fs.protected_regular
+        if: ${{ matrix.protected_regular == 'unset' }}
+        run: sudo sysctl fs.protected_regular=0
+      - name: Run master and replica
+        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+      - name: Run partial tests
+        if: ${{ failure() }}
+        run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+
+  test-podman:
+    name: Run with sudo podman
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-32, centos-8 ]
+    steps:
+      - name: Install podman
+        run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | sudo podman load
+      - name: Run master and replica
+        run: docker='sudo podman' tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+      - name: Run partial tests
+        if: ${{ failure() }}
+        run: docker='sudo podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+
+  test-rootless-podman:
+    name: Run with rootless podman
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-32, centos-8 ]
+    steps:
+      - name: Install podman and others
+        run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
+      - name: Run master
+        run: docker='systemd-run --scope --user podman' replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+      - name: Run partial tests
+        if: ${{ failure() }}
+        run: docker='systemd-run --scope --user podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+
+  test-k3s:
+    name: Run with K3s
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-32, centos-8 ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Unzip the image
+        run: gunzip freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Run K3s and master in it
+        run: tests/run-master-in-k3s.sh local/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
+
