@@ -1,7 +1,6 @@
 # Clone from the CentOS 7
 FROM registry.centos.org/centos:7
 
-MAINTAINER Jan Pazdziora
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
@@ -113,3 +112,5 @@ Authorization (host access control, SELinux user roles, services). The \
 solution provides features for further integration with Linux based clients \
 (SUDO, automount) and integration with Active Directory based infrastructures \
 (Trusts)."
+
+LABEL maintainer="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"

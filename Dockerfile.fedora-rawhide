@@ -1,8 +1,6 @@
 # Clone from the Fedora rawhide image
 FROM registry.fedoraproject.org/fedora:rawhide
 
-MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
-
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
@@ -104,3 +102,5 @@ LABEL run 'docker run ${RUN_OPTS} --name ${NAME} -v /var/lib/${NAME}:/data:Z -v 
 LABEL RUN_OPTS_FILE '/var/lib/${NAME}/docker-run-opts'
 LABEL stop 'docker stop ${NAME}'
 LABEL uninstall 'docker run --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} ${IMAGE} /bin/uninstall.sh'
+
+LABEL maintainer="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
