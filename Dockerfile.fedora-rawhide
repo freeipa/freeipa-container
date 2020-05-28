@@ -24,7 +24,6 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
-RUN mkdir /var/log/journal
 # test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh
 
