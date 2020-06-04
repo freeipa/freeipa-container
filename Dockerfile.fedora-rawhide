@@ -57,8 +57,8 @@ COPY utils/prepare-volume-template utils/populate-volume-from-template utils/ext
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 # Move configuration and data to data volume
-COPY patches/ipa-data-fedora-32.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-32.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
+COPY patches/ipa-data-fedora-33.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-33.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
 
 RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
 COPY ipa-join /usr/sbin/ipa-join
