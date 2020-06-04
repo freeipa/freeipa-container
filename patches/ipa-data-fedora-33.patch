@@ -142,3 +142,36 @@
              try:
                  value = os.getxattr(src, name, follow_symlinks=follow_symlinks)
                  os.setxattr(dst, name, value, follow_symlinks=follow_symlinks)
+#
+# rndc-confgen does not seem to write through the
+# /etc/rndc.key -> /data/etc/rndc.key symlink
+#
+--- /usr/libexec/generate-rndc-key.sh	2020-05-26 08:23:25.000000000 +0000
++++ /usr/libexec/generate-rndc-key.sh	2020-06-04 12:07:40.032800430 +0000
+@@ -15,18 +15,18 @@
+ 
+ # This script generates /etc/rndc.key if doesn't exist AND if there is no rndc.conf
+ 
+-if [ ! -s /etc/rndc.key -a ! -s /etc/rndc.conf ]; then
+-  echo -n $"Generating /etc/rndc.key:"
+-  if /usr/sbin/rndc-confgen -a -A hmac-sha256 -r /dev/urandom > /dev/null 2>&1
++if [ ! -s /data/etc/rndc.key -a ! -s /etc/rndc.conf ]; then
++  echo -n $"Generating /data/etc/rndc.key:"
++  if /usr/sbin/rndc-confgen -c /data/etc/rndc.key -a -A hmac-sha256 -r /dev/urandom > /dev/null 2>&1
+   then
+-    chmod 640 /etc/rndc.key
+-    chown root:named /etc/rndc.key
+-    [ -x /sbin/restorecon ] && /sbin/restorecon /etc/rndc.key
+-    success $"/etc/rndc.key generation"
++    chmod 640 /data/etc/rndc.key
++    chown root:named /data/etc/rndc.key
++    [ -x /sbin/restorecon ] && /sbin/restorecon /data/etc/rndc.key
++    success $"/data/etc/rndc.key generation"
+     echo
+   else
+     rc=$?
+-    failure $"/etc/rndc.key generation"
++    failure $"/data/etc/rndc.key generation"
+     echo
+     exit $rc
+   fi
