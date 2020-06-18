@@ -1,18 +1,4 @@
 #
-# Workaround 1364139
-#
---- /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py	2018-11-19 17:47:07.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaserver/install/server/replicainstall.py	2018-12-12 12:26:43.001033734 +0000
-@@ -877,7 +877,7 @@
-                            "certificate")
- 
-     installutils.verify_fqdn(config.host_name, options.no_host_dns)
--    installutils.verify_fqdn(config.master_host_name, options.no_host_dns)
-+    installutils.verify_fqdn(config.master_host_name, options.no_host_dns, local_hostname=False)
- 
-     ccache = os.environ['KRB5CCNAME']
-     kinit_keytab('host/{env.host}@{env.realm}'.format(env=api.env),
-#
 # Force systemd not to attempt to create session keyring
 #
 --- /dev/null  2018-09-15 15:00:07.785801994 +0000
