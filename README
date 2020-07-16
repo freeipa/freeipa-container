@@ -237,6 +237,29 @@ To check the general health of the project, you can check
 https://travis-ci.org/freeipa/freeipa-container/ where tests are run
 for various OSes (in the container).
 
+# Build and Push image helper script
+
+A script to help on building and pushing the image has been created,
+which can be used from the command line or in a pipeline. It offers a
+default pattern to push the images (development images), and flexibility
+to override the values using environment variables.
+
+Usage:
+
+```shell
+./devel/build-and-push-image.sh
+```
+
+The environment variables available are:
+- **BAPI_DOCKERFILE**: Indicate the Dockerfile to be used; by default it is
+  'Dockerfile'.
+- **BAPI_REMOTE_IMAGE**: The reference to the remote image, indicating the image
+  registry.
+- **BAPI_LOCAL_TAG**: Local reference to be used for the image.
+- **BAPI_USERNAME**: The username to login in the remote image registry.
+- **BAPI_PASSWORD**: The password to login in the remote image registry.
+
+
 # License
 
 Licensed under the Apache License, Version 2.0 (the "License");

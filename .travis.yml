@@ -23,12 +23,17 @@ before_script:
 
 stages:
 - sanity
+- test-build-and-push-image
 - build
 
 matrix:
   include:
     - stage: sanity
       script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
+    - stage: test-build-and-push-image
+      script:
+      - docker run --rm -it quay.io/buildah/stable buildah version
+      - ./tests/test-build-and-push-image.sh
     - stage: build
       env: dockerfile=fedora-32 readonly=--read-only
     - stage: build
