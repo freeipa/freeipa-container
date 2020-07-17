@@ -1,0 +1,13 @@
+golang
+gcc
+centos-release-ansible-29
+gettext 
+less
+openssh-clients
+which
+podman
+buildah
+curl
+xdg-utils
+xdg-user-dirs
+curl

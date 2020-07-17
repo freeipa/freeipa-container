@@ -1,0 +1,13 @@
+golang
+gcc
+ansible
+gettext 
+less
+openssh-clients
+which
+podman
+buildah
+curl
+xdg-utils
+xdg-user-dirs
+curl

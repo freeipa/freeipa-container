@@ -24,11 +24,18 @@ before_script:
 stages:
 - sanity
 - build
+- test-install-local-tools
 
 matrix:
   include:
     - stage: sanity
       script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
+    - stage: test-install-local-tools
+      env: START_INDEX=5 END_INDEX=5 CONTAINER_IMAGE="fedora:32"
+      script: ./tests/test-install-local-tools.sh
+    - stage: test-install-local-tools
+      env: START_INDEX=41 END_INDEX=41 CONTAINER_IMAGE="fedora:32"
+      script: ./tests/test-install-local-tools.sh
     - stage: build
       env: dockerfile=fedora-32 readonly=--read-only
     - stage: build
