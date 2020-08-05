@@ -95,21 +95,6 @@
  d /var/cache 0755 - - -
 
 #
-# Force writing journal to /run/log/journal which we symlink to
-# /data/var/log/journal
-#
---- /etc/systemd/journald.conf	2016-02-01 14:04:05.000000000 +0000
-+++ /etc/systemd/journald.conf	2018-12-14 08:49:25.189295557 +0000
-@@ -12,7 +12,7 @@
- # See journald.conf(5) for details.
- 
- [Journal]
--#Storage=auto
-+Storage=volatile
- #Compress=yes
- #Seal=yes
- #SplitMode=uid
-#
 # Support /var/lib/samba on /data volume
 #
 --- /etc/samba/smb.conf	2019-11-06 11:57:25.000000000 +0000
