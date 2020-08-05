@@ -60,14 +60,12 @@ RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 # Move configuration and data to data volume
 COPY patches/ipa-data-fedora-33.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-33.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
+COPY ipaplatform-fedora.conf /usr/lib/systemd/system.conf.d/ipaplatform-override.conf
+ENV IPAPLATFORM_OVERRIDE=fedora_container
 
 COPY journald-storage.conf /usr/lib/systemd/journald.conf.d/storage.conf
 
-RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
-COPY ipa-join /usr/sbin/ipa-join
-
-RUN authselect select sssd with-sudo --force && mv /usr/bin/authselect /usr/bin/authselect.orig
-COPY authselect /usr/bin/authselect
+RUN authselect select sssd with-sudo --force
 
 COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
 RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
