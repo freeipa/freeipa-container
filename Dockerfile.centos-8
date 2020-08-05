@@ -57,6 +57,8 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-rhel-8.patch | te
 COPY patches/ipa-data-rhel-8.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-rhel-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
 
+COPY journald-storage.conf /usr/lib/systemd/journald.conf.d/storage.conf
+
 RUN mv /usr/sbin/ipa-join /usr/sbin/ipa-join.orig
 COPY ipa-join /usr/sbin/ipa-join
 
