@@ -79,23 +79,13 @@ function run_ipa_container() {
 	if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] && [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
-	VOLUME_OPTS=
-	if [ -n "$readonly_run" -a -n "$TRAVIS" ] ; then
-		if ! [ -f $VOLUME/etc/machine-id ] ; then
-			mkdir -p $VOLUME/etc
-			chmod o+rx $VOLUME/etc
-			uuidgen | sed 's/-//g' > $VOLUME/etc/machine-id
-			chmod 444 $VOLUME/etc/machine-id
-		fi
-		VOLUME_OPTS="-v $VOLUME/etc/machine-id:/etc/machine-id:ro,Z"
-	fi
 	(
 	set -x
 	umask 0
 	$docker run $readonly_run -d --name "$N" -h $HOSTNAME \
 		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-		-v $VOLUME:/data:Z $VOLUME_OPTS $DOCKER_RUN_OPTS \
+		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
 		-e PASSWORD=Secret123 "$IMAGE" "$@"
 	)
 	wait_for_ipa_container "$N" "$@"

@@ -10,6 +10,7 @@
 /etc/krb5.conf
 /etc/krb5.conf.d/
 /etc/krb5.keytab
+/etc/machine-id
 /etc/named.conf
 /etc/named.keytab
 /etc/named/ipa-ext.conf
