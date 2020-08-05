@@ -38,7 +38,7 @@ if [ -e /var/log/journal/$MACHINE_ID ] ; then
 	exit 1
 fi
 
-$docker diff $C | tee /dev/stderr | grep -v '^C /etc$' | sort | diff tests/$D /dev/stdin
+$docker diff $C | tee /dev/stderr | sort | ( cd tests && diff $D /dev/stdin )
 
 echo OK $0.
 

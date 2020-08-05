@@ -49,8 +49,11 @@ done
 # Workaround 1373562
 mkdir -p /run/lock
 
-mkdir -p /run/ipa /run/log /data/var/log/journal
-ln -s /data/var/log/journal /run/log/journal
+DATA=/data
+DATA_TEMPLATE=/data-template
+
+mkdir -p /run/ipa /run/log $DATA/var/log/journal
+ln -s $DATA/var/log/journal /run/log/journal
 
 if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
 	if [ "$1" == 'no-exit' ] ; then
@@ -75,7 +78,6 @@ fi
 # Debugging:  Turn on tracing of ipa-server-configure-first script
 test -z "$DEBUG_TRACE" || touch /run/ipa/debug-trace
 
-DATA=/data
 COMMAND=
 if [ -n "$1" ] ; then
 	case "$1" in
@@ -169,12 +171,20 @@ if ! [ -f "$DATA/hostname" ] ; then
 	echo "$HOSTNAME" > "$DATA/hostname"
 fi
 
-DATA_TEMPLATE=/data-template
+function create_machine_id () {
+	# only triggers when /etc/machine-id is a symlink and not bind-mounted into
+	# the container by a container runtime.
+	if [ -L /etc/machine-id -a ! -f $DATA/etc/machine-id ] ; then
+		dbus-uuidgen --ensure=$DATA/etc/machine-id
+		chmod 444 $DATA/etc/machine-id
+	fi
+}
 
 if ! [ -f /etc/ipa/ca.crt ] ; then
 	if ! [ -f $DATA/ipa.csr ] ; then
 		# Do not refresh $DATA in the second stage of the external CA setup
-		/usr/local/bin/populate-volume-from-template /data
+		/usr/local/bin/populate-volume-from-template $DATA
+		create_machine_id
 	fi
 	if [ -n "$PASSWORD" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' ] ; then
@@ -226,7 +236,8 @@ fi
 if [ -f "$DATA/build-id" ] ; then
 	if ! cmp -s $DATA/build-id $DATA_TEMPLATE/build-id ; then
 		echo "FreeIPA server is already configured but with different version, volume update."
-		/usr/local/bin/populate-volume-from-template /data
+		/usr/local/bin/populate-volume-from-template $DATA
+		create_machine_id
 		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
 			| while read f ; do
 				rm -f "$DATA/$f"

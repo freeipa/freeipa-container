@@ -67,7 +67,7 @@ VOLUME [ "/tmp", "/run", "/data", "/var/log/journal" ]
 
 COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]
-# test: systemd-container-ipa-server-install-data.sh docker-diff-minimal-centos-7.out
+# test: systemd-container-ipa-server-install-data.sh /dev/null
 
 # Configure master/replica upon the first invocation
 COPY init-data /usr/local/sbin/init
