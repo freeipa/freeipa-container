@@ -73,7 +73,7 @@ function run_ipa_container() {
 	fi
 	mkdir -p $VOLUME
 	SEC_OPTS=
-	if [ "$docker" != "sudo podman" ] && [ -n "$seccomp" ] ; then
+	if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] && [ -n "$seccomp" ] ; then
 		SEC_OPTS="--security-opt=seccomp:$seccomp"
 	fi
 	VOLUME_OPTS=
@@ -172,7 +172,7 @@ fi
 readonly_run="$readonly"
 MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 DOCKER_RUN_OPTS="--dns=$MASTER_IP"
-if [ "$docker" != "sudo podman" ] ; then
+if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
 	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
 fi
 run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin --setup-ca --no-ntp
