@@ -34,6 +34,8 @@ function wait_for_ipa_container() {
 				break
 			elif [ "$STATUS" == 'degraded' ] ; then
 				echo "The container systemctl is-system-running [$STATUS]."
+				$docker exec "$N" systemctl
+				$docker exec "$N" systemctl status
 				EXIT_STATUS=1
 				break
 			fi
