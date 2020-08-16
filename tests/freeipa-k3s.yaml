@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: freeipa-data-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: freeipa-server-password
+stringData:
+  admin.password: Secret123
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: freeipa-server-service
+spec:
+  selector:
+    app: freeipa-server
+  clusterIP: 10.43.201.201
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: https
+    port: 443
+    targetPort: 443
+  - name: dns-udp
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  - name: kerberos-tcp
+    port: 88
+    protocol: TCP
+    targetPort: 88
+  - name: kerberos-udp
+    port: 88
+    protocol: UDP
+    targetPort: 88
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: freeipa-server
+  labels:
+    app: freeipa-server
+spec:
+  restartPolicy: Never
+  containers:
+  - name: freeipa-server
+    image: local/freeipa-server:latest
+    imagePullPolicy: Never
+    volumeMounts:
+    - name: freeipa-server-data
+      mountPath: /data
+    - name: cgroups
+      mountPath: /sys/fs/cgroup
+      readOnly: true
+    ports:
+    - containerPort: 80
+      protocol: TCP
+    - containerPort: 443
+      protocol: TCP
+    - containerPort: 53
+      protocol: UDP
+    - containerPort: 88
+      protocol: TCP
+    - containerPort: 88
+      protocol: UDP
+    env:
+    - name: IPA_SERVER_HOSTNAME
+      value: freeipa-server.example.test
+    - name: PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: freeipa-server-password
+          key: admin.password
+    - name: IPA_SERVER_INSTALL_OPTS
+      value: "-U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp"
+    readinessProbe:
+      exec:
+        command: [ "/usr/bin/systemctl", "status", "ipa" ]
+      initialDelaySeconds: 60
+      timeoutSeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
+  volumes:
+  - name: freeipa-server-data
+    persistentVolumeClaim:
+      claimName: freeipa-data-pvc
+  - name: cgroups
+    hostPath:
+      path: /sys/fs/cgroup

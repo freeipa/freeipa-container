@@ -104,3 +104,16 @@ jobs:
       workspaces:
         use: fedora-23
       before_install: sudo sysctl fs.protected_regular=0
+
+    - &test-k3s
+      env: dockerfile=fedora-32
+      install: skip
+      after_failure: skip
+      script: tests/run-master-in-k3s.sh local/freeipa-server:$dockerfile local-freeipa-server-$dockerfile.tar
+      workspaces:
+        use: fedora-32
+    - <<: *test-k3s
+      env: dockerfile=centos-8
+      workspaces:
+        use: centos-8
+
