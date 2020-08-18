@@ -5,71 +5,102 @@ dist: focal
 services:
 - docker
 
-before_install:
+install:
 - if test -n "$ca" ; then sudo apt-get install -y libnss3-tools ; fi
 - export docker=${docker:-docker}
 - if test "$docker" == "sudo podman" ; then . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman ; fi
 
-install: true
-
 before_script:
 - perl -e 'print map "$_=$ENV{$_}".chr(10), sort keys %ENV'
 
-stages:
-- build
-
-jobs:
-  include:
-    - stage: build
-      env: dockerfile=fedora-32 readonly=--read-only
-    - stage: build
-      env: dockerfile=fedora-32 ca=--external-ca readonly=--read-only
-    - stage: build
-      env: dockerfile=fedora-32
-    - stage: build
-      env: dockerfile=fedora-32 docker='sudo podman'
-    - stage: build
-      env: dockerfile=fedora-31
-    - stage: build
-      env: dockerfile=centos-8 readonly=--read-only
-    - stage: build
-      env: dockerfile=centos-8 ca=--external-ca readonly=--read-only
-    - stage: build
-      env: dockerfile=centos-8
-    - stage: build
-      env: dockerfile=centos-8 docker='sudo podman'
-    - stage: build
-      env: dockerfile=centos-7
-      install: sudo sysctl fs.protected_regular=0
-    - stage: build
-      env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
-      install: sudo sysctl fs.protected_regular=0
-  exclude:
-    - stage: build
-      env: dockerfile=rhel-7
-    - stage: build
-      env: dockerfile=rhel-8
-    - stage: build
-      env: dockerfile=fedora-rawhide
-    - stage: build
-      env: dockerfile=fedora-30
-    - stage: build
-      env: dockerfile=fedora-29
-    - stage: build
-      env: dockerfile=fedora-28
-    - stage: build
-      env: dockerfile=fedora-27
-    - stage: build
-      env: dockerfile=fedora-26 replica=none
-    - stage: build
-      env: dockerfile=fedora-25 seccomp=unconfined
-    - stage: build
-      env: dockerfile=fedora-24 replica=none seccomp=unconfined
-
 script:
-- $docker build -t local/freeipa-server -f Dockerfile.$dockerfile .
-- tests/run-master-and-replica.sh local/freeipa-server
+- $docker load -i local-freeipa-server-$dockerfile.tar
+- $docker run --rm --entrypoint rpm local/freeipa-server:$dockerfile -qa | sort
+- tests/run-master-and-replica.sh local/freeipa-server:$dockerfile
 
 after_failure:
 - $docker ps -aq | while read i ; do $docker rm -f $i ; done
 - tests/run-partial-tests.sh Dockerfile.$dockerfile
+
+stages:
+- build
+- test
+
+jobs:
+  include:
+    - &build-stage
+      stage: build
+      env: dockerfile=fedora-32
+      install: export docker=${docker:-docker}
+      script: $docker build -t local/freeipa-server:$dockerfile -f Dockerfile.$dockerfile . && $docker save --output local-freeipa-server-$dockerfile.tar local/freeipa-server:$dockerfile
+      after_failure: skip
+      workspaces:
+        create:
+          name: fedora-32
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+    - <<: *build-stage
+      env: dockerfile=fedora-31
+      workspaces:
+        create:
+          name: fedora-31
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+    - <<: *build-stage
+      env: dockerfile=centos-8
+      workspaces:
+        create:
+          name: centos-8
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+    - <<: *build-stage
+      env: dockerfile=centos-7
+      workspaces:
+        create:
+          name: centos-7
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+    - <<: *build-stage
+      env: dockerfile=fedora-23
+      workspaces:
+        create:
+          name: fedora-23
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+
+    - stage: test
+      env: dockerfile=fedora-32 readonly=--read-only
+      workspaces:
+        use: fedora-32
+    - env: dockerfile=fedora-32 ca=--external-ca readonly=--read-only
+      workspaces:
+        use: fedora-32
+    - env: dockerfile=fedora-32
+      workspaces:
+        use: fedora-32
+    - env: dockerfile=fedora-32 docker='sudo podman'
+      workspaces:
+        use: fedora-32
+    - env: dockerfile=fedora-31
+      workspaces:
+        use: fedora-31
+    - env: dockerfile=centos-8 readonly=--read-only
+      workspaces:
+        use: centos-8
+    - env: dockerfile=centos-8 ca=--external-ca readonly=--read-only
+      workspaces:
+        use: centos-8
+    - env: dockerfile=centos-8
+      workspaces:
+        use: centos-8
+    - env: dockerfile=centos-8 docker='sudo podman'
+      workspaces:
+        use: centos-8
+    - env: dockerfile=centos-7
+      workspaces:
+        use: centos-7
+      before_install: sudo sysctl fs.protected_regular=0
+    - env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
+      workspaces:
+        use: fedora-23
+      before_install: sudo sysctl fs.protected_regular=0
