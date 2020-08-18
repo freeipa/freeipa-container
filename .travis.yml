@@ -51,8 +51,10 @@ jobs:
       env: dockerfile=centos-8 docker='sudo podman'
     - stage: build
       env: dockerfile=centos-7
+      install: sudo sysctl fs.protected_regular=0
     - stage: build
       env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
+      install: sudo sysctl fs.protected_regular=0
   exclude:
     - stage: build
       env: dockerfile=rhel-7
