@@ -31,7 +31,10 @@ $docker exec $C id bob
 
 MACHINE_ID=$( $docker exec $C cat /etc/machine-id )
 $docker exec $C ls -la /data/var/log/journal/$MACHINE_ID/system.journal /data/var/log/ipaserver-install.log
-if ls -la /var/log/journal/$MACHINE_ID ; then
+
+# Check that journal landed on volume and not in host's /var/log/journal
+if [ -e /var/log/journal/$MACHINE_ID ] ; then
+	ls -la /var/log/journal/$MACHINE_ID
 	exit 1
 fi
 

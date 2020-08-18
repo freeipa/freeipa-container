@@ -55,7 +55,8 @@ function wait_for_ipa_container() {
 	if [ -n "$MACHINE_ID" ] ; then
 		# Check that journal landed on volume and not in host's /var/log/journal
 		$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
-		if ls -la /var/log/journal/$MACHINE_ID ; then
+		if [ -e /var/log/journal/$MACHINE_ID ] ; then
+			ls -la /var/log/journal/$MACHINE_ID
 			exit 1
 		fi
 	fi
