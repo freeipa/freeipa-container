@@ -1,6 +1,6 @@
 language: generic
+os: linux
 dist: bionic
-sudo: required
 
 services:
 - docker
@@ -27,7 +27,7 @@ stages:
 - sanity
 - build
 
-matrix:
+jobs:
   include:
     - stage: sanity
       script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
