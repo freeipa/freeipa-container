@@ -48,11 +48,11 @@ matrix:
     - stage: build
       env: dockerfile=centos-8
     - stage: build
+      env: dockerfile=centos-8 docker='sudo podman'
+    - stage: build
       env: dockerfile=centos-7
     - stage: build
       env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
-    - stage: build
-      env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only docker='sudo podman'
   exclude:
     - stage: build
       env: dockerfile=rhel-7
