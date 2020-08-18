@@ -13,24 +13,13 @@ before_install:
 install: true
 
 before_script:
-- TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE:-$TRAVIS_COMMIT~..$TRAVIS_COMMIT} && echo "$TRAVIS_COMMIT_RANGE"
-- export TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE/.../..} && echo "$TRAVIS_COMMIT_RANGE"
-- export FILES_CHANGED=$( git diff --name-only $TRAVIS_COMMIT_RANGE | sort ) && echo "$FILES_CHANGED"
-- export TRAVIS_DOCKERFILES=$( sed 's/^ *env. dockerfile=/Dockerfile./;s/ .*//;/^Dockerfile/p;d' .travis.yml | sort ) && echo "$TRAVIS_DOCKERFILES"
-- export BUILD_DOCKERFILES=$( grep '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$BUILD_DOCKERFILES"
-- export NONDOCKERFILES_CHANGED=$( grep -v '^Dockerfile\.' <( echo "$FILES_CHANGED" ) ) ; echo "$NONDOCKERFILES_CHANGED"
-- if test -z "$FILES_CHANGED" || test -n "$NONDOCKERFILES_CHANGED" ; then export BUILD_DOCKERFILES=$TRAVIS_DOCKERFILES ; fi ; echo "$BUILD_DOCKERFILES"
-- if grep -F "Dockerfile.$dockerfile" <( echo "$BUILD_DOCKERFILES" ) ; then export RUN_DOCKER_BUILD=1 ; fi
 - perl -e 'print map "$_=$ENV{$_}".chr(10), sort keys %ENV'
 
 stages:
-- sanity
 - build
 
 jobs:
   include:
-    - stage: sanity
-      script: if comm -23 <( echo "$FILES_CHANGED" ) <( echo "$TRAVIS_DOCKERFILES" ) | grep Dockerfile. ; then echo "Dockerfile modified but not tracked by Travis." >&2 ; exit 1 ; else echo "No unexpected Dockerfile changes, OK." ; fi
     - stage: build
       env: dockerfile=fedora-32 readonly=--read-only
     - stage: build
@@ -78,9 +67,9 @@ jobs:
       env: dockerfile=fedora-24 replica=none seccomp=unconfined
 
 script:
-- if test -n "$RUN_DOCKER_BUILD" ; then $docker build -t local/freeipa-server -f Dockerfile.$dockerfile . ; fi
-- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-master-and-replica.sh local/freeipa-server ; fi
+- $docker build -t local/freeipa-server -f Dockerfile.$dockerfile .
+- tests/run-master-and-replica.sh local/freeipa-server
 
 after_failure:
 - $docker ps -aq | while read i ; do $docker rm -f $i ; done
-- if test -n "$RUN_DOCKER_BUILD" ; then tests/run-partial-tests.sh Dockerfile.$dockerfile ; fi
+- tests/run-partial-tests.sh Dockerfile.$dockerfile
