@@ -10,8 +10,8 @@ if [ -n "$2" ] ; then
 fi
 kubectl get pods --all-namespaces
 kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-k3s.yaml )
-while true ; do if kubectl get pod/freeipa-server | tee /dev/stderr | grep -q '\bRunning\b' ; then break ; else sleep 5 ; fi ; done
+( set +x ; while true ; do if kubectl get pod/freeipa-server | tee /dev/stderr | grep -q '\bRunning\b' ; then break ; else sleep 5 ; fi ; done )
 kubectl logs -f pod/freeipa-server &
-( set -x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $! ; break ; else sleep 5 ; fi ; done )
+( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $! ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-server
 ls -la /var/lib/rancher/k3s/storage/pvc-*
