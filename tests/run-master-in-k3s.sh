@@ -4,7 +4,7 @@ set -e
 set -x
 
 curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
-while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done
+( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
 if [ -n "$2" ] ; then
 	sudo k3s ctr images import "$2"
 fi
