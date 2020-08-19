@@ -58,6 +58,8 @@ spec:
   - name: freeipa-server
     image: localhost/freeipa-server:latest
     imagePullPolicy: Never
+    securityContext:
+      readOnlyRootFilesystem: true
     volumeMounts:
     - name: freeipa-server-data
       mountPath: /data
