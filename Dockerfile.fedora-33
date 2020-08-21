@@ -1,5 +1,5 @@
-# Clone from the Fedora rawhide image
-FROM registry.fedoraproject.org/fedora:rawhide
+# Clone from the Fedora 33 image
+FROM registry.fedoraproject.org/fedora:33
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
@@ -57,7 +57,7 @@ COPY utils/prepare-volume-template utils/populate-volume-from-template utils/ext
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 # Move configuration and data to data volume
-COPY patches/ipa-data-fedora-34.patch /root
+COPY patches/ipa-data-fedora-33.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-33.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
 
 COPY ipaplatform-fedora.conf /usr/lib/systemd/system.conf.d/ipaplatform-override.conf
