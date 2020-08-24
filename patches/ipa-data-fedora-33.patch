@@ -1,5 +1,14 @@
---- /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2020-06-26 09:13:10.512506200 +0000
-+++ /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2020-06-26 09:14:06.509741730 +0000
+--- /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2020-08-20 10:38:12.000000000 +0000
++++ /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2020-08-24 18:31:19.978883075 +0000
+@@ -53,7 +53,7 @@
+     HTTPD_SSL_SITE_CONF = "/etc/httpd/conf.d/ssl.conf"
+     HTTPD_CERT_FILE = "/var/lib/ipa/certs/httpd.crt"
+     HTTPD_KEY_FILE = "/var/lib/ipa/private/httpd.key"
+-    HTTPD_PASSWD_FILE_FMT = "/var/lib/ipa/passwds/{host}-443-RSA"
++    HTTPD_PASSWD_FILE_FMT = "/data/var/lib/ipa/passwds/{host}-443-RSA"
+     # only used on Fedora
+     HTTPD_IPA_WSGI_MODULES_CONF = None
+     OLD_IPA_KEYTAB = "/etc/httpd/conf/ipa.keytab"
 @@ -72,23 +72,23 @@
      IPA_NSSDB_DIR = "/etc/ipa/nssdb"
      IPA_NSSDB_PWDFILE_TXT = "/etc/ipa/nssdb/pwdfile.txt"
@@ -29,6 +38,24 @@
      NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
      NAMED_ROOT_KEY = "/etc/named.root.key"
      NAMED_MANAGED_KEYS_DIR = "/var/named/dynamic"
+@@ -114,7 +114,7 @@
+     CA_CERTIFICATES_BUNDLE_PEM = None
+     CA_CERTIFICATES_DIR = None
+     NSS_DB_DIR = "/etc/pki/nssdb"
+-    PKI_CONFIGURATION = "/etc/pki"
++    PKI_CONFIGURATION = "/data/etc/pki"
+     PKI_TOMCAT = "/etc/pki/pki-tomcat"
+     PKI_TOMCAT_ALIAS_DIR = "/etc/pki/pki-tomcat/alias"
+     PKI_TOMCAT_ALIAS_PWDFILE_TXT = "/etc/pki/pki-tomcat/alias/pwdfile.txt"
+@@ -325,7 +325,7 @@
+         "/var/lib/pki/pki-tomcat/ca/profiles/ca/caSignedLogCert.cfg")
+     KRA_CS_CFG_PATH = "/var/lib/pki/pki-tomcat/conf/kra/CS.cfg"
+     KRACERT_P12 = "/root/kracert.p12"
+-    SAMBA_DIR = "/var/lib/samba"
++    SAMBA_DIR = "/data/var/lib/samba"
+     SSSD_DB = "/var/lib/sss/db"
+     SSSD_MC_GROUP = "/var/lib/sss/mc/group"
+     SSSD_MC_PASSWD = "/var/lib/sss/mc/passwd"
 --- /usr/lib/python3.9/site-packages/ipaplatform/redhat/paths.py	2019-11-19 09:36:59.087415395 +0000
 +++ /usr/lib/python3.9/site-packages/ipaplatform/redhat/paths.py	2019-11-19 09:37:10.928527450 +0000
 @@ -39,7 +39,7 @@
@@ -40,28 +67,6 @@
  
  
  paths = RedHatPathNamespace()
---- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
-+++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
-@@ -24,7 +24,7 @@
- 
- # Dogtag defaults
- pki_instance_name=pki-tomcat
--pki_configuration_path=/etc/pki
-+pki_configuration_path=/data/etc/pki
- pki_instance_configuration_path=%(pki_configuration_path)s/%(pki_instance_name)s
- 
- pki_admin_cert_file=%(pki_client_dir)s/ca_admin.cert
---- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
-+++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
-@@ -13,7 +13,7 @@
- fi
- 
- fname=${1/:/-}-$2
--pwdpath=/var/lib/ipa/passwds/$fname
-+pwdpath=/data/var/lib/ipa/passwds/$fname
- 
- # Make sure the values passed in do not contain path information
- checkpath=$(/usr/bin/realpath -e ${pwdpath} 2>/dev/null)
 #
 # Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
 # being created in runtime
@@ -94,32 +99,6 @@
  
  d /var/cache 0755 - - -
 
-#
-# Support /var/lib/samba on /data volume
-#
---- /etc/samba/smb.conf	2019-11-06 11:57:25.000000000 +0000
-+++ /etc/samba/smb.conf	2019-11-19 08:54:22.264738866 +0000
-@@ -4,6 +4,7 @@
- # you modified it.
- 
- [global]
-+	state directory = /data/var/lib/samba
- 	workgroup = SAMBA
- 	security = user
- 
---- /usr/lib/python3.9/site-packages/ipaserver/install/adtrustinstance.py	2019-08-14 15:37:23.000000000 +0000
-+++ /usr/lib/python3.9/site-packages/ipaserver/install/adtrustinstance.py	2019-11-19 08:34:09.065235181 +0000
-@@ -465,7 +465,9 @@
-         conf_fd.write('### Added by IPA Installer ###\n')
-         conf_fd.write('[global]\n')
-         conf_fd.write('debug pid = yes\n')
--        conf_fd.write('config backend = registry\n')
-+        conf_fd.write('state directory = /data/var/lib/samba\n')
-+        conf_fd.write('cache directory = /data/var/lib/samba\n')
-+        conf_fd.write('include = registry\n')
-         conf_fd.close()
- 
-     def __add_plugin_conf(self, name, plugin_cn, ldif_file):
 #
 # Workaround https://github.com/freeipa/freeipa-container/issues/313
 #
