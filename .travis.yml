@@ -30,10 +30,17 @@ jobs:
   include:
     - &build-stage
       stage: build
-      env: dockerfile=fedora-32
+      env: dockerfile=fedora-33
       install: export docker=${docker:-docker}
       script: $docker build -t local/freeipa-server:$dockerfile -f Dockerfile.$dockerfile . && $docker save --output local-freeipa-server-$dockerfile.tar local/freeipa-server:$dockerfile
       after_failure: skip
+      workspaces:
+        create:
+          name: fedora-33
+          paths:
+            - local-freeipa-server-$dockerfile.tar
+    - <<: *build-stage
+      env: dockerfile=fedora-32
       workspaces:
         create:
           name: fedora-32
@@ -76,7 +83,10 @@ jobs:
             - local-freeipa-server-$dockerfile.tar
 
     - stage: test
-      env: dockerfile=fedora-32 readonly=--read-only
+      env: dockerfile=fedora-33
+      workspaces:
+        use: fedora-33
+    - env: dockerfile=fedora-32 readonly=--read-only
       workspaces:
         use: fedora-32
     - env: dockerfile=fedora-32 ca=--external-ca readonly=--read-only
