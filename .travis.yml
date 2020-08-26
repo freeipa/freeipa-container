@@ -124,6 +124,7 @@ jobs:
       workspaces:
         use: fedora-23
       before_install: sudo sysctl fs.protected_regular=0
+      language: generic
 
     - &test-k3s
       env: dockerfile=fedora-32
