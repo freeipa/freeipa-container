@@ -8,7 +8,8 @@ services:
 install:
 - if test -n "$ca" ; then sudo apt-get install -y libnss3-tools ; fi
 - export docker=${docker:-docker}
-- if test "$docker" == "sudo podman" ; then . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman ; fi
+- if test "$docker" == "sudo podman" -o "$docker" == 'podman' ; then . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman ; fi
+- if [ "$docker" = 'podman' ] ; then sudo apt-get install -y fuse-overlayfs uidmap slirp4netns ; fi
 
 before_script:
 - perl -e 'print map "$_=$ENV{$_}".chr(10), sort keys %ENV'
@@ -96,6 +97,9 @@ jobs:
       workspaces:
         use: fedora-32
     - env: dockerfile=fedora-32 docker='sudo podman'
+      workspaces:
+        use: fedora-32
+    - env: dockerfile=fedora-32 docker=podman replica=none
       workspaces:
         use: fedora-32
     - env: dockerfile=fedora-31
