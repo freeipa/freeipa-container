@@ -44,11 +44,6 @@ jobs:
             ca: --external-ca
           - os: centos-7
             protected_regular: unset
-          - os: fedora-23
-            readonly: --read-only
-            seccomp: unconfined
-            replica: none
-            protected_regular: unset
         os: [ fedora-33, fedora-31, fedora-rawhide ]
     steps:
       - uses: actions/checkout@v2
@@ -65,6 +60,35 @@ jobs:
         run: sudo sysctl fs.protected_regular=0
       - name: Run master and replica
         run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+      - name: Run partial tests
+        if: ${{ failure() }}
+        run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+
+  test-docker-fedora-23:
+    name: Run with docker
+    runs-on: ubuntu-18.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: fedora-23
+            readonly: --read-only
+            seccomp: unconfined
+            replica: none
+            protected_regular: unset
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Disable fs.protected_regular
+        if: ${{ matrix.protected_regular == 'unset' }}
+        run: sudo sysctl fs.protected_regular=0
+      - name: Run master
+        run: readonly=${{ matrix.readonly }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
