@@ -133,11 +133,15 @@ jobs:
           name: freeipa-server-${{ matrix.os }}.tar.gz
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
+      - name: Enable ssh access to self
+        run: ssh-keygen -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 400 ~/.ssh/authorized_keys && chmod o-w ~
       - name: Run master
-        run: docker='systemd-run --scope --user podman' replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+        shell: ssh -o StrictHostKeyChecking=no localhost bash {0}
+        run: cd ${{ github.workspace }} && docker='systemd-run --scope --user podman' replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
-        run: docker='systemd-run --scope --user podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+        shell: ssh localhost bash {0}
+        run: cd ${{ github.workspace }} && docker='systemd-run --scope --user podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
   test-k3s:
     name: Run with K3s
