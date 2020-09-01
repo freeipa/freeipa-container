@@ -75,16 +75,18 @@ function run_ipa_container() {
 		VOLUME=/tmp/freeipa-test-$$/data-replica
 	fi
 	mkdir -p $VOLUME
-	SEC_OPTS=
-	if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] && [ -n "$seccomp" ] ; then
-		SEC_OPTS="--security-opt=seccomp:$seccomp"
+	OPTS=
+	if [ "${docker%podman}" = "$docker" ] ; then
+		OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
+	fi
+	if [ -n "$seccomp" ] ; then
+		OPTS="$OPTS --security-opt=seccomp:$seccomp"
 	fi
 	(
 	set -x
 	umask 0
 	$docker run $readonly_run -d --name "$N" -h $HOSTNAME \
-		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 \
-		--tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+		$OPTS \
 		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
 		-e PASSWORD=Secret123 "$IMAGE" "$@"
 	)

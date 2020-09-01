@@ -18,13 +18,15 @@ function run_and_wait_for () {
 	set +x
 	local IMAGE="$1"
 	local NAME="$2"
-	SEC_OPTS=
-	if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] && [ -n "$seccomp" ] ; then
-		SEC_OPTS="--security-opt=seccomp:$seccomp"
+	OPTS=
+	if [ "${docker%podman}" = "$docker" ] ; then
+		OPTS="--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi
-	$docker run --name $NAME -d -h ipa.example.test \
-		--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-		$SEC_OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0 $IMAGE
+	if [ -n "$seccomp" ] ; then
+		OPTS="$OPTS --security-opt=seccomp:$seccomp"
+	fi
+	( set -x ; $docker run --name $NAME -d -h ipa.example.test \
+		$OPTS $IMAGE )
 	for j in $( seq 1 30 ) ; do
 		if $docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -q -E 'running|degraded' ; then
 			return
