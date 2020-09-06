@@ -1,6 +1,6 @@
 name: Build and test FreeIPA containers
 
-on: [push]
+on: [push, pull_request]
 
 env:
   TRAVIS: yes-similar-ubuntu-environment
