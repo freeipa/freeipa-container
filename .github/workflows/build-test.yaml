@@ -171,25 +171,25 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | skopeo login -u "$DOCKER_USERNAME" --password-stdin docker.io
+        run: echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin docker.io
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-32.tar.gz
       - name: Push Fedora 32 image to Docker Hub
-        run: skopeo copy docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freipa/freeipa-server:fedora-32
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freipa/freeipa-server:fedora-32
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-rawhide.tar.gz
       - name: Push Fedora rawhide image to Docker Hub
-        run: skopeo copy docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freipa/freeipa-server:fedora-rawhide
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freipa/freeipa-server:fedora-rawhide
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-8.tar.gz
       - name: Push CentOS 8 image to Docker Hub
-        run: skopeo copy docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freipa/freeipa-server:centos-8
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freipa/freeipa-server:centos-8
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-7.tar.gz
       - name: Push CentOS 7 image to Docker Hub
-        run: skopeo copy docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freipa/freeipa-server:centos-7
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freipa/freeipa-server:centos-7
 
