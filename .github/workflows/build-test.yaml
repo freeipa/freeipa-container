@@ -15,12 +15,16 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build image
         run: docker build -t local/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+      - name: Create directory for artifacts
+        run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
-        run: docker save local/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}.tar.gz
+        run: docker save local/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+      - name: Get FreeIPA version
+        run: docker run --rm --entrypoint rpm local/freeipa-server:${{ matrix.os }} -qf --qf '%{version}\n' /usr/sbin/ipa-server-install > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.version
       - uses: actions/upload-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
-          path: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
+          path: freeipa-server-${{ matrix.os }}
 
   test-docker:
     name: Run with docker
@@ -49,7 +53,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Install certutil
@@ -81,7 +85,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Disable fs.protected_regular
@@ -107,7 +111,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | sudo podman load
       - name: Run master and replica
@@ -130,7 +134,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
       - name: Enable ssh access to self
@@ -155,7 +159,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-${{ matrix.os }}.tar.gz
+          name: freeipa-server-${{ matrix.os }}
       - name: Unzip the image
         run: gunzip freeipa-server-${{ matrix.os }}.tar.gz
       - name: Run K3s and master in it
@@ -174,22 +178,30 @@ jobs:
         run: echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin docker.io
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-fedora-32.tar.gz
+          name: freeipa-server-fedora-32
       - name: Push Fedora 32 image to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32
+      - name: Push Fedora 32 image tagged with FreeIPA version to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32-$( cat freeipa-server-fedora-32.version )
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-fedora-rawhide.tar.gz
+          name: freeipa-server-fedora-rawhide
       - name: Push Fedora rawhide image to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-rawhide
+      - name: Push Fedora rawhide image tagged with FreeIPA version to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-rawhide-$( cat freeipa-server-fedora-rawhide.version )
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-centos-8.tar.gz
+          name: freeipa-server-centos-8
       - name: Push CentOS 8 image to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freeipa/freeipa-server:centos-8
+      - name: Push CentOS 8 image tagged with FreeIPA version to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freeipa/freeipa-server:centos-8-$( cat freeipa-server-centos-8.version )
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-centos-7.tar.gz
+          name: freeipa-server-centos-7
       - name: Push CentOS 7 image to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freeipa/freeipa-server:centos-7
+      - name: Push CentOS 7 image tagged with FreeIPA version to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freeipa/freeipa-server:centos-7-$( cat freeipa-server-centos-7.version )
 
