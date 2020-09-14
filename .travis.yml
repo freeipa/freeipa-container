@@ -55,13 +55,6 @@ jobs:
           paths:
             - local-freeipa-server-$dockerfile.tar
     - <<: *build-stage
-      env: dockerfile=fedora-rawhide
-      workspaces:
-        create:
-          name: fedora-rawhide
-          paths:
-            - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
       env: dockerfile=centos-8
       workspaces:
         create:
@@ -105,9 +98,6 @@ jobs:
     - env: dockerfile=fedora-31
       workspaces:
         use: fedora-31
-    - env: dockerfile=fedora-rawhide
-      workspaces:
-        use: fedora-rawhide
     - env: dockerfile=centos-8 readonly=--read-only
       workspaces:
         use: centos-8
