@@ -20,6 +20,19 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build image
         run: docker build -t local/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+      - name: File issue if building image failed
+        if: ${{ failure() && github.event_name == 'schedule' }}
+        run: |
+          curl -s 'https://api.github.com/repos/${{ github.repository }}/issues?labels=image-build-fail' | jq -r '.[0].state' | grep open \
+          || curl -s -X POST \
+            --url https://api.github.com/repos/${{ github.repository }}/issues \
+            -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'Accept: application/vnd.github.v3+json' \
+            -d '{
+              "title": "Image build for ${{ matrix.os }} failed on '$( date -I )'",
+              "body": "This issue was automatically created by GitHub Action\n\nhttps://github.com/adelton/freeipa-container/actions/runs/${{ github.run_id }}.\n",
+              "labels": ["image-build-fail" ]
+              }'
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
