@@ -6,8 +6,7 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-RUN yum -y module enable idm:DL1
-RUN yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:DL1/dns && yum -y install patch sudo && yum clean all
+RUN yum -y module enable idm:DL1 && yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:DL1/dns && yum -y install patch sudo && yum clean all
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
