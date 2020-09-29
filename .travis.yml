@@ -31,34 +31,13 @@ jobs:
   include:
     - &build-stage
       stage: build
-      env: dockerfile=fedora-33
+      env: dockerfile=fedora-32
       install: export docker=${docker:-docker}
       script: $docker build -t local/freeipa-server:$dockerfile -f Dockerfile.$dockerfile . && $docker save --output local-freeipa-server-$dockerfile.tar local/freeipa-server:$dockerfile
       after_failure: skip
       workspaces:
         create:
-          name: fedora-33
-          paths:
-            - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=fedora-32
-      workspaces:
-        create:
           name: fedora-32
-          paths:
-            - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=fedora-31
-      workspaces:
-        create:
-          name: fedora-31
-          paths:
-            - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=fedora-rawhide
-      workspaces:
-        create:
-          name: fedora-rawhide
           paths:
             - local-freeipa-server-$dockerfile.tar
     - <<: *build-stage
@@ -68,32 +47,9 @@ jobs:
           name: centos-8
           paths:
             - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=centos-7
-      workspaces:
-        create:
-          name: centos-7
-          paths:
-            - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=fedora-23
-      workspaces:
-        create:
-          name: fedora-23
-          paths:
-            - local-freeipa-server-$dockerfile.tar
 
     - stage: test
-      env: dockerfile=fedora-33
-      workspaces:
-        use: fedora-33
-    - env: dockerfile=fedora-32 readonly=--read-only
-      workspaces:
-        use: fedora-32
-    - env: dockerfile=fedora-32 ca=--external-ca readonly=--read-only
-      workspaces:
-        use: fedora-32
-    - env: dockerfile=fedora-32
+      env: dockerfile=fedora-32 readonly=--read-only
       workspaces:
         use: fedora-32
     - env: dockerfile=fedora-32 docker='sudo podman'
@@ -102,33 +58,12 @@ jobs:
     - env: dockerfile=fedora-32 docker=podman replica=none
       workspaces:
         use: fedora-32
-    - env: dockerfile=fedora-31
-      workspaces:
-        use: fedora-31
-    - env: dockerfile=fedora-rawhide
-      workspaces:
-        use: fedora-rawhide
     - env: dockerfile=centos-8 readonly=--read-only
-      workspaces:
-        use: centos-8
-    - env: dockerfile=centos-8 ca=--external-ca readonly=--read-only
-      workspaces:
-        use: centos-8
-    - env: dockerfile=centos-8
       workspaces:
         use: centos-8
     - env: dockerfile=centos-8 docker='sudo podman'
       workspaces:
         use: centos-8
-    - env: dockerfile=centos-7
-      workspaces:
-        use: centos-7
-      before_install: sudo sysctl fs.protected_regular=0
-    - env: dockerfile=fedora-23 replica=none seccomp=unconfined readonly=--read-only
-      workspaces:
-        use: fedora-23
-      before_install: sudo sysctl fs.protected_regular=0
-      language: generic
 
     - &test-k3s
       env: dockerfile=fedora-32
