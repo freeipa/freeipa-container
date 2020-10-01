@@ -90,16 +90,3 @@ RUN uuidgen > /data-template/build-id
 # Invocation:
 # docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
 
-# Atomic specific bits
-COPY install.sh uninstall.sh /bin/
-COPY atomic-install-help /usr/share/ipa/
-
-# For atomic, we run INSTALL --privileged but install.sh will start another unprivileged container.
-# We do it this way to be able to set hostname for the unprivileged container.
-LABEL install 'docker run -ti --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} -e NAME=${NAME} -e IMAGE=${IMAGE} ${IMAGE} /bin/install.sh'
-LABEL run 'docker run ${RUN_OPTS} --name ${NAME} -v /var/lib/${NAME}:/data:Z -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp -v /dev/urandom:/dev/random:ro ${IMAGE}'
-LABEL RUN_OPTS_FILE '/var/lib/${NAME}/docker-run-opts'
-LABEL stop 'docker stop ${NAME}'
-LABEL uninstall 'docker run --rm --privileged -v /:/host -e HOST=/host -e DATADIR=/var/lib/${NAME} ${IMAGE} /bin/uninstall.sh'
-
-LABEL maintainer="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
