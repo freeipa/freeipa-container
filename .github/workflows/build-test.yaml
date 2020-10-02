@@ -188,7 +188,7 @@ jobs:
     name: Push images to Docker Hub
     runs-on: ubuntu-20.04
     needs: [ test-docker, test-podman, test-rootless-podman, test-k3s ]
-    if: github.event_name == 'push' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
       - name: Log in to Docker Hub
         env:
