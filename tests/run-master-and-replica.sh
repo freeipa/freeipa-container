@@ -100,20 +100,25 @@ if [ "$readonly" == "--read-only" ] ; then
 	readonly_run="$readonly --dns=127.0.0.1"
 fi
 
-# Initial setup of the FreeIPA server
-dns_opts="--auto-reverse --allow-zone-overlap"
-if [ "$replica" = 'none' ] ; then
-	dns_opts=""
-fi
-run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts --no-ntp $ca
+if [ -f "$VOLUME/build-id" ] ; then
+	# If we were given already populated volume, just run the container
+	run_ipa_container $IMAGE freeipa-master exit-on-finished
+else
+	# Initial setup of the FreeIPA server
+	dns_opts="--auto-reverse --allow-zone-overlap"
+	if [ "$replica" = 'none' ] ; then
+		dns_opts=""
+	fi
+	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts --no-ntp $ca
 
-if [ -n "$ca" ] ; then
-	$docker rm -f freeipa-master
-	date
-	$sudo tests/generate-external-ca.sh $VOLUME
-	# For external CA, provide the certificate for the second stage
-	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
-		--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
+	if [ -n "$ca" ] ; then
+		$docker rm -f freeipa-master
+		date
+		$sudo tests/generate-external-ca.sh $VOLUME
+		# For external CA, provide the certificate for the second stage
+		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
+			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
+	fi
 fi
 
 while [ -n "$1" ] ; do
@@ -153,8 +158,8 @@ done
 (
 set -x
 $docker exec freeipa-master bash -c 'echo Secret123 | kinit admin'
-$docker exec freeipa-master ipa user-add --first Bob --last Nowak bob
-$docker exec freeipa-master id bob
+$docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
+$docker exec freeipa-master id bob$$
 
 $docker exec freeipa-master ipa-adtrust-install -a Secret123 --netbios-name=EXAMPLE -U
 )
