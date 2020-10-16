@@ -166,6 +166,38 @@ jobs:
         shell: ssh localhost bash {0}
         run: cd ${{ github.workspace }} && docker=podman tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
+  test-upgrade:
+    name: Upgrade from older version or build
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: fedora-33
+            data-from: fedora-32
+          - os: fedora-33
+            data-from: fedora-31
+          - os: fedora-32
+            data-from: fedora-32
+          - os: fedora-32
+            data-from: fedora-31
+          - os: fedora-31
+            data-from: fedora-31
+          - os: centos-8
+            data-from: centos-8
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Populate volume with data
+        run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z docker.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
+      - name: Run master and replica
+        run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+
   test-k3s:
     name: Run with K3s
     runs-on: ubuntu-20.04
@@ -187,7 +219,7 @@ jobs:
   push-after-success:
     name: Push images to Docker Hub
     runs-on: ubuntu-20.04
-    needs: [ test-docker, test-podman, test-rootless-podman, test-k3s ]
+    needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
       - name: Log in to Docker Hub
