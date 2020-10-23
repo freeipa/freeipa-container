@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-33, fedora-32, fedora-31, fedora-23, centos-8, centos-7 ]
+        os: [ fedora-33, fedora-32, fedora-31, fedora-23, centos-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -67,7 +67,7 @@ jobs:
             ca: --external-ca
           - os: centos-7
             protected_regular: unset
-        os: [ fedora-33, fedora-31, fedora-rawhide ]
+        os: [ fedora-33, fedora-31 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -202,13 +202,6 @@ jobs:
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32
       - name: Push Fedora 32 image tagged with FreeIPA version to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32-$( cat freeipa-server-fedora-32.version )
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-rawhide
-      - name: Push Fedora rawhide image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-rawhide
-      - name: Push Fedora rawhide image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-rawhide.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-rawhide-$( cat freeipa-server-fedora-rawhide.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-8
