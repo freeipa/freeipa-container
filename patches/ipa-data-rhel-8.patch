@@ -21,6 +21,24 @@
      NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
      NAMED_ROOT_KEY = "/etc/named.root.key"
      NAMED_BINDKEYS_FILE = "/etc/named.iscdlv.key"
+@@ -336,7 +336,7 @@
+     VAR_LOG_AUDIT = "/var/log/audit/audit.log"
+     VAR_LOG_HTTPD_DIR = "/var/log/httpd"
+     VAR_LOG_HTTPD_ERROR = "/var/log/httpd/error_log"
+-    IPABACKUP_LOG = "/var/log/ipabackup.log"
++    IPABACKUP_LOG = "/data/var/log/ipabackup.log"
+     IPACLIENT_INSTALL_LOG = "/var/log/ipaclient-install.log"
+     IPACLIENT_UNINSTALL_LOG = "/var/log/ipaclient-uninstall.log"
+     IPACLIENTSAMBA_INSTALL_LOG = "/var/log/ipaclientsamba-install.log"
+@@ -344,7 +344,7 @@
+     IPAREPLICA_CA_INSTALL_LOG = "/var/log/ipareplica-ca-install.log"
+     IPAREPLICA_CONNCHECK_LOG = "/var/log/ipareplica-conncheck.log"
+     IPAREPLICA_INSTALL_LOG = "/var/log/ipareplica-install.log"
+-    IPARESTORE_LOG = "/var/log/iparestore.log"
++    IPARESTORE_LOG = "/data/var/log/iparestore.log"
+     IPASERVER_INSTALL_LOG = "/var/log/ipaserver-install.log"
+     IPASERVER_KRA_INSTALL_LOG = "/var/log/ipaserver-kra-install.log"
+     IPASERVER_UNINSTALL_LOG = "/var/log/ipaserver-uninstall.log"
 --- /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-09-23 09:28:23.000000000 +0000
 +++ /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-11-09 05:54:47.896060575 +0000
 @@ -39,7 +39,7 @@
