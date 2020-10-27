@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, fedora-32, fedora-31, fedora-23, centos-8, centos-7 ]
+        os: [ fedora-33, fedora-32, fedora-23, centos-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -53,10 +53,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-32
-          - os: fedora-32
+          - os: fedora-33
+          - os: fedora-33
             readonly: --read-only
-          - os: fedora-32
+          - os: fedora-33
             readonly: --read-only
             ca: --external-ca
           - os: centos-8
@@ -67,7 +67,7 @@ jobs:
             ca: --external-ca
           - os: centos-7
             protected_regular: unset
-        os: [ fedora-33, fedora-31 ]
+        os: [ fedora-32 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -123,7 +123,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-32, centos-8 ]
+        os: [ fedora-33, centos-8 ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -146,7 +146,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-32, centos-8 ]
+        os: [ fedora-33, centos-8 ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
@@ -179,10 +179,6 @@ jobs:
           - os: fedora-33
             data-from: fedora-31
           - os: fedora-32
-            data-from: fedora-32
-          - os: fedora-32
-            data-from: fedora-31
-          - os: fedora-31
             data-from: fedora-31
           - os: centos-8
             data-from: centos-8
@@ -205,7 +201,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-32, centos-8 ]
+        os: [ fedora-33, centos-8 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -227,6 +223,13 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin docker.io
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-fedora-33
+      - name: Push Fedora 33 image to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33
+      - name: Push Fedora 33 image tagged with FreeIPA version to Docker Hub
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33-$( cat freeipa-server-fedora-33.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-32
