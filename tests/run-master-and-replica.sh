@@ -15,14 +15,10 @@ function wait_for_ipa_container() {
 	set +x
 	N="$1" ; shift
 	set -e
-	MACHINE_ID=''
 	$docker logs -f "$N" &
 	EXIT_STATUS=999
 	while true ; do
 		sleep 10
-		if [ -z "$MACHINE_ID" ] ; then
-			MACHINE_ID=$( $docker exec "$N" cat /etc/machine-id || : )
-		fi
 		if [ "$( $docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
 			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
@@ -54,13 +50,12 @@ function wait_for_ipa_container() {
 		&& $docker diff "$N" | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 		exit 1
 	fi
-	if [ -n "$MACHINE_ID" ] ; then
-		# Check that journal landed on volume and not in host's /var/log/journal
-		$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
-		if [ -e /var/log/journal/$MACHINE_ID ] ; then
-			ls -la /var/log/journal/$MACHINE_ID
-			exit 1
-		fi
+	MACHINE_ID=$( cat $VOLUME/etc/machine-id )
+	# Check that journal landed on volume and not in host's /var/log/journal
+	$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
+	if [ -e /var/log/journal/$MACHINE_ID ] ; then
+		ls -la /var/log/journal/$MACHINE_ID
+		exit 1
 	fi
 }
 
