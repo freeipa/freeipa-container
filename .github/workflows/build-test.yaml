@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, fedora-32, fedora-23, centos-8, centos-7 ]
+        os: [ fedora-33, fedora-32, fedora-23, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -57,12 +57,6 @@ jobs:
           - os: fedora-33
             readonly: --read-only
           - os: fedora-33
-            readonly: --read-only
-            ca: --external-ca
-          - os: centos-8
-          - os: centos-8
-            readonly: --read-only
-          - os: centos-8
             readonly: --read-only
             ca: --external-ca
           - os: centos-7
@@ -123,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, centos-8 ]
+        os: [ fedora-33 ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -146,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, centos-8 ]
+        os: [ fedora-33 ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcont ainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
@@ -180,8 +174,6 @@ jobs:
             data-from: fedora-31
           - os: fedora-32
             data-from: fedora-31
-          - os: centos-8
-            data-from: centos-8
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -201,7 +193,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, centos-8 ]
+        os: [ fedora-33 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -237,13 +229,6 @@ jobs:
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32
       - name: Push Fedora 32 image tagged with FreeIPA version to Docker Hub
         run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32-$( cat freeipa-server-fedora-32.version )
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-centos-8
-      - name: Push CentOS 8 image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freeipa/freeipa-server:centos-8
-      - name: Push CentOS 8 image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-8.tar.gz docker://docker.io/freeipa/freeipa-server:centos-8-$( cat freeipa-server-centos-8.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-7
