@@ -54,11 +54,14 @@ jobs:
       matrix:
         include:
           - os: fedora-33
+            replica: none
           - os: fedora-33
             readonly: --read-only
+            replica: none
           - os: fedora-33
             readonly: --read-only
             ca: --external-ca
+            replica: none
           - os: centos-7
             protected_regular: unset
         os: [ fedora-32 ]
@@ -128,7 +131,7 @@ jobs:
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | sudo podman load
       - name: Run master and replica
-        run: docker='sudo podman' tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+        run: replica=none docker='sudo podman' tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: docker='sudo podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -215,13 +218,6 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin docker.io
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-33
-      - name: Push Fedora 33 image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33
-      - name: Push Fedora 33 image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33-$( cat freeipa-server-fedora-33.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-32

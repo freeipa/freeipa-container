@@ -46,10 +46,10 @@ jobs:
             - local-freeipa-server-$dockerfile.tar
 
     - stage: test
-      env: dockerfile=fedora-33 readonly=--read-only
+      env: dockerfile=fedora-33 readonly=--read-only replica=none
       workspaces:
         use: fedora-33
-    - env: dockerfile=fedora-33 docker='sudo podman'
+    - env: dockerfile=fedora-33 docker='sudo podman' replica=none
       workspaces:
         use: fedora-33
     - env: dockerfile=fedora-33 docker=podman replica=none
