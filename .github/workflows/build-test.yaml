@@ -205,35 +205,42 @@ jobs:
         run: tests/run-master-in-k3s.sh local/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
 
   push-after-success:
-    name: Push images to Docker Hub
+    name: Push images to Registry
     runs-on: ubuntu-20.04
     needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
-    if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request' && ( ( github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master' ) || github.repository != 'freeipa/freeipa-container' )
+    env:
+      DOCKER_IMAGE_BASE: ${{ secrets.DOCKER_IMAGE_BASE }}
     steps:
-      - name: Log in to Docker Hub
+      - name: Log in to the registry
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin docker.io
+        run: |
+          [ "${DOCKER_IMAGE_BASE}" == "" ] && echo "ERROR: DOCKER_IMAGE_BASE is empty" && exit 2
+          [ "${DOCKER_USERNAME}" == "" ] && echo "ERROR: DOCKER_USERNAME is empty" && exit 2
+          [ "${DOCKER_PASSWORD}" == "" ] && echo "ERROR: DOCKER_PASSWORD is empty" && exit 2
+          DOCKER_SERVER="${DOCKER_IMAGE_BASE%%/*}"
+          echo "$DOCKER_PASSWORD" | skopeo login --authfile=auth.json -u "$DOCKER_USERNAME" --password-stdin "${DOCKER_SERVER}"
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-33
-      - name: Push Fedora 33 image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33
-      - name: Push Fedora 33 image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-33-$( cat freeipa-server-fedora-33.version )
+      - name: Push Fedora 33 image to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://${DOCKER_IMAGE_BASE}:fedora-33
+      - name: Push Fedora 33 image tagged with FreeIPA version to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-33.tar.gz docker://${DOCKER_IMAGE_BASE}:fedora-33-$( cat freeipa-server-fedora-33.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-32
-      - name: Push Fedora 32 image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32
-      - name: Push Fedora 32 image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://docker.io/freeipa/freeipa-server:fedora-32-$( cat freeipa-server-fedora-32.version )
+      - name: Push Fedora 32 image to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://${DOCKER_IMAGE_BASE}:fedora-32
+      - name: Push Fedora 32 image tagged with FreeIPA version to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-fedora-32.tar.gz docker://${DOCKER_IMAGE_BASE}:fedora-32-$( cat freeipa-server-fedora-32.version )
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-7
-      - name: Push CentOS 7 image to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freeipa/freeipa-server:centos-7
-      - name: Push CentOS 7 image tagged with FreeIPA version to Docker Hub
-        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://docker.io/freeipa/freeipa-server:centos-7-$( cat freeipa-server-centos-7.version )
+      - name: Push CentOS 7 image to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://${DOCKER_IMAGE_BASE}:centos-7
+      - name: Push CentOS 7 image tagged with FreeIPA version to the registry
+        run: skopeo copy --authfile=auth.json docker-archive:freeipa-server-centos-7.tar.gz docker://${DOCKER_IMAGE_BASE}:centos-7-$( cat freeipa-server-centos-7.version )
 
