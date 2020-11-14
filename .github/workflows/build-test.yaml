@@ -181,8 +181,17 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Create empty data image
+        run: |
+          TEMPDIR="$( mktemp -d /tmp/XXXXXXXX )"
+          cat > "${TEMPDIR}/Dockerfile" << EOF
+          FROM scratch
+          WORKDIR /
+          EOF
+          docker build -t local/freeipa-server:data-${{ matrix.data-from }} "${TEMPDIR}/"
+          rm -rf "${TEMPDIR}"
       - name: Populate volume with data
-        run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z docker.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
+        run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z local/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
       - name: Run master and replica
         run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
 
