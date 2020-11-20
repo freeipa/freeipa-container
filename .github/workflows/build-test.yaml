@@ -31,7 +31,7 @@ jobs:
             -H 'Accept: application/vnd.github.v3+json' \
             -d '{
               "title": "Image build for ${{ matrix.os }} failed on '$( date -I )'",
-              "body": "This issue was automatically created by GitHub Action\n\nhttps://github.com/adelton/freeipa-container/actions/runs/${{ github.run_id }}.\n",
+              "body": "This issue was automatically created by GitHub Action\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.\n",
               "labels": ["image-build-fail" ]
               }'
       - name: Create directory for artifacts
