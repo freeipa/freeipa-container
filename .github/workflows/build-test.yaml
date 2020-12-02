@@ -148,6 +148,8 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Workaround https://github.com/containers/podman/issues/8539
+        run: ln -s /tmp/run-$( id -u ) /tmp/podman-run-$( id -u )
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
       - name: Enable ssh access to self
