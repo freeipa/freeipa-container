@@ -171,9 +171,17 @@ DOCKER_RUN_OPTS="--dns=$MASTER_IP"
 if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
 	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
 fi
-run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin --setup-ca --no-ntp
+SETUP_CA=--setup-ca
+if [ $(( $RANDOM % 2 )) == 0 ] ; then
+	SETUP_CA=
+fi
+run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin $SETUP_CA --no-ntp
 date
 if $docker diff freeipa-master | tee /dev/stderr | grep -Evf tests/docker-diff-ipa.out | grep . ; then
 	exit 1
+fi
+if [ -z "$SETUP_CA" ] ; then
+	$docker exec freeipa-replica ipa-ca-install -p Secret123
+	$docker exec freeipa-replica systemctl is-system-running
 fi
 echo OK $0.

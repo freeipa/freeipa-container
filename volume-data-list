@@ -66,6 +66,7 @@
 /var/log/ipa/
 /var/log/ipaclient-install.log
 /var/log/ipa-custodia.audit.log
+/var/log/ipareplica-ca-install.log
 /var/log/ipareplica-conncheck.log
 /var/log/ipareplica-install.log
 /var/log/ipaserver-install.log
