@@ -78,6 +78,8 @@ spec:
     env:
     - name: IPA_SERVER_HOSTNAME
       value: freeipa-server.example.test
+    - name: IPA_SERVER_IP
+      value: 10.43.201.201
     - name: PASSWORD
       valueFrom:
         secretKeyRef:

@@ -21,3 +21,11 @@ kubectl logs -f pod/freeipa-server &
 ( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $! ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-server
 ls -la /var/lib/rancher/k3s/storage/pvc-*
+IPA_SERVER_HOSTNAME=$( kubectl get -o=jsonpath='{.spec.containers[0].env[?(@.name=="IPA_SERVER_HOSTNAME")].value}' pod freeipa-server )
+# echo $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) $IPA_SERVER_HOSTNAME >> /etc/hosts
+if ! test -f /etc/resolv.conf.backup ; then
+	sudo mv /etc/resolv.conf /etc/resolv.conf.backup
+fi
+sudo systemctl stop systemd-resolved.service || :
+echo nameserver $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) | sudo tee /etc/resolv.conf
+curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
