@@ -3,7 +3,7 @@
 set -e
 
 j=1
-for i in 389-ds-base pki-server bind-dyndb-ldap ; do
+for i in 389-ds-base pki-server bind-dyndb-ldap certmonger ; do
 	s=/usr/sbin/ipa-upgrade-rpm-scriptlets-$j-$i
 	rpm -q --scripts $i | perl -lne '/^\S+ scriptlet/ and $x = 0; print if $x; if (/^postinstall scriptlet \(using (\S+)\)/) { $x = 1; print "#!$1"; if ($1 eq "/bin/sh") { print "set -x" } }' > $s
 	sed -i '\|/sbin/ldconfig|d;s%/etc/named.conf%/data/etc/named.conf%' $s
