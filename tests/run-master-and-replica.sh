@@ -152,7 +152,7 @@ for i in $( seq 1 20 ) ; do
 done
 (
 set -x
-$docker exec freeipa-master bash -c 'echo Secret123 | kinit admin'
+$docker exec freeipa-master bash -c 'yes Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
 $docker exec freeipa-master id bob$$
 
