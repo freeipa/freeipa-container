@@ -60,7 +60,7 @@
 -if [ ! -s /etc/rndc.key -a ! -s /etc/rndc.conf ]; then
 -  echo -n $"Generating /etc/rndc.key:"
 -  if /usr/sbin/rndc-confgen -a -A hmac-sha256 > /dev/null 2>&1
-+if [ ! -s /data/etc/rndc.key -a ! -s /data/etc/rndc.conf ]; then
++if [ ! -s /data/etc/rndc.key -a ! -s /etc/rndc.conf ]; then
 +  echo -n $"Generating /data/etc/rndc.key:"
 +  if /usr/sbin/rndc-confgen -c /data/etc/rndc.key -a -A hmac-sha256 > /dev/null 2>&1
    then
