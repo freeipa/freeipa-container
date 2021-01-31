@@ -19,7 +19,8 @@ function wait_for_ipa_container() {
 	EXIT_STATUS=999
 	while true ; do
 		sleep 10
-		if [ "$( $docker inspect "$N" --format='{{.State.Status}}' )" == exited ] ; then
+		status=$( $docker inspect "$N" --format='{{.State.Status}}' )
+		if [ "$status" == exited -o "$status" == stopped ] ; then
 			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
 			break
