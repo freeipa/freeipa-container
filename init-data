@@ -68,9 +68,7 @@ if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
 elif [ "$1" == 'exit-on-finished' ] ; then
 	for i in ipa-server-configure-first.service ipa-server-upgrade.service; do
 		mkdir -p /run/systemd/system/$i.d
-		# We'd like to use SuccessAction=poweroff here but it's only
-		# available in systemd 236.
-		echo -e "[Service]\nExecStartPost=/usr/bin/systemctl poweroff" > /run/systemd/system/$i.d/50-success-poweroff.conf
+		ln -s /usr/lib/systemd/system/ipa-server-configure-first.service.d/service-success-poweroff.conf.template /run/systemd/system/$i.d/50-success-poweroff.conf
 	done
 	shift
 fi

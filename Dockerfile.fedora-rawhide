@@ -82,6 +82,7 @@ ENTRYPOINT [ "/usr/local/sbin/init" ]
 COPY init-data /usr/local/sbin/init
 COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
 COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
+COPY service-success-poweroff.conf /usr/lib/systemd/system/ipa-server-configure-first.service.d/service-success-poweroff.conf.template
 RUN ln -sv /usr/lib/systemd/system/ipa-server-configure-first.service /data-template/etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
 COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
 
