@@ -1,6 +1,6 @@
---- /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2020-09-26 08:16:20.000000000 +0000
-+++ /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2020-10-25 18:08:03.666074920 +0000
-@@ -336,7 +336,7 @@
+--- /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2020-11-17 17:41:25.000000000 +0000
++++ /usr/lib/python3.8/site-packages/ipaplatform/base/paths.py	2020-11-20 09:49:31.065787804 +0000
+@@ -345,7 +345,7 @@
      VAR_LOG_AUDIT = "/var/log/audit/audit.log"
      VAR_LOG_HTTPD_DIR = "/var/log/httpd"
      VAR_LOG_HTTPD_ERROR = "/var/log/httpd/error_log"
@@ -9,15 +9,15 @@
      IPACLIENT_INSTALL_LOG = "/var/log/ipaclient-install.log"
      IPACLIENT_UNINSTALL_LOG = "/var/log/ipaclient-uninstall.log"
      IPACLIENTSAMBA_INSTALL_LOG = "/var/log/ipaclientsamba-install.log"
-@@ -344,7 +344,7 @@
+@@ -353,7 +353,7 @@
      IPAREPLICA_CA_INSTALL_LOG = "/var/log/ipareplica-ca-install.log"
      IPAREPLICA_CONNCHECK_LOG = "/var/log/ipareplica-conncheck.log"
      IPAREPLICA_INSTALL_LOG = "/var/log/ipareplica-install.log"
 -    IPARESTORE_LOG = "/var/log/iparestore.log"
 +    IPARESTORE_LOG = "/data/var/log/iparestore.log"
      IPASERVER_INSTALL_LOG = "/var/log/ipaserver-install.log"
-     IPASERVER_KRA_INSTALL_LOG = "/var/log/ipaserver-kra-install.log"
-     IPASERVER_UNINSTALL_LOG = "/var/log/ipaserver-uninstall.log"
+     IPASERVER_ADTRUST_INSTALL_LOG = "/var/log/ipaserver-adtrust-install.log"
+     IPASERVER_DNS_INSTALL_LOG = "/var/log/ipaserver-dns-install.log"
 --- /usr/lib/tmpfiles.d/var.conf	2018-10-29 00:59:14.000000000 +0000
 +++ /usr/lib/tmpfiles.d/var.conf	2018-12-14 10:37:58.607898037 +0000
 @@ -12,9 +12,9 @@
