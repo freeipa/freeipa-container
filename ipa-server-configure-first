@@ -74,7 +74,7 @@ if [ "$1" == update-self-ip-address ] ; then
 	exec >> /var/log/ipa-server-run.log 2>&1
 	echo "$(date) $0 $@"
 
-	if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+	if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 		# Wait until DNS is up and running and resolving
 		while ! host -t A $HOSTNAME > /dev/null ; do
 			sleep 1
@@ -212,7 +212,7 @@ else
 			exit
 		fi
 
-		if systemctl is-active -q named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+		if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			while ! host -t A $HOSTNAME > /dev/null ; do
 				sleep 1
