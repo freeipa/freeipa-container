@@ -59,6 +59,8 @@ jobs:
           - os: fedora-33
             readonly: --read-only
             ca: --external-ca
+          - os: fedora-rawhide
+            seccomp: unconfined
           - os: centos-8
           - os: centos-8
             readonly: --read-only
@@ -172,7 +174,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-33, centos-8 ]
+        os: [ fedora-rawhide, fedora-33, centos-8 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -189,6 +191,9 @@ jobs:
     needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-fedora-rawhide
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-33
