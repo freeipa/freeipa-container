@@ -6,7 +6,7 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-RUN yum -y module enable idm:DL1 && yum -y install patch sudo && yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:DL1/dns && yum clean all
+RUN yum -y module enable idm:DL1 && yum -y install patch sudo && yum -y remove kexec-tools && yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:DL1/dns && yum clean all
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
@@ -21,7 +21,7 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
 # test-addon: VOLUME [ "/var/log/journal" ]
-# test: systemd-container-failed.sh kdump.service var-lib-nfs-rpc_pipefs.mount
+# test: systemd-container-failed.sh var-lib-nfs-rpc_pipefs.mount
 
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l \! -lname /dev/null | xargs rm -v
