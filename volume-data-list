@@ -59,6 +59,7 @@
 /var/lib/sss/pipes/
 /var/lib/sss/pubconf/
 /var/lib/systemd/
+/var/lib/tpm2-tss/
 /var/log/btmp
 /var/log/custodia.audit.log
 /var/log/dirsrv/
