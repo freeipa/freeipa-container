@@ -16,6 +16,7 @@ function wait_for_ipa_container() {
 	N="$1" ; shift
 	set -e
 	$docker logs -f "$N" &
+	trap "kill $! 2> /dev/null || : ; trap - RETURN EXIT" RETURN EXIT
 	EXIT_STATUS=999
 	while true ; do
 		sleep 10
