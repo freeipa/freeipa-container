@@ -18,6 +18,7 @@ if ! kubectl get pod/freeipa-server | grep -q '\bRunning\b' ; then
 	exit 1
 fi
 kubectl logs -f pod/freeipa-server &
+trap "kill $! 2> /dev/null || : ; trap - EXIT" EXIT
 ( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $! ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-server
 ls -la /var/lib/rancher/k3s/storage/pvc-*
