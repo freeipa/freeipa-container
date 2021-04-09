@@ -51,9 +51,6 @@ RUN systemd-tmpfiles --remove --create
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
 
-COPY patches/ipa-fedora-32.patch /root
-RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-fedora-32.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs python3 -m compileall
-
 # test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
