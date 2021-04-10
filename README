@@ -210,12 +210,11 @@ or
 
 which can uncover the general issues with running systemd in containers.
 
-## GitHub Actions and Travis CI
+## CI in GitHub Actions
 
 To check the general health of the project, see
-https://github.com/freeipa/freeipa-container/actions and
-https://travis-ci.org/freeipa/freeipa-container/ where tests are run
-for various OS versions in the containers.
+https://github.com/freeipa/freeipa-container/actions
+where tests are run for various OS versions in the containers.
 
 ## License
 
