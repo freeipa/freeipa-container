@@ -42,6 +42,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN systemd-sysusers
 RUN systemd-tmpfiles --remove --create
+RUN mkdir -p /var/log/journal
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 # test-addon: VOLUME [ "/var/log/journal", "/var/tmp", "/var/lib/tpm2-tss/system/keystore" ]
 # test: systemd-container-diff.sh list-dependencies-fedora-34.out /dev/null docker-diff-minimal-fedora-23.out
