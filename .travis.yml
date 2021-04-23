@@ -60,6 +60,9 @@ jobs:
     - env: dockerfile=fedora-33 docker='sudo podman'
       workspaces:
         use: fedora-33
+    - env: dockerfile=fedora-33 docker=podman replica=none
+      workspaces:
+        use: fedora-33
     - env: dockerfile=centos-8 readonly=--read-only
       workspaces:
         use: centos-8
