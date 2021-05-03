@@ -61,7 +61,6 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
-            seccomp: unconfined
           - os: centos-8
           - os: centos-8
             readonly: --read-only
