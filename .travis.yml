@@ -57,9 +57,6 @@ jobs:
       env: dockerfile=fedora-34 readonly=--read-only seccomp=unconfined
       workspaces:
         use: fedora-34
-    - env: dockerfile=fedora-34 docker='sudo podman'
-      workspaces:
-        use: fedora-34
     - env: dockerfile=fedora-34 docker=podman replica=none
       workspaces:
         use: fedora-34
