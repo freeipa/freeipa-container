@@ -3,7 +3,7 @@
 set -e
 set -x
 
-DATA="$1"
+DATA="${1:-/data}"
 NSSDB=/tmp/nssdb-$RANDOM
 mkdir -p $NSSDB
 rm -rf $NSSDB/*

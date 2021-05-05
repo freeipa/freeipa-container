@@ -76,9 +76,6 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
-      - name: Install certutil
-        if: ${{ matrix.ca == '--external-ca' }}
-        run: sudo apt-get update -y && sudo apt-get install -y libnss3-tools
       - name: Disable fs.protected_regular
         if: ${{ matrix.protected_regular == 'unset' }}
         run: sudo sysctl fs.protected_regular=0

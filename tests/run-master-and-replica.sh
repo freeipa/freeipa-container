@@ -111,7 +111,8 @@ else
 	if [ -n "$ca" ] ; then
 		$docker rm -f freeipa-master
 		date
-		$sudo tests/generate-external-ca.sh $VOLUME
+		$sudo cp tests/generate-external-ca.sh $VOLUME/
+		$docker run --rm -v $VOLUME:/data:Z --entrypoint /data/generate-external-ca.sh "$IMAGE"
 		# For external CA, provide the certificate for the second stage
 		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
 			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
