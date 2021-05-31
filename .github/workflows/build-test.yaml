@@ -60,6 +60,7 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
+            replica: none
           - os: centos-8
           - os: centos-8
             readonly: --read-only
