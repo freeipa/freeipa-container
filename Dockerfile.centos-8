@@ -56,6 +56,8 @@ RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-rhel-8.patch | te
 # Move configuration and data to data volume
 COPY patches/ipa-data-rhel-8.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-rhel-8.patch | tee /dev/stderr | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
+COPY ipaplatform-rhel.conf /usr/lib/systemd/system.conf.d/ipaplatform-override.conf
+ENV IPAPLATFORM_OVERRIDE=rhel_container
 
 COPY journald-storage.conf /usr/lib/systemd/journald.conf.d/storage.conf
 

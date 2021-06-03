@@ -1,28 +1,6 @@
---- /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2020-06-10 19:34:40.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2020-11-07 15:06:24.474612767 +0000
-@@ -72,10 +72,10 @@
-     IPA_NSSDB_DIR = "/etc/ipa/nssdb"
-     IPA_NSSDB_PWDFILE_TXT = "/etc/ipa/nssdb/pwdfile.txt"
-     COMMON_KRB5_CONF_DIR = "/etc/krb5.conf.d/"
--    KRB5_CONF = "/etc/krb5.conf"
-+    KRB5_CONF = "/data/etc/krb5.conf"
-     KRB5_FREEIPA = COMMON_KRB5_CONF_DIR + "freeipa"
-     KRB5_FREEIPA_SERVER = COMMON_KRB5_CONF_DIR + "freeipa-server"
--    KRB5_KEYTAB = "/etc/krb5.keytab"
-+    KRB5_KEYTAB = "/data/etc/krb5.keytab"
-     LDAP_CONF = "/etc/ldap.conf"
-     LIBNSS_LDAP_CONF = "/etc/libnss-ldap.conf"
-     NAMED_CONF = "/etc/named.conf"
-@@ -88,7 +88,7 @@
-         '/usr/share/ipa/bind.ipa-options-ext.conf.template'
-     )
-     NAMED_VAR_DIR = "/var/named"
--    NAMED_KEYTAB = "/etc/named.keytab"
-+    NAMED_KEYTAB = "/data/etc/named.keytab"
-     NAMED_RFC1912_ZONES = "/etc/named.rfc1912.zones"
-     NAMED_ROOT_KEY = "/etc/named.root.key"
-     NAMED_MANAGED_KEYS_DIR = "/var/named/dynamic"
-@@ -331,7 +331,7 @@
+--- /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-02-15 18:43:46.000000000 +0000
++++ /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-06-03 20:05:46.970733811 +0000
+@@ -350,7 +350,7 @@
      VAR_LOG_AUDIT = "/var/log/audit/audit.log"
      VAR_LOG_HTTPD_DIR = "/var/log/httpd"
      VAR_LOG_HTTPD_ERROR = "/var/log/httpd/error_log"
@@ -31,65 +9,15 @@
      IPACLIENT_INSTALL_LOG = "/var/log/ipaclient-install.log"
      IPACLIENT_UNINSTALL_LOG = "/var/log/ipaclient-uninstall.log"
      IPACLIENTSAMBA_INSTALL_LOG = "/var/log/ipaclientsamba-install.log"
-@@ -339,7 +339,7 @@
+@@ -358,7 +358,7 @@
      IPAREPLICA_CA_INSTALL_LOG = "/var/log/ipareplica-ca-install.log"
      IPAREPLICA_CONNCHECK_LOG = "/var/log/ipareplica-conncheck.log"
      IPAREPLICA_INSTALL_LOG = "/var/log/ipareplica-install.log"
 -    IPARESTORE_LOG = "/var/log/iparestore.log"
 +    IPARESTORE_LOG = "/data/var/log/iparestore.log"
      IPASERVER_INSTALL_LOG = "/var/log/ipaserver-install.log"
-     IPASERVER_KRA_INSTALL_LOG = "/var/log/ipaserver-kra-install.log"
-     IPASERVER_UNINSTALL_LOG = "/var/log/ipaserver-uninstall.log"
---- /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-09-23 09:28:23.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaplatform/redhat/paths.py	2019-11-09 05:54:47.896060575 +0000
-@@ -39,7 +39,7 @@
-     AUTHCONFIG = '/usr/sbin/authconfig'
-     AUTHSELECT = '/usr/bin/authselect'
-     SYSCONF_NETWORK = '/etc/sysconfig/network'
--    NSSWITCH_CONF = '/etc/authselect/user-nsswitch.conf'
-+    NSSWITCH_CONF = '/data/etc/authselect/user-nsswitch.conf'
- 
- 
- paths = RedHatPathNamespace()
---- /usr/share/ipa/ipaca_default.ini	2019-04-25 12:35:58.000000000 +0000
-+++ /usr/share/ipa/ipaca_default.ini	2019-05-06 17:41:27.278583996 +0000
-@@ -24,7 +24,7 @@
- 
- # Dogtag defaults
- pki_instance_name=pki-tomcat
--pki_configuration_path=/etc/pki
-+pki_configuration_path=/data/etc/pki
- pki_instance_configuration_path=%(pki_configuration_path)s/%(pki_instance_name)s
- 
- pki_admin_cert_file=%(pki_client_dir)s/ca_admin.cert
---- /usr/libexec/ipa/ipa-httpd-pwdreader	2018-10-05 18:30:34.000000000 +0000
-+++ /usr/libexec/ipa/ipa-httpd-pwdreader	2018-11-16 07:17:55.235711545 +0000
-@@ -13,7 +13,7 @@
- fi
- 
- fname=${1/:/-}-$2
--pwdpath=/var/lib/ipa/passwds/$fname
-+pwdpath=/data/var/lib/ipa/passwds/$fname
- 
- # Make sure the values passed in do not contain path information
- checkpath=$(/usr/bin/realpath -e ${pwdpath} 2>/dev/null)
-#
-# Prevent unneeded /etc/httpd/conf.modules.d/02-ipa-wsgi.conf from
-# being created in runtime
-#
---- /usr/lib/python3.6/site-packages/ipaplatform/fedora/paths.py.orig	2019-02-27 21:40:03.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaplatform/fedora/paths.py	2019-03-04 09:22:27.456146528 +0000
-@@ -30,9 +30,7 @@
- 
- 
- class FedoraPathNamespace(RedHatPathNamespace):
--    HTTPD_IPA_WSGI_MODULES_CONF = (
--        "/etc/httpd/conf.modules.d/02-ipa-wsgi.conf"
--    )
-+    HTTPD_IPA_WSGI_MODULES_CONF = None
-     NAMED_CRYPTO_POLICY_FILE = "/etc/crypto-policies/back-ends/bind.config"
-     if HAS_NFS_CONF:
-         SYSCONFIG_NFS = '/etc/nfs.conf'
+     IPASERVER_ADTRUST_INSTALL_LOG = "/var/log/ipaserver-adtrust-install.log"
+     IPASERVER_DNS_INSTALL_LOG = "/var/log/ipaserver-dns-install.log"
 --- /usr/lib/tmpfiles.d/var.conf        2018-10-29 00:59:14.000000000 +0000
 +++ /usr/lib/tmpfiles.d/var.conf        2018-12-14 10:37:58.607898037 +0000
 @@ -12,9 +12,9 @@
@@ -107,32 +35,6 @@
 
 #
 # Support /var/lib/samba on /data volume
-#
---- /etc/samba/smb.conf	2019-11-06 11:57:25.000000000 +0000
-+++ /etc/samba/smb.conf	2019-11-19 08:54:22.264738866 +0000
-@@ -4,6 +4,7 @@
- # you modified it.
- 
- [global]
-+	state directory = /data/var/lib/samba
- 	workgroup = SAMBA
- 	security = user
- 
---- /usr/lib/python3.6/site-packages/ipaserver/install/adtrustinstance.py	2019-08-14 15:37:23.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaserver/install/adtrustinstance.py	2019-11-19 08:34:09.065235181 +0000
-@@ -465,7 +465,9 @@
-         conf_fd.write('### Added by IPA Installer ###\n')
-         conf_fd.write('[global]\n')
-         conf_fd.write('debug pid = yes\n')
--        conf_fd.write('config backend = registry\n')
-+        conf_fd.write('state directory = /data/var/lib/samba\n')
-+        conf_fd.write('cache directory = /data/var/lib/samba\n')
-+        conf_fd.write('include = registry\n')
-         conf_fd.close()
- 
-     def __add_plugin_conf(self, name, plugin_cn, ldif_file):
-#
-# Workaround https://github.com/freeipa/freeipa-container/issues/313
 #
 --- /usr/lib64/python3.6/shutil.py	2019-12-18 18:48:49.000000000 +0000
 +++ /usr/lib64/python3.6/shutil.py	2020-03-11 16:17:24.727098610 +0000
