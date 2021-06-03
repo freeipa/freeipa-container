@@ -30,3 +30,4 @@ fi
 sudo systemctl stop systemd-resolved.service || :
 echo nameserver $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) | sudo tee /etc/resolv.conf
 curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
+echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
