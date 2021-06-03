@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34, fedora-33, fedora-32, centos-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-34, fedora-33, centos-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -69,7 +69,7 @@ jobs:
             ca: --external-ca
           - os: centos-7
             protected_regular: unset
-        os: [ fedora-32, fedora-33 ]
+        os: [ fedora-33 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -197,9 +197,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-33
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-32
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-8
