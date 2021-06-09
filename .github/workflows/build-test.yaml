@@ -142,12 +142,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-34
-            data-from: fedora-34
-          - os: fedora-34
-            data-from: fedora-33
-          - os: fedora-34
-            data-from: fedora-32
           - os: centos-8
             data-from: centos-8
     steps:
@@ -186,9 +180,6 @@ jobs:
     needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-34
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-33
