@@ -104,6 +104,7 @@ function upgrade_server () {
 		fi
 		sed -i "s/platform.*/platform = $PLATFORM/" /var/lib/ipa/sysupgrade/sysupgrade.state
 	fi
+	systemctl list-units --no-pager --no-legend --type service --all 'dirsrv@*' | awk '{ print $1 }' | xargs systemctl start || :
 	ipa-server-upgrade
 	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
 	cp -f /data-template/build-id /data/build-id
