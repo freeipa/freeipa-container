@@ -79,7 +79,7 @@ function run_ipa_container() {
 		OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi
 	if [ -n "$seccomp" ] ; then
-		OPTS="$OPTS --security-opt=seccomp:$seccomp"
+		OPTS="$OPTS --security-opt seccomp=$seccomp"
 	fi
 	if [ "$(id -u)" != 0 -a "$docker" == podman -a "$replica" != none ] ; then
 		if [ "$N" == "freeipa-master" ] ; then

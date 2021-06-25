@@ -23,7 +23,7 @@ function run_and_wait_for () {
 		OPTS="--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi
 	if [ -n "$seccomp" ] ; then
-		OPTS="$OPTS --security-opt=seccomp:$seccomp"
+		OPTS="$OPTS --security-opt seccomp=$seccomp"
 	fi
 	( set -x ; $docker run --name $NAME -d -h ipa.example.test \
 		$OPTS $IMAGE )
