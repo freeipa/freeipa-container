@@ -29,6 +29,14 @@ boolean `container_manage_cgroup` on the host with
 
     setsebool -P container_manage_cgroup 1
 
+When using docker and latest Fedora-based images on hosts operating
+systems which default to cgroups v2, switching to cgroups version 1
+might be needed. On Fedora hosts, something like
+
+    sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+
+and reboot might be necessary.
+
 The FreeIPA container will store all its configurations and data on
 volume mounted to `/data` directory in the container. If we create
 directory which will hold the server data on the host with
