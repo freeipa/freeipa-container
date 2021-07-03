@@ -59,12 +59,6 @@ jobs:
     - env: dockerfile=fedora-34 docker=podman replica=none seccomp=unconfined
       workspaces:
         use: fedora-34
-    - env: dockerfile=centos-8 readonly=--read-only
-      workspaces:
-        use: centos-8
-    - env: dockerfile=centos-8 docker='sudo podman'
-      workspaces:
-        use: centos-8
 
     - &test-k3s
       env: dockerfile=fedora-34
@@ -73,8 +67,4 @@ jobs:
       script: tests/run-master-in-k3s.sh local/freeipa-server:$dockerfile local-freeipa-server-$dockerfile.tar
       workspaces:
         use: fedora-34
-    - <<: *test-k3s
-      env: dockerfile=centos-8
-      workspaces:
-        use: centos-8
 
