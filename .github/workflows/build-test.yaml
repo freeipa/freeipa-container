@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34, fedora-33, centos-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-34, fedora-33, centos-8, centos-8-stream, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -60,6 +60,12 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
+          - os: centos-8-stream
+          - os: centos-8-stream
+            readonly: --read-only
+          - os: centos-8-stream
+            readonly: --read-only
+            ca: --external-ca
           - os: centos-7
             protected_regular: unset
         os: [ fedora-33 ]
@@ -86,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-34 ]
+        os: [ fedora-34, centos-8-stream ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -109,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-34 ]
+        os: [ fedora-34, centos-8-stream ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
@@ -143,6 +149,8 @@ jobs:
             data-from: fedora-33
           - os: fedora-34
             data-from: fedora-32
+          - os: centos-8-stream
+            data-from: centos-8
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -162,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34 ]
+        os: [ fedora-rawhide, fedora-34, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -188,6 +196,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-33
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-centos-8-stream
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-7
