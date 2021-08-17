@@ -30,4 +30,5 @@ fi
 sudo systemctl stop systemd-resolved.service || :
 echo nameserver $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) | sudo tee /etc/resolv.conf
 curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
+curl -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep -q utilisateur
 echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
