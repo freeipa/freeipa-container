@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build -t local/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+        run: docker build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
@@ -37,9 +37,9 @@ jobs:
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
-        run: docker save local/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+        run: docker save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
       - name: Get FreeIPA version
-        run: docker run --rm --entrypoint rpm local/freeipa-server:${{ matrix.os }} -qf --qf '%{version}\n' /usr/sbin/ipa-server-install > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.version
+        run: docker run --rm --entrypoint rpm localhost/freeipa-server:${{ matrix.os }} -qf --qf '%{version}\n' /usr/sbin/ipa-server-install > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.version
       - uses: actions/upload-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -81,7 +81,7 @@ jobs:
         if: ${{ matrix.protected_regular == 'unset' }}
         run: sudo sysctl fs.protected_regular=0
       - name: Run master and replica
-        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -104,7 +104,7 @@ jobs:
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | sudo podman load
       - name: Run master and replica
-        run: docker='sudo podman' tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+        run: docker='sudo podman' tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: docker='sudo podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -130,7 +130,7 @@ jobs:
         run: ssh-keygen -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 400 ~/.ssh/authorized_keys && chmod o-w ~
       - name: Run master
         shell: ssh -o StrictHostKeyChecking=no localhost bash {0}
-        run: cd ${{ github.workspace }} && docker=podman tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+        run: cd ${{ github.workspace }} && docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
       - name: Run partial tests
         if: ${{ failure() }}
         shell: ssh localhost bash {0}
@@ -164,7 +164,7 @@ jobs:
       - name: Populate volume with data
         run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z docker.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
       - name: Run master and replica
-        run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh local/freeipa-server:${{ matrix.os }}
+        run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-k3s:
     name: Run with K3s
@@ -182,7 +182,7 @@ jobs:
       - name: Unzip the image
         run: gunzip freeipa-server-${{ matrix.os }}.tar.gz
       - name: Run K3s and master in it
-        run: tests/run-master-in-k3s.sh local/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
+        run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
 
   push-after-success:
     name: Push images to registries
