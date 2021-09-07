@@ -16,11 +16,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34, fedora-33, centos-8, centos-8-stream, centos-7 ]
+        os: [ fedora-34, fedora-33, centos-8, centos-8-stream, centos-7 ]
+        docker: [ docker ]
+        include:
+          - os: fedora-rawhide
+            docker: podman
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+        run: ${{ matrix.docker }} build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
@@ -37,9 +41,9 @@ jobs:
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
-        run: docker save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
       - name: Get FreeIPA version
-        run: docker run --rm --entrypoint rpm localhost/freeipa-server:${{ matrix.os }} -qf --qf '%{version}\n' /usr/sbin/ipa-server-install > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.version
+        run: ${{ matrix.docker }} run --rm --entrypoint rpm localhost/freeipa-server:${{ matrix.os }} -qf --qf '%{version}\n' /usr/sbin/ipa-server-install > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.version
       - uses: actions/upload-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -60,6 +64,7 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
+            seccomp: unconfined
           - os: centos-8
           - os: centos-8
             readonly: --read-only
