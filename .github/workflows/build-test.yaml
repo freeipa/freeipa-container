@@ -136,7 +136,7 @@ jobs:
         run: ssh-keygen -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 400 ~/.ssh/authorized_keys && chmod o-w ~
       - name: Run master
         shell: ssh -o StrictHostKeyChecking=no localhost bash {0}
-        run: cd ${{ github.workspace }} && docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+        run: cd ${{ github.workspace }} && replica=none docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman ps -aq | xargs podman rm -f
       - name: Run partial tests
         if: ${{ failure() }}
         shell: ssh localhost bash {0}
