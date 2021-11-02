@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34, fedora-33, centos-8, centos-8-stream, centos-7 ]
+        os: [ fedora-rawhide, fedora-35, fedora-34, fedora-33, centos-8, centos-8-stream, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -53,10 +53,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-34
-          - os: fedora-34
+          - os: fedora-35
+          - os: fedora-35
             readonly: --read-only
-          - os: fedora-34
+          - os: fedora-35
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
@@ -70,7 +70,7 @@ jobs:
             readonly: --read-only
           - os: centos-7
             protected_regular: unset
-        os: [ fedora-33 ]
+        os: [ fedora-34, fedora-33 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-34, centos-8, centos-8-stream ]
+        os: [ fedora-35, centos-8, centos-8-stream ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-34, centos-8, centos-8-stream ]
+        os: [ fedora-35, centos-8, centos-8-stream ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
@@ -145,11 +145,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-34
+          - os: fedora-35
             data-from: fedora-34
-          - os: fedora-34
+          - os: fedora-35
             data-from: fedora-33
-          - os: fedora-34
+          - os: fedora-35
             data-from: fedora-32
           - os: centos-8
             data-from: centos-8
@@ -174,7 +174,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-34, centos-8, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-35, centos-8, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -194,6 +194,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-rawhide
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-fedora-35
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-34

@@ -34,13 +34,13 @@ jobs:
   include:
     - &build-stage
       stage: build
-      env: dockerfile=fedora-34
+      env: dockerfile=fedora-35
       install: export docker=${docker:-docker}
       script: $docker build -t local/freeipa-server:$dockerfile -f Dockerfile.$dockerfile . && $docker save --output local-freeipa-server-$dockerfile.tar local/freeipa-server:$dockerfile
       after_failure: skip
       workspaces:
         create:
-          name: fedora-34
+          name: fedora-35
           paths:
             - local-freeipa-server-$dockerfile.tar
     - <<: *build-stage
@@ -53,12 +53,12 @@ jobs:
             - local-freeipa-server-$dockerfile.tar
 
     - stage: test
-      env: dockerfile=fedora-34 readonly=--read-only seccomp=unconfined
+      env: dockerfile=fedora-35 readonly=--read-only seccomp=unconfined
       workspaces:
-        use: fedora-34
-    - env: dockerfile=fedora-34 docker=podman replica=none seccomp=unconfined
+        use: fedora-35
+    - env: dockerfile=fedora-35 docker=podman replica=none seccomp=unconfined
       workspaces:
-        use: fedora-34
+        use: fedora-35
     - env: dockerfile=centos-8 readonly=--read-only
       workspaces:
         use: centos-8
@@ -67,12 +67,12 @@ jobs:
         use: centos-8
 
     - &test-k3s
-      env: dockerfile=fedora-34
+      env: dockerfile=fedora-35
       install: skip
       after_failure: skip
       script: tests/run-master-in-k3s.sh local/freeipa-server:$dockerfile local-freeipa-server-$dockerfile.tar
       workspaces:
-        use: fedora-34
+        use: fedora-35
     - <<: *test-k3s
       env: dockerfile=centos-8
       workspaces:
