@@ -42,8 +42,6 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN systemd-sysusers
-# Workaround 2018922
-RUN rm -f /usr/lib/tmpfiles.d/gssproxy.conf
 RUN systemd-tmpfiles --remove --create
 RUN mkdir -p /var/log/journal
 # debug: RUN ! test -f /var/lib/systemd/random-seed
