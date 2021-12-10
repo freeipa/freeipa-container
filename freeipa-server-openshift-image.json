@@ -22,29 +22,29 @@
                         },
                         "from": {
                             "kind": "ImageStreamTag",
-                            "name": "fedora-33"
+                            "name": "fedora-35"
                         }
                     },
                     {
-                        "name": "fedora-33",
+                        "name": "fedora-35",
                         "annotations": {
-                            "openshift.io/display-name": "FreeIPA Server on Fedora 33",
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 35",
                             "tags": "freeipa, identity management"
                         },
                         "from": {
                             "kind": "DockerImage",
-                            "name": "freeipa/freeipa-server:fedora-33"
+                            "name": "freeipa/freeipa-server:fedora-35"
                         }
                     },
                     {
-                        "name": "fedora-32",
+                        "name": "fedora-34",
                         "annotations": {
-                            "openshift.io/display-name": "FreeIPA Server on Fedora 32",
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 34",
                             "tags": "freeipa, identity management"
                         },
                         "from": {
                             "kind": "DockerImage",
-                            "name": "freeipa/freeipa-server:fedora-32"
+                            "name": "freeipa/freeipa-server:fedora-34"
                         }
                     },
                     {
