@@ -1,6 +1,6 @@
---- /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-12-18 10:04:54.000000000 +0000
-+++ /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-12-22 07:32:34.865581952 +0000
-@@ -355,7 +355,7 @@
+--- /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-02-15 18:43:46.000000000 +0000
++++ /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-06-03 20:05:46.970733811 +0000
+@@ -350,7 +350,7 @@
      VAR_LOG_AUDIT = "/var/log/audit/audit.log"
      VAR_LOG_HTTPD_DIR = "/var/log/httpd"
      VAR_LOG_HTTPD_ERROR = "/var/log/httpd/error_log"
@@ -9,15 +9,15 @@
      IPACLIENT_INSTALL_LOG = "/var/log/ipaclient-install.log"
      IPACLIENT_UNINSTALL_LOG = "/var/log/ipaclient-uninstall.log"
      IPACLIENTSAMBA_INSTALL_LOG = "/var/log/ipaclientsamba-install.log"
-@@ -363,7 +363,7 @@
+@@ -358,7 +358,7 @@
      IPAREPLICA_CA_INSTALL_LOG = "/var/log/ipareplica-ca-install.log"
      IPAREPLICA_CONNCHECK_LOG = "/var/log/ipareplica-conncheck.log"
      IPAREPLICA_INSTALL_LOG = "/var/log/ipareplica-install.log"
 -    IPARESTORE_LOG = "/var/log/iparestore.log"
 +    IPARESTORE_LOG = "/data/var/log/iparestore.log"
-     IPASERVER_ENABLESID_LOG = "/var/log/ipaserver-enable-sid.log"
      IPASERVER_INSTALL_LOG = "/var/log/ipaserver-install.log"
      IPASERVER_ADTRUST_INSTALL_LOG = "/var/log/ipaserver-adtrust-install.log"
+     IPASERVER_DNS_INSTALL_LOG = "/var/log/ipaserver-dns-install.log"
 --- /usr/lib/tmpfiles.d/var.conf        2018-10-29 00:59:14.000000000 +0000
 +++ /usr/lib/tmpfiles.d/var.conf        2018-12-14 10:37:58.607898037 +0000
 @@ -12,9 +12,9 @@
