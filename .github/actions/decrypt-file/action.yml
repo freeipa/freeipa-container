@@ -1,0 +1,17 @@
+name: 'Decrypt file using a secret (reverse of encrypt-file)'
+inputs:
+  file:
+    description: 'The file to decrypt'
+    required: true
+  secret:
+    description: 'The secret that was used to encrypt'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - run: echo "${{ inputs.secret }}" | openssl enc -d -pass stdin -aes-256-cbc -pbkdf2 -in "${{ inputs.file }}" -out "${{ inputs.file }}.dec.${{ github.run_id }}"
+      shell: bash
+    - run: rm -f "${{ inputs.file }}"
+      shell: bash
+    - run: mv -f "${{ inputs.file }}.dec.${{ github.run_id }}" "${{ inputs.file }}"
+      shell: bash

@@ -1,0 +1,17 @@
+name: 'Encrypt file with a secret'
+inputs:
+  file:
+    description: 'The file to encrypt'
+    required: true
+  secret:
+    description: 'The secret to be used to encrypt'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - run: echo "${{ inputs.secret }}" | openssl enc -pass stdin -aes-256-cbc -pbkdf2 -in "${{ inputs.file }}" -out "${{ inputs.file }}.enc.${{ github.run_id }}"
+      shell: bash
+    - run: rm -f "${{ inputs.file }}"
+      shell: bash
+    - run: mv -f "${{ inputs.file }}.enc.${{ github.run_id }}" "${{ inputs.file }}"
+      shell: bash

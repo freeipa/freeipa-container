@@ -23,6 +23,10 @@ if [ -z "$BASE_DIGEST" ] ; then
 	# Since docker images strips the docker.io/ prefix, try again without it
 	BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="${FROM#docker.io/}" '$1 == image { print $2 }' )
 fi
+if [ -z "$BASE_DIGEST" ] ; then
+	# When FROM does not specify a tag, try again with :latest
+	BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="$FROM:latest" '$1 == image { print $2 }' )
+fi
 test -n "$BASE_DIGEST"
 
 IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install )

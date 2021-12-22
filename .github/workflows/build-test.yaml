@@ -17,6 +17,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
+        docker: [ docker ]
+        include:
+          - os: rhel-9
+            docker: podman
+          - os: rhel-8
+            docker: podman
+          - os: rhel-7
+            docker: podman
     steps:
       - uses: actions/checkout@v2
       - name: Separate git work tree with just the files needed for build
@@ -25,10 +33,16 @@ jobs:
         run: cd ../minimize-for-build && git checkout HEAD Dockerfile.${{ matrix.os }}
       - name: Populate with files referenced from the Dockerfile
         run: cd ../minimize-for-build && awk '/^(ADD|COPY)/ { for (i = 2; i < NF; i++) print $i }' Dockerfile.${{ matrix.os }} | while read f ; do git checkout HEAD $f ; done
+      - name: For RHEL builds, use entitlements
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        uses: ./.github/actions/podman-entitlement
+        with:
+          org: ${{ secrets.REDHAT_ORG }}
+          activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
       - name: Build image
-        run: docker build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
+        run: ${{ matrix.docker }} build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
       - name: Label the built image
-        run: ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree )
+        run: docker="${{ matrix.docker }}" ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree )
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
@@ -46,10 +60,22 @@ jobs:
         run: |
           skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
           diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
+        if: matrix.docker != 'podman'
+      - name: Check resulting labels
+        run: |
+          skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
+          diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
+        if: matrix.docker == 'podman'
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
-        run: docker save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+      - name: For RHEL builds, encrypt the artifacts
+        uses: ./.github/actions/encrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - uses: actions/upload-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -82,7 +108,7 @@ jobs:
           - os: centos-8-stream
             readonly: --read-only
             ca: --external-ca
-        os: [ fedora-35 ]
+        os: [ fedora-35, rhel-9, rhel-8 ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/stock-docker.io
@@ -90,6 +116,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Run master and replica
@@ -114,11 +146,19 @@ jobs:
             readonly: --read-only
           - os: centos-7
             protected_regular: unset
+          - os: rhel-7
+            protected_regular: unset
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Disable fs.protected_regular
@@ -143,6 +183,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | sudo podman load
       - name: Run master and replica
@@ -158,12 +204,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-36, centos-9-stream, centos-8-stream, rocky-8, almalinux-8 ]
+        os: [ fedora-36, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-8, almalinux-8 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
       - name: Enable ssh access to self
@@ -190,6 +242,8 @@ jobs:
             data-from: fedora-35
           - os: fedora-36
             data-from: fedora-34
+          - os: rhel-8
+            data-from: centos-8
           - os: centos-8-stream
             data-from: centos-8
           - os: rocky-8
@@ -203,6 +257,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Populate volume with data
@@ -225,6 +285,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
       - name: Populate volume with data
@@ -249,6 +315,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Populate volume with data
@@ -263,7 +335,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-36, centos-9-stream, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-36, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/stock-docker.io
@@ -271,6 +343,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Download latest cri-dockerd
         run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep jammy_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
@@ -299,6 +377,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Unzip the image
         run: gunzip freeipa-server-${{ matrix.os }}.tar.gz
       - name: Run K3s and master in it
@@ -318,6 +402,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Download latest cri-dockerd
         run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd

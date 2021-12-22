@@ -1,0 +1,33 @@
+name: 'Enable Red Hat entitled podman builds'
+inputs:
+  org:
+    description: 'Red Hat account organization'
+  activationkey:
+    description: 'Red Hat account activation key'
+  image:
+    description: 'Container image to use to run subscription-manager register'
+    default: 'registry.access.redhat.com/ubi9'
+runs:
+  using: 'composite'
+  steps:
+    - run: mkdir -p /tmp/{etc-pki-entitlement,rhsm}-${{ github.run_id }}
+      shell: bash
+    - run: |
+        NAME=$( echo "$run_url" | sed 's#^https://##;s#/#-#g' )
+        podman run --rm --name="$NAME" \
+          -v "/tmp/etc-pki-entitlement-${{ github.run_id }}":/etc/pki/entitlement-out:z \
+          -v "/tmp/rhsm-${{ github.run_id }}":/etc/rhsm-out:z \
+          -e SMDEV_CONTAINER_OFF=1 \
+          "${{ inputs.image }}" \
+          bash -c '/usr/sbin/subscription-manager register \
+                     --org="${{ inputs.org }}" \
+                     --activationkey="${{ inputs.activationkey }}" \
+                     --name="'$NAME'" \
+                   && cp /etc/pki/entitlement/* /etc/pki/entitlement-out/ \
+                   && cp -r /etc/rhsm/ca /etc/rhsm/rhsm.conf /etc/rhsm-out \
+                   && /usr/sbin/subscription-manager unregister'
+      env:
+        run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      shell: bash
+    - run: for i in etc-pki-entitlement rhsm ; do echo "/tmp/$i-${{ github.run_id }}:/run/secrets/$i" ; done | sudo tee -a /etc/containers/mounts.conf
+      shell: bash
