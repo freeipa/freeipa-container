@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-35, fedora-34, centos-8, centos-8-stream, centos-7 ]
+        os: [ fedora-35, fedora-34, centos-8, centos-8-stream, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -59,7 +59,6 @@ jobs:
           - os: fedora-35
             readonly: --read-only
             ca: --external-ca
-          - os: fedora-rawhide
           - os: centos-8
           - os: centos-8
             readonly: --read-only
@@ -174,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-35, centos-8, centos-8-stream ]
+        os: [ fedora-35, centos-8, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -191,9 +190,6 @@ jobs:
     needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-rawhide
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-35
