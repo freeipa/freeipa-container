@@ -5,19 +5,20 @@ set -x
 
 #
 # Example of preparing data image for upgrade testing:
+# check /etc/hosts and /etc/resolv.conf
 # mkdir -p freeipa-server/data
-# replica=none VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh freeipa/freeipa-server:fedora-34
-# docker rm -f freeipa-master
-# sudo tests/pack-data-as-image.sh freeipa-server data-fedora-34
-# docker login index.docker.io
-# docker push freeipa/freeipa-server:data-fedora-34
-# docker tag freeipa/freeipa-server:data-fedora-34 quay.io/freeipa/freeipa-server:data-fedora-34
-# docker login quay.io
-# docker push quay.io/freeipa/freeipa-server:data-fedora-34
+# replica=none docker=podman VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-35
+# podman rm -f freeipa-master
+# tests/pack-data-as-image.sh freeipa-server data-fedora-35
+# podman login index.docker.io
+# podman push freeipa/freeipa-server:data-fedora-35
+# podman tag freeipa/freeipa-server:data-fedora-35 quay.io/freeipa/freeipa-server:data-fedora-35
+# podman login quay.io
+# podman push quay.io/freeipa/freeipa-server:data-fedora-35
 #
 
 cd "$1"
-tar cf data.tar data
+podman run --rm -v $(pwd)/data:/data:Z registry.fedoraproject.org/fedora:35 tar cf - data > data.tar
 SUM=$( sha256sum data.tar )
 SUM=${SUM%% *}
 mv data.tar $SUM.tar
@@ -50,10 +51,10 @@ cat <<EOF > manifest.json
   }
 ]
 EOF
-tar czf "$2.tar.gz" $SUM.tar $CSUM.json manifest.json
+tar -cz --owner=root:0 --group=root:0 -f "$2.tar.gz" $SUM.tar $CSUM.json manifest.json
 rm -f $SUM.tar $CSUM.json manifest.json
 echo "$CSUM" > "$2.image"
 
-docker load -i "$2.tar.gz"
-docker tag $( cat $2.image ) freeipa/freeipa-server:$2
+podman load -i "$2.tar.gz"
+podman tag $( cat $2.image ) freeipa/freeipa-server:$2
 

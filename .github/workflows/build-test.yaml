@@ -145,11 +145,11 @@ jobs:
       matrix:
         include:
           - os: fedora-35
+            data-from: fedora-35
+          - os: fedora-35
             data-from: fedora-34
           - os: fedora-35
             data-from: fedora-33
-          - os: fedora-35
-            data-from: fedora-32
           - os: centos-8
             data-from: centos-8
           - os: centos-8-stream
