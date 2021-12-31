@@ -10,9 +10,10 @@ There are multiple `Dockerfile`s available for images based on various
 operating systems. Use `-f` option to `podman build` or `docker build`
 to pick a specific operating system. For example, running
 
-    podman build -t freeipa-server -f Dockerfile.centos-8 .
+    podman build -t freeipa-server -f Dockerfile.centos-8-stream .
 
-will build image based on CentOS 8 packages using podman, and with
+will build image based on CentOS 8 Stream packages using podman,
+and with
 
     docker build -t freeipa-server -f Dockerfile.fedora-rawhide .
 

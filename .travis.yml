@@ -43,14 +43,6 @@ jobs:
           name: fedora-35
           paths:
             - local-freeipa-server-$dockerfile.tar
-    - <<: *build-stage
-      env: dockerfile=centos-8
-      before_script: sed -i 's%registry.centos.org/centos:8%docker.io/arm64v8/centos:8%' Dockerfile.centos-8
-      workspaces:
-        create:
-          name: centos-8
-          paths:
-            - local-freeipa-server-$dockerfile.tar
 
     - stage: test
       env: dockerfile=fedora-35 readonly=--read-only seccomp=unconfined
@@ -59,12 +51,6 @@ jobs:
     - env: dockerfile=fedora-35 docker=podman replica=none seccomp=unconfined
       workspaces:
         use: fedora-35
-    - env: dockerfile=centos-8 readonly=--read-only
-      workspaces:
-        use: centos-8
-    - env: dockerfile=centos-8 docker='sudo podman'
-      workspaces:
-        use: centos-8
 
     - &test-k3s
       env: dockerfile=fedora-35
@@ -73,8 +59,4 @@ jobs:
       script: tests/run-master-in-k3s.sh local/freeipa-server:$dockerfile local-freeipa-server-$dockerfile.tar
       workspaces:
         use: fedora-35
-    - <<: *test-k3s
-      env: dockerfile=centos-8
-      workspaces:
-        use: centos-8
 
