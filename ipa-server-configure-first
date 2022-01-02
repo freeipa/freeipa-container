@@ -104,7 +104,6 @@ function upgrade_server () {
 		fi
 		sed -i "s/platform.*/platform = $PLATFORM/" /var/lib/ipa/sysupgrade/sysupgrade.state
 	fi
-	for i in /etc/dirsrv/slapd-* ; do echo dirsrv@${i#/etc/dirsrv/slapd-}.service ; done | xargs systemctl start || :
 	ipa-server-upgrade
 	mv /data/build-id /data/build-id-upgraded-$( date +'%Y%m%d-%H%M%S' )
 	cp -f /data-template/build-id /data/build-id
