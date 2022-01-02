@@ -38,7 +38,7 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN mkdir /var/log/journal
-# debug: RUN ! test -f /var/lib/systemd/random-see
+# debug: RUN ! test -f /var/lib/systemd/random-seed
 RUN systemd-tmpfiles --remove --create
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 # test-addon: VOLUME [ "/var/log/journal" ]
