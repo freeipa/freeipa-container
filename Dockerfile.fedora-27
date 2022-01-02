@@ -1,4 +1,4 @@
-# Clone from the Fedora rawhide image
+# Clone from the Fedora 27 image
 FROM registry.fedoraproject.org/fedora:27
 
 MAINTAINER FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>
