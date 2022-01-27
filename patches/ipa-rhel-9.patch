@@ -1,0 +1,18 @@
+#
+# Prevent the installer from being picky about hostname
+#
+--- /usr/lib/python3.9/site-packages/ipaserver/install/server/install.py	2021-06-04 09:34:39.000000000 +0000
++++ /usr/lib/python3.9/site-packages/ipaserver/install/server/install.py	2021-06-20 05:57:43.413865870 +0000
+@@ -500,11 +500,6 @@
+     else:
+         host_name = host_default
+ 
+-    try:
+-        verify_fqdn(host_default, options.no_host_dns)
+-    except BadHostError as e:
+-        raise ScriptError(e)
+-
+     host_name = host_name.lower()
+     logger.debug("will use host_name: %s\n", host_name)
+ 
+
