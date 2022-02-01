@@ -115,7 +115,9 @@ if [ "$1" == upgrade ] ; then
 		echo "The /data volume was created using incompatible image." >&2
 		exit 2
 	fi
-	if [ -f /data/etc/resolv.conf.ipa ] && ! grep '^nameserver 127\.0\.0\.1$' /etc/resolv.conf ; then
+	if [ -f /data/etc/resolv.conf.ipa ] \
+		&& ! cmp /etc/resolv.conf /data/etc/resolv.conf.ipa \
+		&& ! grep '^nameserver 127\.0\.0\.1$' /etc/resolv.conf ; then
 		perl -pe 's/^(nameserver).*/$1 127.0.0.1/' /data/etc/resolv.conf.ipa > /etc/resolv.conf
 		if ! grep -q "\b$HOSTNAME\b" /etc/hosts ; then
 			echo "127.0.0.2 $HOSTNAME" >> /etc/hosts
