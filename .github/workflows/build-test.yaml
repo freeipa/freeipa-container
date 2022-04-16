@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-35, fedora-34, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-36, fedora-35, fedora-34, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -60,6 +60,7 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
+          - os: fedora-36
           - os: centos-9-stream
           - os: centos-8-stream
           - os: centos-8-stream

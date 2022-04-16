@@ -1,5 +1,5 @@
-# Clone from the Fedora rawhide image
-FROM registry.fedoraproject.org/fedora:rawhide
+# Clone from the Fedora 36 image
+FROM registry.fedoraproject.org/fedora:36
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
@@ -31,8 +31,8 @@ STOPSIGNAL RTMIN+3
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l \! -lname /dev/null | xargs rm -v
 RUN systemctl mask systemd-logind.service
-COPY patches/minimal-fedora-37.patch /root/
-RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-37.patch
+COPY patches/minimal-fedora-36.patch /root/
+RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-36.patch
 # debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 RUN ln -s /usr/lib/systemd/system/dbus-broker.service /usr/lib/systemd/system/dbus.service
