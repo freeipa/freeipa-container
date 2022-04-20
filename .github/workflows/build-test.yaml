@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-35, centos-8-stream, centos-8-stream ]
+        os: [ fedora-35, centos-9-stream, centos-8-stream ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-35, centos-8-stream, centos-8-stream, rocky-8, almalinux-8 ]
+        os: [ fedora-35, centos-9-stream, centos-8-stream, rocky-8, almalinux-8 ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
