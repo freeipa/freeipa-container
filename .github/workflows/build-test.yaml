@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-36, fedora-35, fedora-34, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-36, fedora-35, fedora-34, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
       - name: Build image
@@ -61,6 +61,7 @@ jobs:
             ca: --external-ca
           - os: fedora-rawhide
           - os: fedora-36
+          - os: centos-9-stream
           - os: centos-8-stream
           - os: centos-8-stream
             readonly: --read-only
@@ -93,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-35, centos-8-stream ]
+        os: [ fedora-35, centos-9-stream, centos-8-stream ]
     steps:
       - name: Install podman
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman
@@ -116,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-35, centos-8-stream, rocky-8, almalinux-8 ]
+        os: [ fedora-35, centos-9-stream, centos-8-stream, rocky-8, almalinux-8 ]
     steps:
       - name: Install podman and others
         run: . /etc/os-release && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - && sudo apt-get update -y && sudo apt-get install -y podman fuse-overlayfs uidmap slirp4netns
@@ -175,7 +176,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-35, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-35, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
