@@ -22,7 +22,18 @@
                         },
                         "from": {
                             "kind": "ImageStreamTag",
-                            "name": "fedora-35"
+                            "name": "fedora-36"
+                        }
+                    },
+                    {
+                        "name": "fedora-36",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 36",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "freeipa/freeipa-server:fedora-36"
                         }
                     },
                     {
