@@ -176,7 +176,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-35, centos-9-stream, centos-8-stream ]
+        os: [ fedora-35, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
