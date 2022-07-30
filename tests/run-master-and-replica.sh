@@ -76,7 +76,13 @@ function run_ipa_container() {
 	mkdir -p $VOLUME
 	OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
-		OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
+		# if it is not podman, it is docker
+		if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
+			# we assume unified cgroup v2 and docker with userns remapping enabled
+			OPTS="--sysctl net.ipv6.conf.all.disable_ipv6=0"
+		else
+			OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
+		fi
 	fi
 	if [ -n "$seccomp" ] ; then
 		OPTS="$OPTS --security-opt seccomp=$seccomp"

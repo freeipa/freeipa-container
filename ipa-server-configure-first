@@ -150,7 +150,7 @@ function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
 	else
-		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /path:/data:Z image" >&2
+		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z image" >&2
 	fi
 	exit 1
 }
