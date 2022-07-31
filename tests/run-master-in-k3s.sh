@@ -10,6 +10,7 @@ if [ -n "$2" ] ; then
 	sudo k3s ctr images import "$2"
 fi
 kubectl get pods --all-namespaces
+( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
 kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-k3s.yaml )
 ( set +x ; while kubectl get pod/freeipa-server | tee /dev/stderr | grep -Eq '\bPending\b|\bContainerCreating\b' ; do sleep 5 ; done )
 if ! kubectl get pod/freeipa-server | grep -q '\bRunning\b' ; then
