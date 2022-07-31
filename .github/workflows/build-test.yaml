@@ -185,6 +185,28 @@ jobs:
       - name: Run K3s and master in it
         run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
 
+  test-k3s-docker:
+    name: Run with K3s with docker
+    runs-on: ubuntu-20.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-36, centos-9-stream, centos-8-stream ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}
+      - name: Download latest cri-dockerd
+        run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
+      - name: Install cri-dockerd
+        run: sudo apt install -y ./cri-dockerd_*.deb
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Run K3s and master in it
+        run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }}
+
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-20.04

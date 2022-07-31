@@ -3,7 +3,11 @@
 set -e
 set -x
 
-curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
+if [ -e /var/run/cri-dockerd.sock ] ; then
+	OPTS="--container-runtime-endpoint=unix:///var/run/cri-dockerd.sock --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+fi
+curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 $OPTS
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
 if [ -n "$2" ] ; then
