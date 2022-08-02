@@ -69,6 +69,7 @@ jobs:
         os: [ fedora-35 ]
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
       - uses: actions/download-artifact@v2
         with:
@@ -180,6 +181,7 @@ jobs:
             data-from: centos-8
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
       - uses: actions/download-artifact@v2
         with:
