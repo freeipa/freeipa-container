@@ -63,9 +63,6 @@ spec:
     volumeMounts:
     - name: freeipa-server-data
       mountPath: /data
-    - name: cgroups
-      mountPath: /sys/fs/cgroup
-      readOnly: true
     ports:
     - containerPort: 80
       protocol: TCP
@@ -101,6 +98,3 @@ spec:
   - name: freeipa-server-data
     persistentVolumeClaim:
       claimName: freeipa-data-pvc
-  - name: cgroups
-    hostPath:
-      path: /sys/fs/cgroup

@@ -1,0 +1,19 @@
+--- tests/freeipa-k3s.yaml
++++ tests/freeipa-k3s.yaml
+@@ -63,6 +63,9 @@ spec:
+     volumeMounts:
+     - name: freeipa-server-data
+       mountPath: /data
++    - name: cgroups
++      mountPath: /sys/fs/cgroup
++      readOnly: true
+     ports:
+     - containerPort: 80
+       protocol: TCP
+@@ -98,3 +101,6 @@ spec:
+   - name: freeipa-server-data
+     persistentVolumeClaim:
+       claimName: freeipa-data-pvc
++  - name: cgroups
++    hostPath:
++      path: /sys/fs/cgroup

@@ -1,0 +1,13 @@
+name: 'Enable userns-remapped docker setup to work with cgroups v2 on Ubuntu 22.04'
+runs:
+  using: 'composite'
+  steps:
+    - run: echo -e "dockremap:$( id -u ):1\ndockremap:200001:65535" | sudo tee -a /etc/subuid
+      shell: bash
+    - run: echo -e "dockremap:$( id -g ):1\ndockremap:200001:65535" | sudo tee -a /etc/subgid
+      shell: bash
+    - run: |
+        echo '{ "userns-remap": "default" }' | sudo tee /etc/docker/daemon.json
+      shell: bash
+    - run: sudo systemctl restart docker
+      shell: bash
