@@ -76,8 +76,6 @@ spec:
     - containerPort: 88
       protocol: UDP
     env:
-    - name: IPA_SERVER_HOSTNAME
-      value: freeipa-server.example.test
     - name: IPA_SERVER_IP
       value: 10.43.201.201
     - name: PASSWORD
@@ -86,7 +84,7 @@ spec:
           name: freeipa-server-password
           key: admin.password
     - name: IPA_SERVER_INSTALL_OPTS
-      value: "-U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp"
+      value: "-U -r CLUSTER.LOCAL --setup-dns --no-forwarders --no-ntp"
     readinessProbe:
       exec:
         command: [ "/usr/bin/systemctl", "status", "ipa" ]
@@ -95,6 +93,8 @@ spec:
       periodSeconds: 10
       successThreshold: 1
       failureThreshold: 3
+  subdomain: dom1
+  setHostnameAsFQDN: true
   volumes:
   - name: freeipa-server-data
     persistentVolumeClaim:

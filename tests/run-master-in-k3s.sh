@@ -24,8 +24,7 @@ trap "kill $! 2> /dev/null || : ; trap - EXIT" EXIT
 kubectl describe pod/freeipa-server
 PV_DIR=$( kubectl get pvc/freeipa-data-pvc -o 'jsonpath={.spec.volumeName}_{.metadata.namespace}_{.metadata.name}' )
 ls -la /var/lib/rancher/k3s/storage/$PV_DIR
-IPA_SERVER_HOSTNAME=$( kubectl get -o=jsonpath='{.spec.containers[0].env[?(@.name=="IPA_SERVER_HOSTNAME")].value}' pod freeipa-server )
-# echo $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) $IPA_SERVER_HOSTNAME >> /etc/hosts
+IPA_SERVER_HOSTNAME=$( kubectl exec pod/freeipa-server -- hostname -f )
 if ! test -f /etc/resolv.conf.backup ; then
 	sudo mv /etc/resolv.conf /etc/resolv.conf.backup
 fi
