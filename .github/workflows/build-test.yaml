@@ -212,7 +212,7 @@ jobs:
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-20.04
-    needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s ]
+    needs: [ test-docker, test-podman, test-rootless-podman, test-upgrade, test-k3s, test-k3s-docker ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v2
