@@ -198,6 +198,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-${{ matrix.os }}
+      - name: Replace the default moby-engine with docker.io that cri-dockerd seems to depend on
+        run: |
+             set -e
+             sudo apt update
+             sudo apt remove -y moby-engine moby-containerd moby-runc
+             sudo apt install -y docker.io
       - name: Download latest cri-dockerd
         run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
