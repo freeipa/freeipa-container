@@ -18,6 +18,7 @@ if ! kubectl get pod/freeipa-server | grep -q '\bRunning\b' ; then
 	kubectl logs pod/freeipa-server
 	exit 1
 fi
+( set +x ; for i in $( seq 1 10 ) ; do kubectl logs pod/freeipa-server > /dev/null && break ; sleep 3 ; done )
 kubectl logs -f pod/freeipa-server &
 trap "kill $! 2> /dev/null || : ; trap - EXIT" EXIT
 ( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $! ; break ; else sleep 5 ; fi ; done )
