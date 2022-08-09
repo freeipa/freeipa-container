@@ -281,6 +281,12 @@ jobs:
         run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
         run: sudo apt install -y ./cri-dockerd_*.deb
+      - name: Unset network-plugin
+        run: |
+          sudo mkdir /etc/systemd/system/cri-docker.service.d
+          ( echo '[Service]' ; echo 'ExecStart=' ; sed 's/ExecStart=.*/& --network-plugin=/;t;d' /lib/systemd/system/cri-docker.service ) | sudo tee /etc/systemd/system/cri-docker.service.d/network-plugin.conf
+          sudo systemctl daemon-reload
+          sudo systemctl restart cri-docker
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
       - name: Run K3s and master in it
