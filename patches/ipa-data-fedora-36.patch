@@ -51,16 +51,16 @@
 # rndc-confgen does not seem to write through the
 # /etc/rndc.key -> /data/etc/rndc.key symlink
 #
---- /usr/libexec/generate-rndc-key.sh	2022-01-28 10:39:02.987540642 +0000
-+++ /usr/libexec/generate-rndc-key.sh	2022-01-28 10:39:49.948267375 +0000
+--- /usr/libexec/generate-rndc-key.sh	2022-08-03 20:02:36.000000000 +0000
++++ /usr/libexec/generate-rndc-key.sh	2022-08-09 14:41:05.933442950 +0000
 @@ -15,18 +15,18 @@
-
+ 
  # This script generates /etc/rndc.key if doesn't exist AND if there is no rndc.conf
-
--if [ ! -s /etc/rndc.key ] && [ ! -s /etc/rndc.conf ]; then
+ 
+-if [ ! -s /etc/rndc.key -a ! -s /etc/rndc.conf ]; then
 -  echo -n $"Generating /etc/rndc.key:"
 -  if /usr/sbin/rndc-confgen -a -A hmac-sha256 > /dev/null 2>&1
-+if [ ! -s /data/etc/rndc.key ] && [ ! -s /etc/rndc.conf ]; then
++if [ ! -s /data/etc/rndc.key -a ! -s /data/etc/rndc.conf ]; then
 +  echo -n $"Generating /data/etc/rndc.key:"
 +  if /usr/sbin/rndc-confgen -c /data/etc/rndc.key -a -A hmac-sha256 > /dev/null 2>&1
    then
