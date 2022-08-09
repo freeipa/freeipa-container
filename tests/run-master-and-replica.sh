@@ -136,8 +136,10 @@ elif [ "$readonly" == "--read-only" ] ; then
 	readonly_run="$readonly --dns=127.0.0.1"
 fi
 
+fresh_install=true
 if [ -f "$VOLUME/build-id" ] ; then
 	# If we were given already populated volume, just run the container
+	fresh_install=false
 	run_ipa_container $IMAGE freeipa-master exit-on-finished
 else
 	# Initial setup of the FreeIPA server
@@ -201,7 +203,10 @@ $docker exec freeipa-master bash -c 'yes Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
 $docker exec freeipa-master id bob$$
 
-$docker exec freeipa-master ipa-adtrust-install -a Secret123 --netbios-name=EXAMPLE -U
+if $fresh_install ; then
+	$docker exec freeipa-master ipa-adtrust-install -a Secret123 --netbios-name=EXAMPLE -U
+	$docker exec freeipa-master ipa-kra-install -p Secret123 -U
+fi
 )
 
 if [ "$replica" = 'none' ] ; then

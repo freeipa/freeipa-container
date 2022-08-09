@@ -32,6 +32,7 @@
 /etc/yp.conf
 /root/ca-agent.p12
 /root/cacert.p12
+/root/kracert.p12
 /root/.dogtag/
 /root/ipa.csr
 /usr/share/ipa/html/ca.crt
@@ -72,6 +73,7 @@
 /var/log/ipareplica-install.log
 /var/log/ipaserver-adtrust-install.log
 /var/log/ipaserver-install.log
+/var/log/ipaserver-kra-install.log
 /var/log/ipa-server-configure-first.log
 /var/log/ipa-server-run.log
 /var/log/ipaupgrade.log
