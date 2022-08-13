@@ -193,6 +193,30 @@ jobs:
       - name: Run master and replica
         run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
+  test-upgrade-podman:
+    name: Upgrade from older version with podman
+    runs-on: ubuntu-22.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: fedora-36
+            data-from: fedora-36
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-${{ matrix.os }}
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
+      - name: Populate volume with data
+        run: podman volume create loaded-data && podman run --name loaded-data -v loaded-data:/data:z docker.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop || true
+      - name: Copy the content of the volume to directory
+        run: mkdir /tmp/freeipa-data && podman run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
+      - name: Run master and replica
+        run: docker=podman VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+
   test-upgrade-20-04:
     name: Upgrade from older version or build on Ubuntu 20.04
     runs-on: ubuntu-20.04
