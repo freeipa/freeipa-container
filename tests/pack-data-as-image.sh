@@ -32,6 +32,7 @@ cat <<EOF > config.json
     "type": "layers",
     "diff_ids": [ "sha256:$SUM" ]
   },
+  "config": {},
   "history": [
     {
       "created": "$DATE",
