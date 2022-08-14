@@ -1,0 +1,18 @@
+--- a/tests/freeipa-k3s.yaml	2022-08-14 16:02:15.617164798 +0200
++++ b/tests/freeipa-k3s.yaml	2022-08-14 16:01:55.340130622 +0200
+@@ -66,6 +66,8 @@
+     - name: cgroups
+       mountPath: /sys/fs/cgroup
+       readOnly: true
++    - mountPath: /dev/shm
++      name: dshm
+     ports:
+     - containerPort: 80
+       protocol: TCP
+@@ -104,3 +106,6 @@
+   - name: cgroups
+     hostPath:
+       path: /sys/fs/cgroup
++  - name: dshm
++    emptyDir:
++      medium: Memory

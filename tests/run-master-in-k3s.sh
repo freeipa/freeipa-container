@@ -3,14 +3,16 @@
 set -e
 set -x
 
-if [ -e /var/run/cri-dockerd.sock ] ; then
-	OPTS="--container-runtime-endpoint=unix:///var/run/cri-dockerd.sock --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
-	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
-fi
 if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-	OPTS="--kubelet-arg=cgroup-driver=systemd $OPTS"
+	OPTS="--kubelet-arg=cgroup-driver=systemd"
 else
 	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.cgroups-v1.patch
+fi
+if [ -e /var/run/cri-dockerd.sock ] ; then
+	OPTS="$OPTS --container-runtime-endpoint=unix:///var/run/cri-dockerd.sock --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+else
+	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.shm.patch
 fi
 curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 $OPTS
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
