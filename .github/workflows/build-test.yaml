@@ -59,6 +59,7 @@ jobs:
           - os: fedora-36
             readonly: --read-only
             ca: --external-ca
+          - os: fedora-rawhide
           - os: centos-9-stream
           - os: centos-8-stream
           - os: centos-8-stream
@@ -322,6 +323,9 @@ jobs:
     needs: [ test-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s, test-k3s-20-04, test-k3s-docker-20-04 ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-fedora-rawhide
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-36
