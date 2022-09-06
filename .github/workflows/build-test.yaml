@@ -61,6 +61,11 @@ jobs:
             ca: --external-ca
           - os: fedora-rawhide
           - os: centos-9-stream
+          - os: centos-9-stream
+            readonly: --read-only
+          - os: centos-9-stream
+            readonly: --read-only
+            ca: --external-ca
           - os: centos-8-stream
           - os: centos-8-stream
             readonly: --read-only
@@ -94,6 +99,7 @@ jobs:
           - os: fedora-36
             readonly: --read-only
           - os: centos-9-stream
+            readonly: --read-only
           - os: centos-8-stream
             readonly: --read-only
           - os: centos-7
@@ -277,7 +283,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-36, centos-9-stream, centos-8-stream ]
+        os: [ fedora-36, centos-9-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -295,7 +301,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-36, centos-9-stream, centos-8-stream ]
+        os: [ fedora-36, centos-9-stream ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/stock-docker.io
@@ -332,6 +338,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-fedora-35
+      - uses: actions/download-artifact@v2
+        with:
+          name: freeipa-server-centos-9-stream
       - uses: actions/download-artifact@v2
         with:
           name: freeipa-server-centos-8-stream
