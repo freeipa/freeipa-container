@@ -17,6 +17,10 @@ test -n "$FROM"
 # Sadly we cannot --filter specific image because in that case docker
 # does not show the digest
 BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="$FROM" '$1 == image { print $2 }' )
+if [ -z "$BASE_DIGEST" ] ; then
+	# Since docker images strips the docker.io/ prefix, try again without it
+	BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="${FROM#docker.io/}" '$1 == image { print $2 }' )
+fi
 test -n "$BASE_DIGEST"
 
 IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install )
