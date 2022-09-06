@@ -100,4 +100,5 @@ RUN uuidgen > /data-template/build-id
 # Invocation:
 # docker run -ti -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
 
-LABEL maintainer="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
+LABEL org.opencontainers.image.title="FreeIPA server"
+LABEL org.opencontainers.image.authors="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"

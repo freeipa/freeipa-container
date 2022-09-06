@@ -84,18 +84,11 @@ RUN uuidgen > /data-template/build-id
 # Invocation:
 # docker run -ti -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /tmp -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
 
-LABEL description="IPA is an integrated solution to provide centrally managed \
+LABEL org.opencontainers.image.title="Identity Management (IdM) for Linux"
+LABEL org.opencontainers.image.description="IPA is an integrated solution to provide centrally managed \
 Identity (users, hosts, services), Authentication (SSO, 2FA), and \
 Authorization (host access control, SELinux user roles, services). The \
 solution provides features for further integration with Linux based clients \
 (SUDO, automount) and integration with Active Directory based infrastructures \
 (Trusts)."
-LABEL io.k8s.display-name="Identity Management (IdM) for Linux"
-LABEL io.k8s.description="IPA is an integrated solution to provide centrally \
-managed Identity (users, hosts, services), Authentication (SSO, 2FA), and \
-Authorization (host access control, SELinux user roles, services). The \
-solution provides features for further integration with Linux based clients \
-(SUDO, automount) and integration with Active Directory based infrastructures \
-(Trusts)."
-
-LABEL maintainer="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
+LABEL org.opencontainers.image.authors="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
