@@ -338,48 +338,30 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [ test-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s, test-k3s-20-04, test-k3s-docker-20-04 ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: freeipa-server-fedora-rawhide
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-36
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-fedora-35
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-centos-9-stream
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-centos-8-stream
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-rocky-8
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-almalinux-8
-      - uses: actions/download-artifact@v2
-        with:
-          name: freeipa-server-centos-7
+          name: freeipa-server-${{ matrix.os }}
       - name: Prepare authentication file
         run: |
           cat > auth.json << 'EOF'
           ${{ secrets.REGISTRY_CREDENTIALS_FILE }}
           EOF
-      - name: Copy the images to registries
+      - name: Copy ${{ matrix.os }} to registries
         run: |
+          set -e
+          f=docker-archive:freeipa-server-${{ matrix.os }}.tar.gz
           while read r ; do
-            for f in freeipa-server-*.tar.gz ; do j=${f%.tar.gz} ;
-              echo Copying $j to ${r#docker://}
-              skopeo copy --authfile=auth.json docker-archive:$f $r:${j#freeipa-server-}
-              VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' docker-archive:$f | sed 's/-.*//' )
-              if test -n "$VERSION" ; then
-                skopeo copy --authfile=auth.json docker-archive:$f $r:${j#freeipa-server-}-$VERSION
-                echo Tagged as $VERSION
-              fi
-            done
+            echo Copying freeipa-server:${{ matrix.os }} to ${r#docker://}
+            skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
+            VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' $f | sed 's/-.*//' )
+            test -n "$VERSION"
+            skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}-$VERSION
+            echo Tagged as ${{ matrix.os }}-$VERSION as well
           done << 'EOF'
           ${{ secrets.REGISTRY_TARGET_LIST }}
           EOF
