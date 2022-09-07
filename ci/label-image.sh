@@ -8,6 +8,7 @@ docker=${docker:-docker}
 
 DOCKERFILE="$1"
 TAG="$2"
+GITTREE="$3"
 
 COMMIT=$( git rev-parse HEAD )
 test -n "$COMMIT"
@@ -28,6 +29,10 @@ IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' 
 test -n "$IPA_VERSION"
 RPM_QA_SHA=$( $docker run --rm --entrypoint rpm "$TAG" -qa | LC_COLLATE=C sort | sha256sum | sed 's/ .*//' )
 test -n "$RPM_QA_SHA"
+if test -z "$GITTREE" ; then
+	GITTREE=$( git write-tree )
+fi
+test -n "$GITTREE"
 
 declare -a OPTS
 TITLE="$( $docker inspect "$TAG" --format '{{ index .Config.Labels "org.opencontainers.image.title" }}' )"
@@ -94,7 +99,7 @@ set -x
 $docker build -f "$DOCKERFILE" -t "$TAG" \
 	--label org.opencontainers.image.created="$CREATED" \
 	--label org.opencontainers.image.revision=$COMMIT \
-	--label org.opencontainers.image.version="$IPA_VERSION-rpms-$RPM_QA_SHA" \
+	--label org.opencontainers.image.version="$IPA_VERSION-rpms-$RPM_QA_SHA-gittree-$GITTREE" \
 	--label org.opencontainers.image.base.name=$FROM \
 	--label org.opencontainers.image.base.digest=$BASE_DIGEST \
 	"${OPTS[@]}" .

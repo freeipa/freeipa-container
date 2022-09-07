@@ -19,10 +19,16 @@ jobs:
         os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-8, almalinux-8, centos-7 ]
     steps:
       - uses: actions/checkout@v2
+      - name: Separate git work tree with just the files needed for build
+        run: git worktree add --no-checkout ../minimize-for-build
+      - name: Populate with the Dockerfile
+        run: cd ../minimize-for-build && git checkout HEAD Dockerfile.${{ matrix.os }}
+      - name: Populate with files referenced from the Dockerfile
+        run: cd ../minimize-for-build && awk '/^(ADD|COPY)/ { for (i = 2; i < NF; i++) print $i }' Dockerfile.${{ matrix.os }} | while read f ; do git checkout HEAD $f ; done
       - name: Build image
-        run: docker build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+        run: docker build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
       - name: Label the built image
-        run: ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }}
+        run: ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree )
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
