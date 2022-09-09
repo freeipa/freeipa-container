@@ -356,6 +356,14 @@ jobs:
           set -e
           f=docker-archive:freeipa-server-${{ matrix.os }}.tar.gz
           while read r ; do
+            if cmp \
+              <( skopeo inspect $r:${{ matrix.os }} \
+                | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) \
+              <( skopeo inspect $f \
+                | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) ; then
+              echo Built freeipa-server:${{ matrix.os }} is the same as image at ${r#docker://}, not pushing
+              continue
+            fi
             echo Copying freeipa-server:${{ matrix.os }} to ${r#docker://}
             skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
             VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' $f | sed 's/-.*//' )
