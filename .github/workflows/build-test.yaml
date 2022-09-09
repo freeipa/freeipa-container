@@ -368,7 +368,7 @@ jobs:
             skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
             VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' $f | sed 's/-.*//' )
             test -n "$VERSION"
-            skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}-$VERSION
+            skopeo copy --authfile=auth.json $r:${{ matrix.os }} $r:${{ matrix.os }}-$VERSION
             echo Tagged as ${{ matrix.os }}-$VERSION as well
           done << 'EOF'
           ${{ secrets.REGISTRY_TARGET_LIST }}
