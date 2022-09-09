@@ -28,7 +28,8 @@ jobs:
     steps:
       - name: Install podman 4.*
         run: |
-          . /etc/os-release \
+          sudo apt-get remove -y golang-github-containers-image \
+          && . /etc/os-release \
           && echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list \
           && curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add - \
           && sudo apt-get update -y \
