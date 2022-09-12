@@ -55,14 +55,14 @@ jobs:
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
-          curl -s 'https://api.github.com/repos/${{ github.repository }}/issues?labels=image-build-fail' | jq -r '.[0].state' | grep open \
+          curl -s '${{ github.api_url }}/repos/${{ github.repository }}/issues?labels=image-build-fail' | jq -r '.[0].state' | grep open \
           || curl -s -X POST \
-            --url https://api.github.com/repos/${{ github.repository }}/issues \
+            --url ${{ github.api_url }}/repos/${{ github.repository }}/issues \
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H 'Accept: application/vnd.github.v3+json' \
             -d '{
               "title": "Image build for ${{ matrix.os }} failed on '$( date -I )'",
-              "body": "This issue was automatically created by GitHub Action\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.\n",
+              "body": "This issue was automatically created by GitHub Action\n\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.\n",
               "labels": ["image-build-fail" ]
               }'
       - name: Check resulting labels
@@ -359,7 +359,7 @@ jobs:
           file: freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Download latest cri-dockerd
-        run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep jammy_amd64.deb | tee /dev/stderr | xargs curl -LO
+        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep jammy_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
         run: sudo apt install -y ./cri-dockerd_*.deb
       - name: Unset network-plugin
@@ -418,7 +418,7 @@ jobs:
           file: freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Download latest cri-dockerd
-        run: curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
+        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
         run: sudo apt install -y ./cri-dockerd_*.deb
       - name: Unset network-plugin
