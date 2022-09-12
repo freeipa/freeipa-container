@@ -9,6 +9,7 @@ docker=${docker:-docker}
 DOCKERFILE="$1"
 TAG="$2"
 GITTREE="$3"
+JOB_URL="$4"
 
 COMMIT=$( git rev-parse HEAD )
 test -n "$COMMIT"
@@ -94,6 +95,9 @@ if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."io.k8s.description"' > /d
 fi
 if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.maintainer' > /dev/null ; then
 	OPTS+=(--label maintainer="$( $docker inspect "$TAG" --format '{{ index .Config.Labels "org.opencontainers.image.authors" }}' )")
+fi
+if test -n "$JOB_URL" ; then
+	OPTS+=(--label org.opencontainers.image.source="$JOB_URL")
 fi
 
 
