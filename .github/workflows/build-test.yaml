@@ -441,7 +441,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     steps:
       - uses: actions/download-artifact@v2
         with:
