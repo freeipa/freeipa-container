@@ -28,6 +28,10 @@ if [ -z "$BASE_DIGEST" ] ; then
 	# When FROM does not specify a tag, try again with :latest
 	BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="$FROM:latest" '$1 == image { print $2 }' )
 fi
+if [ -z "$BASE_DIGEST" ] ; then
+	# When FROM does not specify a tag, try again with :latest
+	BASE_DIGEST=$( $docker images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' | awk -v image="${FROM#docker.io/}:latest" '$1 == image { print $2 }' )
+fi
 test -n "$BASE_DIGEST"
 
 IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install )
@@ -95,6 +99,9 @@ if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."io.k8s.description"' > /d
 fi
 if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.maintainer' > /dev/null ; then
 	OPTS+=(--label maintainer="$( $docker inspect "$TAG" --format '{{ index .Config.Labels "org.opencontainers.image.authors" }}' )")
+fi
+if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.usage' > /dev/null ; then
+	OPTS+=(--label usage="https://github.com/freeipa/freeipa-container#running-freeipa-server-container")
 fi
 if test -n "$JOB_URL" ; then
 	OPTS+=(--label org.opencontainers.image.source="$JOB_URL")

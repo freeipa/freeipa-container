@@ -1,5 +1,5 @@
 # Build on top of the RHEL 9 image
-FROM registry.access.redhat.com/ubi9
+FROM registry.access.redhat.com/ubi9-init
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
