@@ -86,10 +86,11 @@ jobs:
         with:
           file: freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
           path: freeipa-server-${{ matrix.os }}
+          retention-days: 1
 
   test-docker:
     name: Run with docker
