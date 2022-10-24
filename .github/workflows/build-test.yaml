@@ -129,7 +129,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -166,7 +166,7 @@ jobs:
             protected_regular: unset
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -196,7 +196,7 @@ jobs:
         os: [ fedora-36, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -223,7 +223,7 @@ jobs:
         os: [ fedora-36, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -262,7 +262,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -290,7 +290,7 @@ jobs:
             data-from: fedora-36
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -320,7 +320,7 @@ jobs:
             data-from: fedora-36
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -348,7 +348,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -382,7 +382,7 @@ jobs:
         os: [ fedora-36, centos-9-stream ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -407,7 +407,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -441,7 +441,7 @@ jobs:
       matrix:
         os: [ fedora-rawhide, fedora-36, fedora-35, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Prepare authentication file
