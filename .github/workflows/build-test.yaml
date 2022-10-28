@@ -7,8 +7,6 @@ on:
   schedule:
     - cron: '15 4 * * 1,3,5'
 
-env:
-  TRAVIS: yes-similar-ubuntu-environment
 jobs:
   build:
     name: Build image

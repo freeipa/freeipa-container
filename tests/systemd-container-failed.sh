@@ -23,15 +23,7 @@ for s in $FAILED ; do
 	$docker exec $C systemctl status $s --no-pager -l || :
 done
 
-diff <( for i in "$@" ; do
-		if ! [ "$i" == "${i#TRAVIS:}" ] ; then
-			if [ -n "$TRAVIS" ] ; then
-				echo "${i#TRAVIS:}"
-			fi
-		else
-			echo $i
-		fi
-	done ) <( for s in $FAILED ; do echo $s ; done )
+diff <( echo "$@" ) <( for s in $FAILED ; do echo $s ; done )
 
 echo OK $0.
 
