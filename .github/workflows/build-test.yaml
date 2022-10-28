@@ -258,6 +258,14 @@ jobs:
             data-from: fedora-35
           - os: fedora-36
             data-from: fedora-34
+          - os: rhel-8
+            data-from: centos-8
+          - os: centos-8-stream
+            data-from: centos-8
+          - os: rocky-8
+            data-from: centos-8
+          - os: almalinux-8
+            data-from: centos-8
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
