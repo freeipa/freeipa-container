@@ -1,6 +1,6 @@
 {
     "kind": "Template",
-    "apiVersion": "v1",
+    "apiVersion": "template.openshift.io/v1",
     "metadata": {
         "name": "freeipa-server",
         "annotations": {
@@ -15,7 +15,7 @@
     "objects": [
         {
             "kind": "Route",
-            "apiVersion": "v1",
+            "apiVersion": "route.openshift.io/v1",
             "metadata": {
                 "name": "${IPA_SERVER_SERVICE}-https",
                 "annotations": {
@@ -129,7 +129,7 @@
         },
         {
             "kind": "DeploymentConfig",
-            "apiVersion": "v1",
+            "apiVersion": "apps.openshift.io/v1",
             "metadata": {
                 "name": "${IPA_SERVER_SERVICE}",
                 "labels": {
