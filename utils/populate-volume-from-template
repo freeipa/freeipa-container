@@ -16,6 +16,21 @@ while [ -n "$VOLUME" ] ; do
 	if [ -f "$VOLUME/build-id" ] ; then
 		OLDEST_BUILD_ID=$( ls -t "$VOLUME"/build-id* | tail -1 )
 	fi
+
+	if [ -d "$VOLUME/.configfiles" ] ; then
+		find "$VOLUME/.configfiles" -type f -printf '%P\n' | while read f ; do
+			if [ -e "$VOLUME/$f" ] && ! [ -e "$VOLUME-template/.configfiles/$f" ] ; then
+				echo "Removing $VOLUME/$f which is no longer a config file."
+				if cmp -s "$VOLUME/.configfiles/$f" "$VOLUME/$f" ; then
+					rm -rf "$VOLUME/$f" "$VOLUME/.configfiles/$f" "$VOLUME/.configfiles-noreplace/$f"
+				else
+					mv -vf "$VOLUME/$f" "$VOLUME/$f.rpmsave"
+					rm -rf "$VOLUME/.configfiles/$f" "$VOLUME/.configfiles-noreplace/$f"
+				fi
+			fi
+		done
+	fi
+
 	cd "$VOLUME-template"
 
 	find * | while read f ; do
