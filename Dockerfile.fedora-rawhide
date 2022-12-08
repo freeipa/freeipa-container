@@ -1,5 +1,5 @@
 # Clone from the Fedora rawhide image
-FROM registry.fedoraproject.org/fedora:rawhide
+FROM docker.io/library/fedora:rawhide
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
@@ -18,7 +18,8 @@ RUN systemctl mask rpc-gssd.service
 
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
-# debug: RUN test "$container" = oci
+# debug: RUN test -z "$container"
+ENV container oci
 
 # Establish reasonably low open files limit in the container
 RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
