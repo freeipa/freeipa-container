@@ -6,13 +6,7 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
-RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf && \
-	sed -i.bak "s/mirrorlist=/#mirrorlist=/" /etc/yum.repos.d/rocky.repo && \
-	sed -i.bak "s/#baseurl=http:\/\/dl.rockylinux.org\/\$contentdir/baseurl=https:\/\/mirror.yandex.ru\/rockylinux/" /etc/yum.repos.d/rocky.repo && \
-	yum --disablerepo=\* --enablerepo=baseos install -y findutils && \
-	find /etc/yum.repos.d/ -type f -name "*.repo" -exec sed -i.bak "s/mirrorlist=/#mirrorlist=/" {} \; && \
-	find /etc/yum.repos.d/ -type f -name "*.repo" -exec sed -i.bak "s/#baseurl=http:\/\/dl.rockylinux.org\/\$contentdir/baseurl=https:\/\/mirror.yandex.ru\/rockylinux/" {} \;
-
+RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN yum -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ipa-server-trust-ad patch && yum clean all
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
