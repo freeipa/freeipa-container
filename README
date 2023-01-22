@@ -153,17 +153,23 @@ and just the necessary services started in the container.
 If you want to use the FreeIPA server not just from the host
 where it is running but from external machines as well, you
 might want to use the `-p` options to make the services accessible
-externally. You will then likely want to also specify the
-`IPA_SERVER_IP` environment variable via the `-e` option to
-define what IP address should the server put to DNS as its
-address. Starting the server would then be
+externally.
 
-    docker run -e IPA_SERVER_IP=10.12.0.98 -p 53:53/udp -p 53:53 \
+    docker run -p 53:53/udp -p 53:53 \
         -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 \
 	-p 88:88/udp -p 464:464/udp -p 123:123/udp ...
 
-Note that an attempt of achieving this goal with the `--ip-address`
-option of `ipa-server-install` command might fail.
+You will then likely want to also specify the `--ip-address`
+option to `ipa-server-install` with the IP address of the host,
+and also use the `--add-host` option to the `docker run` / `podman run`
+with the same IP address, especially when running the container
+as read only.
+
+Alternatively, the `IPA_SERVER_IP` environment variable via the
+`-e` option to `docker run` / `podman run` can be used to
+define what IP address should the FreeIPA server put to DNS as its
+address. Using this mechanism will however not update the `ipa-ca`
+record.
 
 If you have existing container with data volume, it should be safe
 to shut it down and run new one based on newer image, with the same
