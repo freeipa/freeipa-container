@@ -134,6 +134,15 @@ and `podman run` or `docker run` is executed with
 `ipa-server-install-options` will be passed as arguments to
 `ipa-server-install`.
 
+Since the `ipa-server-install-options` typically contains passwords,
+it is also possible to use `podman secret create` to store the whole
+content of that file, and the invoke `podman run` with options like
+
+    --secret source=options-with-credentials,target=/data/ipa-server-install-options
+
+to expose the options in the container. The same holds for `docker`
+invocation.
+
 If you want to instruct the container to create a replica, specify the
 `ipa-replica-install` command in the `podman run` or `docker run`
 parameters:
