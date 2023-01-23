@@ -9,7 +9,8 @@ docker=${docker:-docker}
 DOCKERFILE="$1"
 TAG="$2"
 GITTREE="$3"
-JOB_URL="$4"
+REPO_URL="$4"
+JOB_PATH="$5"
 
 COMMIT=$( git rev-parse HEAD )
 test -n "$COMMIT"
@@ -103,8 +104,11 @@ fi
 if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.usage' > /dev/null ; then
 	OPTS+=(--label usage="https://github.com/freeipa/freeipa-container#running-freeipa-server-container")
 fi
-if test -n "$JOB_URL" ; then
-	OPTS+=(--label org.opencontainers.image.source="$JOB_URL")
+if test -n "$REPO_URL" ; then
+	OPTS+=(--label org.opencontainers.image.source="$REPO_URL/blob/$COMMIT/$DOCKERFILE")
+fi
+if test -n "$JOB_PATH" ; then
+	OPTS+=(--label org.opencontainers.image.url="$REPO_URL/$JOB_PATH")
 fi
 
 

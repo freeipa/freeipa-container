@@ -55,7 +55,7 @@ jobs:
         run: ${{ matrix.docker }} build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
 
       - name: Label the built image
-        run: docker="${{ matrix.docker }}" ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree ) "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: docker="${{ matrix.docker }}" ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree ) "${{ github.server_url }}/${{ github.repository }}" "actions/runs/${{ github.run_id }}"
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
