@@ -10,11 +10,12 @@ set -x
 # replica=none docker=podman VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-36
 # podman rm -f freeipa-master
 # tests/pack-data-as-image.sh freeipa-server data-fedora-36
-# podman login index.docker.io
-# podman push freeipa/freeipa-server:data-fedora-36
-# podman tag freeipa/freeipa-server:data-fedora-36 quay.io/freeipa/freeipa-server:data-fedora-36
 # podman login quay.io
+# podman tag freeipa/freeipa-server:data-fedora-36 quay.io/freeipa/freeipa-server:data-fedora-36
 # podman push quay.io/freeipa/freeipa-server:data-fedora-36
+# podman login index.docker.io
+# podman tag freeipa/freeipa-server:data-fedora-36 docker.io/freeipa/freeipa-server:data-fedora-36
+# podman push docker.io/freeipa/freeipa-server:data-fedora-36
 #
 
 cd "$1"
