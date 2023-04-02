@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: freeipa-data-pvc
+  name: freeipa-replica-pvc
   namespace: default
 spec:
   accessModes:
@@ -12,20 +12,14 @@ spec:
       storage: 1Gi
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: freeipa-server-password
-stringData:
-  admin.password: Secret123
----
-apiVersion: v1
 kind: Service
 metadata:
-  name: freeipa-server-service
+  name: freeipa-replica-service
 spec:
   selector:
-    app: freeipa-server
-  clusterIP: 10.43.201.201
+    app: freeipa-replica
+  clusterIP: 10.43.202.202
+  publishNotReadyAddresses: true
   ports:
   - name: http
     port: 80
@@ -69,13 +63,13 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: freeipa-server
+  name: freeipa-replica
   labels:
-    app: freeipa-server
+    app: freeipa-replica
 spec:
   restartPolicy: Never
   containers:
-  - name: freeipa-server
+  - name: freeipa-replica
     image: localhost/freeipa-server:latest
     imagePullPolicy: Never
     securityContext:
@@ -94,14 +88,13 @@ spec:
       protocol: TCP
     - containerPort: 88
       protocol: UDP
+    args: ["ipa-replica-install", "-U", "-r", "CLUSTER.LOCAL", "-P", "admin@CLUSTER.LOCAL", "--ip-address=10.43.202.202", "--no-ntp", "--skip-mem-check"]
     env:
     - name: PASSWORD
       valueFrom:
         secretKeyRef:
           name: freeipa-server-password
           key: admin.password
-    - name: IPA_SERVER_INSTALL_OPTS
-      value: "-U -r CLUSTER.LOCAL --setup-dns --no-forwarders --no-ntp --ip-address=10.43.201.201"
     readinessProbe:
       exec:
         command: [ "/usr/bin/systemctl", "status", "ipa" ]
@@ -113,14 +106,14 @@ spec:
   dnsPolicy: "None"
   dnsConfig:
     nameservers:
-      - 127.0.0.1
+      - 10.43.201.201
   hostAliases:
-  - ip: "10.43.201.201"
+  - ip: "10.43.202.202"
     hostnames:
-    - "freeipa-server.dom1.default.svc.cluster.local"
+    - "freeipa-replica.dom1.default.svc.cluster.local"
   subdomain: dom1
   setHostnameAsFQDN: true
   volumes:
   - name: freeipa-server-data
     persistentVolumeClaim:
-      claimName: freeipa-data-pvc
+      claimName: freeipa-replica-pvc
