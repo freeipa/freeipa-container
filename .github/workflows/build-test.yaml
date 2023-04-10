@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
         docker: [ docker ]
         include:
           - os: rhel-9
@@ -109,7 +109,6 @@ jobs:
           - os: fedora-37
             readonly: --read-only
             ca: --external-ca
-          - os: fedora-rawhide
           - os: centos-9-stream
           - os: centos-9-stream
             readonly: --read-only
@@ -347,7 +346,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
+        os: [ fedora-37, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
@@ -443,7 +442,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     steps:
       - uses: actions/download-artifact@v3
         with:
