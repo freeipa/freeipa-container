@@ -13,10 +13,10 @@ set -x
 # tests/pack-data-as-image.sh freeipa-server data-fedora-37
 # podman login quay.io
 # podman tag freeipa/freeipa-server:data-fedora-37 quay.io/freeipa/freeipa-server:data-fedora-37
-# podman push quay.io/freeipa/freeipa-server:data-fedora-37
+# TMPDIR=/tmp podman push quay.io/freeipa/freeipa-server:data-fedora-37
 # podman login index.docker.io
 # podman tag freeipa/freeipa-server:data-fedora-37 docker.io/freeipa/freeipa-server:data-fedora-37
-# podman push docker.io/freeipa/freeipa-server:data-fedora-37
+# TMPDIR=/tmp podman push docker.io/freeipa/freeipa-server:data-fedora-37
 #
 
 cd "$1"
@@ -58,6 +58,6 @@ tar -cz --owner=root:0 --group=root:0 -f "$2.tar.gz" $SUM.tar $CSUM.json manifes
 rm -f $SUM.tar $CSUM.json manifest.json
 echo "$CSUM" > "$2.image"
 
-podman load -i "$2.tar.gz"
+TMPDIR=/tmp podman load -i "$2.tar.gz"
 podman tag $( cat $2.image ) freeipa/freeipa-server:$2
 
