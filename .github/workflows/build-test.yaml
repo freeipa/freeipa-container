@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-38, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
         docker: [ docker ]
         include:
           - os: rhel-9
@@ -103,10 +103,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-37
-          - os: fedora-37
+          - os: fedora-38
+          - os: fedora-38
             readonly: --read-only
-          - os: fedora-37
+          - os: fedora-38
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
@@ -122,7 +122,7 @@ jobs:
           - os: centos-8-stream
             readonly: --read-only
             ca: --external-ca
-        os: [ fedora-36, rhel-9, rhel-8, almalinux-9 ]
+        os: [ fedora-37, fedora-36, rhel-9, rhel-8, almalinux-9 ]
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
@@ -152,7 +152,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-37
+          - os: fedora-38
             readonly: --read-only
           - os: centos-9-stream
             readonly: --read-only
@@ -191,7 +191,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-37, centos-9-stream, centos-8-stream ]
+        os: [ fedora-38, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -218,7 +218,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-37, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
+        os: [ fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -250,10 +250,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-37
+          - os: fedora-38
+            data-from: fedora-37
+          - os: fedora-38
             data-from: fedora-36
-          - os: fedora-37
-            data-from: fedora-35
           - os: rhel-8
             data-from: centos-8
           - os: centos-8-stream
@@ -290,8 +290,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-37
-            data-from: fedora-36
+          - os: fedora-38
+            data-from: fedora-37
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -320,8 +320,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-37
-            data-from: fedora-36
+          - os: fedora-38
+            data-from: fedora-37
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -347,7 +347,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
@@ -383,7 +383,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-37, centos-9-stream ]
+        os: [ fedora-38, centos-9-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -407,7 +407,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-37, centos-9-stream ]
+        os: [ fedora-38, centos-9-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/stock-docker.io
@@ -443,7 +443,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-38, fedora-37, fedora-36, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     steps:
       - uses: actions/download-artifact@v3
         with:

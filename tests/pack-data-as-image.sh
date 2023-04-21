@@ -7,19 +7,20 @@ set -x
 # Example of preparing data image for upgrade testing:
 # check /etc/hosts and /etc/resolv.conf
 # mkdir -p freeipa-server/data
-# replica=none docker=podman VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-36
+# replica=none docker=podman VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-37
 # podman rm -f freeipa-master
-# tests/pack-data-as-image.sh freeipa-server data-fedora-36
+# check freeipa-server/data/var/lib/ipa/sysrestore/*-resolv.conf
+# tests/pack-data-as-image.sh freeipa-server data-fedora-37
 # podman login quay.io
-# podman tag freeipa/freeipa-server:data-fedora-36 quay.io/freeipa/freeipa-server:data-fedora-36
-# podman push quay.io/freeipa/freeipa-server:data-fedora-36
+# podman tag freeipa/freeipa-server:data-fedora-37 quay.io/freeipa/freeipa-server:data-fedora-37
+# podman push quay.io/freeipa/freeipa-server:data-fedora-37
 # podman login index.docker.io
-# podman tag freeipa/freeipa-server:data-fedora-36 docker.io/freeipa/freeipa-server:data-fedora-36
-# podman push docker.io/freeipa/freeipa-server:data-fedora-36
+# podman tag freeipa/freeipa-server:data-fedora-37 docker.io/freeipa/freeipa-server:data-fedora-37
+# podman push docker.io/freeipa/freeipa-server:data-fedora-37
 #
 
 cd "$1"
-podman run --rm -v $(pwd)/data:/data:Z registry.fedoraproject.org/fedora:36 tar cf - data > data.tar
+podman run --rm -v $(pwd)/data:/data:Z registry.fedoraproject.org/fedora:37 tar cf - data > data.tar
 SUM=$( sha256sum data.tar )
 SUM=${SUM%% *}
 mv data.tar $SUM.tar
