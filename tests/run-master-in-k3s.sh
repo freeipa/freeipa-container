@@ -17,7 +17,7 @@ else
 	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.shm.patch
 	patch tests/freeipa-replica-k3s.yaml < tests/freeipa-k3s.yaml.shm.patch
 fi
-curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 $OPTS --egress-selector-mode=disabled
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.26.3+k3s1 sh -s - --write-kubeconfig-mode 644 $OPTS --egress-selector-mode=disabled
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
 if [ -n "$2" ] ; then
