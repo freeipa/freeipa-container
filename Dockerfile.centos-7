@@ -1,5 +1,5 @@
 # Clone from the CentOS 7
-FROM registry.centos.org/centos:7
+FROM quay.io/centos/centos:centos7
 
 # Moving groupadd before freeipa installation to ensure uid and guid will be same
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy
