@@ -361,8 +361,8 @@ jobs:
         with:
           file: freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
-      - name: Download cri-dockerd
-        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/tags/v0.3.2 | jq -r '.assets[].browser_download_url' | grep jammy_amd64.deb | tee /dev/stderr | xargs curl -LO
+      - name: Download latest cri-dockerd
+        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep jammy_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
         run: sudo apt install -y ./cri-dockerd_*.deb
       - name: Unset network-plugin
@@ -420,8 +420,8 @@ jobs:
         with:
           file: freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
-      - name: Download cri-dockerd
-        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/tags/v0.3.2 | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
+      - name: Download latest cri-dockerd
+        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
       - name: Install cri-dockerd
         run: sudo apt install -y ./cri-dockerd_*.deb
       - name: Unset network-plugin
