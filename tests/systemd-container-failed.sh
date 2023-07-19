@@ -23,7 +23,7 @@ for s in $FAILED ; do
 	$docker exec $C systemctl status $s --no-pager -l || :
 done
 
-diff <( echo "$@" ) <( for s in $FAILED ; do echo $s ; done )
+diff <( for i in "$@" ; do echo $i ; done ) <( for s in $FAILED ; do echo $s ; done )
 
 echo OK $0.
 
