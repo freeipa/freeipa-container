@@ -12,9 +12,8 @@ RUN yum -y module enable idm:DL1 && yum -y install patch sudo && yum -y module i
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
 # Container image which runs systemd
-# debug: RUN test -f /etc/machine-id && test -s /etc/machine-id
-RUN echo -n > /etc/machine-id
-# debug: RUN test "$container" = oci
+# debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
+# debug: RUN test -z "$container"
 ENV container oci
 
 # Establish reasonably low open files limit in the container
