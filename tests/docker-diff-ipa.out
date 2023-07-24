@@ -9,3 +9,12 @@
 ^[AD] /usr/sys$
 ^[AD] /usr/usr$
 ^[AD] /usr/var$
+^C /usr$
+^C /usr/share$
+^C /usr/share/bash-completion$
+^C /usr/share/bash-completion/completions$
+^C /usr/share/bash-completion/completions/ds-replcheck$
+^C /usr/share/bash-completion/completions/dsconf$
+^C /usr/share/bash-completion/completions/dscreate$
+^C /usr/share/bash-completion/completions/dsctl$
+^C /usr/share/bash-completion/completions/dsidm$
