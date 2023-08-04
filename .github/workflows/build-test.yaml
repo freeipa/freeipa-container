@@ -51,6 +51,8 @@ jobs:
         with:
           org: ${{ secrets.REDHAT_ORG }}
           activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
+      - name: Ensure docker images sees the named parent image
+        run: awk '$1 == "FROM" { print $2 ; exit }' ../minimize-for-build/Dockerfile.${{ matrix.os }} | xargs ${{ matrix.docker }} pull
       - name: Build image
         run: ${{ matrix.docker }} build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
 
