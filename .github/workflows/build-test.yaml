@@ -121,7 +121,6 @@ jobs:
         os: [ fedora-37, rhel-9, rhel-8, almalinux-9 ]
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
       - uses: actions/download-artifact@v3
         with:
@@ -256,7 +255,6 @@ jobs:
             data-from: centos-8
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
       - uses: actions/download-artifact@v3
         with:
@@ -342,7 +340,6 @@ jobs:
         os: [ fedora-rawhide, fedora-38, rhel-9, rhel-8, centos-9-stream ]
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/stock-docker.io
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
       - uses: actions/download-artifact@v3
         with:
@@ -402,7 +399,6 @@ jobs:
         os: [ fedora-38, centos-9-stream ]
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/stock-docker.io
       - uses: actions/download-artifact@v3
         with:
           name: freeipa-server-${{ matrix.os }}
