@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-38, fedora-37, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-38, fedora-37, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
         docker: [ docker ]
         include:
           - os: rhel-9
@@ -112,12 +112,6 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
-          - os: centos-9-stream
-          - os: centos-9-stream
-            readonly: --read-only
-          - os: centos-9-stream
-            readonly: --read-only
-            ca: --external-ca
           - os: centos-8-stream
           - os: centos-8-stream
             readonly: --read-only
@@ -155,8 +149,6 @@ jobs:
         include:
           - os: fedora-38
             readonly: --read-only
-          - os: centos-9-stream
-            readonly: --read-only
           - os: centos-8-stream
             readonly: --read-only
           - os: centos-7
@@ -192,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-38, centos-9-stream, centos-8-stream ]
+        os: [ fedora-38, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -219,7 +211,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
+        os: [ fedora-38, rhel-9, rhel-8, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -347,7 +339,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-38, rhel-9, rhel-8, centos-8-stream ]
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
@@ -382,7 +374,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-38, centos-9-stream ]
+        os: [ fedora-38 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -406,7 +398,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-38, centos-9-stream ]
+        os: [ fedora-38 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -441,7 +433,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-38, fedora-37, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-38, fedora-37, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     steps:
       - uses: actions/download-artifact@v3
         with:
