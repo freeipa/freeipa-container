@@ -9,6 +9,9 @@ RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN yum -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ipa-server-trust-ad patch ipa-healthcheck ipa-client-epn && yum clean all
 
+# Workaround 2218209 on RHEL 9.2.z
+RUN systemd-sysusers
+
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
 
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
