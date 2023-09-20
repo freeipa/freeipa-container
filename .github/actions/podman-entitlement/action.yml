@@ -17,7 +17,6 @@ runs:
         podman run --rm --name="$NAME" \
           -v "/tmp/etc-pki-entitlement-${{ github.run_id }}":/etc/pki/entitlement-out:z \
           -v "/tmp/rhsm-${{ github.run_id }}":/etc/rhsm-out:z \
-          -e SMDEV_CONTAINER_OFF=1 \
           "${{ inputs.image }}" \
           bash -c '/usr/sbin/subscription-manager register \
                      --org="${{ inputs.org }}" \
