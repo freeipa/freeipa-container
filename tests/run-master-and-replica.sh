@@ -49,8 +49,10 @@ function wait_for_ipa_container() {
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
-	if $docker exec "$N" grep '^2' /data/volume-version \
-		&& $docker diff "$N" | tee /dev/stderr | grep . ; then
+	if ! $sudo grep '^2' $VOLUME/volume-version ; then
+		exit 1
+	fi
+	if $docker diff "$N" | tee /dev/stderr | grep . ; then
 		exit 1
 	fi
 	MACHINE_ID=$( cat $VOLUME/etc/machine-id )
