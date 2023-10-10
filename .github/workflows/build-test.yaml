@@ -23,6 +23,7 @@ jobs:
             docker: podman
           - os: rhel-7
             docker: podman
+    timeout-minutes: 15
     steps:
       - name: Install podman 4.*
         run: |
@@ -125,6 +126,7 @@ jobs:
             readonly: --read-only
             ca: --external-ca
         os: [ fedora-37, rhel-9, rhel-8, almalinux-9 ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
@@ -163,6 +165,7 @@ jobs:
             protected_regular: unset
           - os: rhel-7
             protected_regular: unset
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -193,6 +196,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-38, centos-9-stream, centos-8-stream ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -220,6 +224,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -263,6 +268,7 @@ jobs:
             data-from: centos-8
           - os: almalinux-8
             data-from: centos-8
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
@@ -292,6 +298,7 @@ jobs:
         include:
           - os: fedora-38
             data-from: fedora-37
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -322,6 +329,7 @@ jobs:
         include:
           - os: fedora-38
             data-from: fedora-37
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -348,6 +356,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-rawhide, fedora-38, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
@@ -383,6 +392,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-38, centos-9-stream ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -407,6 +417,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-38, centos-9-stream ]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -442,6 +453,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-rawhide, fedora-38, fedora-37, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+    timeout-minutes: 30
     steps:
       - uses: actions/download-artifact@v3
         with:
