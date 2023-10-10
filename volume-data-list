@@ -12,6 +12,7 @@
 /etc/krb5.keytab
 /etc/machine-id
 /etc/named.conf
+/etc/named.conf.ipa-backup
 /etc/named.keytab
 /etc/named/ipa-ext.conf
 /etc/named/ipa-options-ext.conf

@@ -1,14 +1,5 @@
 --- /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-12-18 10:04:54.000000000 +0000
 +++ /usr/lib/python3.6/site-packages/ipaplatform/base/paths.py	2021-12-22 07:32:34.865581952 +0000
-@@ -84,7 +84,7 @@
-     LDAP_CONF = "/etc/ldap.conf"
-     LIBNSS_LDAP_CONF = "/etc/libnss-ldap.conf"
-     NAMED_CONF = "/etc/named.conf"
--    NAMED_CONF_BAK = "/etc/named.conf.ipa-backup"
-+    NAMED_CONF_BAK = "/data/etc/named.conf.ipa-backup"
-     NAMED_CUSTOM_CONF = "/etc/named/ipa-ext.conf"
-     NAMED_LOGGING_OPTIONS_CONF = "/etc/named/ipa-logging-ext.conf"
-     NAMED_CUSTOM_OPTIONS_CONF = "/etc/named/ipa-options-ext.conf"
 @@ -355,7 +355,7 @@
      VAR_LOG_AUDIT = "/var/log/audit/audit.log"
      VAR_LOG_HTTPD_DIR = "/var/log/httpd"
