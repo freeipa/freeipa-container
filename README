@@ -188,6 +188,22 @@ to upgrade the configuration and data. Of course, keeping backup
 of the data directory for cases when the upgrade process fails
 is recommended.
 
+## Backup and restore
+
+Speaking of backups: the FreeIPA server container stores all
+configuration, data, and logs in one volume mounted at `/data`.
+So instead of using `ipa-backup` and `ipa-restore`, the easiest way
+to backup the container is to stop it and just copy the content of
+the directory mounted to `/data`.
+
+If you transfer that backup to different machine and you've been
+using setup with user namespace remapping (rootless containers),
+check that the `/etc/subuid` and `/etc/subgid` values used by the
+docker/podman match on both machines.
+
+You then restore the server by running a new container with a copy
+of that backup mounted to `/data`.
+
 ## IPA-enrolled client in Docker
 
 There are multiple `*-client` branches named after OS they are
