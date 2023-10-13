@@ -485,4 +485,3 @@ jobs:
           done << 'EOF'
           ${{ secrets.REGISTRY_TARGET_LIST }}
           EOF
-
