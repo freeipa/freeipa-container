@@ -238,15 +238,11 @@ jobs:
           secret: ${{ secrets.UPLOAD_SECRET }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
-      - name: Enable ssh access to self
-        run: ssh-keygen -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 400 ~/.ssh/authorized_keys && chmod o-w ~
       - name: Run master
-        shell: ssh -o StrictHostKeyChecking=no localhost bash {0}
-        run: cd ${{ github.workspace }} && docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+        run: docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
       - name: Run partial tests
         if: ${{ failure() }}
-        shell: ssh localhost bash {0}
-        run: cd ${{ github.workspace }} && docker=podman tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+        run: docker=podman tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
   test-upgrade:
     name: Upgrade from older version or build
