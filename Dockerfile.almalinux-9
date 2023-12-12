@@ -1,10 +1,6 @@
 # Build on top of base AlmaLinux 9 image
 FROM docker.io/almalinux/9-init
 
-# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1941142
-# and https://github.com/AlmaLinux/docker-images/issues/97
-COPY resolv.conf hostname /etc/
-
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
