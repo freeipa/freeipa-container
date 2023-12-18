@@ -16,13 +16,6 @@ jobs:
       matrix:
         os: [ fedora-rawhide, fedora-39, fedora-38, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
         docker: [ docker ]
-        include:
-          - os: rhel-9
-            docker: podman
-          - os: rhel-8
-            docker: podman
-          - os: rhel-7
-            docker: podman
     timeout-minutes: 15
     steps:
       - name: Install podman 4.*
@@ -125,7 +118,7 @@ jobs:
           - os: centos-8-stream
             readonly: --read-only
             ca: --external-ca
-        os: [ fedora-38, rhel-9, rhel-8, almalinux-9 ]
+        os: [ fedora-38, almalinux-9 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -162,8 +155,6 @@ jobs:
           - os: centos-8-stream
             readonly: --read-only
           - os: centos-7
-            protected_regular: unset
-          - os: rhel-7
             protected_regular: unset
     timeout-minutes: 30
     steps:
@@ -223,7 +214,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-39, rhel-9, rhel-8, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
+        os: [ fedora-39, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -256,8 +247,6 @@ jobs:
             data-from: fedora-38
           - os: fedora-39
             data-from: fedora-37
-          - os: rhel-8
-            data-from: centos-8
           - os: centos-8-stream
             data-from: centos-8
           - os: rocky-8
@@ -351,7 +340,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-39, rhel-9, rhel-8, centos-9-stream, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-39, centos-9-stream, centos-8-stream ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
