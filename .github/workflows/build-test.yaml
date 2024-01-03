@@ -106,12 +106,6 @@ jobs:
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
-          - os: centos-9-stream
-          - os: centos-9-stream
-            readonly: --read-only
-          - os: centos-9-stream
-            readonly: --read-only
-            ca: --external-ca
           - os: centos-8-stream
           - os: centos-8-stream
             readonly: --read-only
@@ -150,8 +144,6 @@ jobs:
         include:
           - os: fedora-39
             readonly: --read-only
-          - os: centos-9-stream
-            readonly: --read-only
           - os: centos-8-stream
             readonly: --read-only
           - os: centos-7
@@ -186,7 +178,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-39, centos-9-stream, centos-8-stream ]
+        os: [ fedora-39, centos-8-stream ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -214,7 +206,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-39, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
+        os: [ fedora-39, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -340,7 +332,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-39, centos-9-stream, centos-8-stream ]
+        os: [ fedora-rawhide, fedora-39, centos-8-stream ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -376,7 +368,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-39, centos-9-stream ]
+        os: [ fedora-39 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -401,7 +393,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-39, centos-9-stream ]
+        os: [ fedora-39 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -437,7 +429,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-39, fedora-38, centos-9-stream, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-39, fedora-38, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     timeout-minutes: 30
     steps:
       - uses: actions/download-artifact@v3
