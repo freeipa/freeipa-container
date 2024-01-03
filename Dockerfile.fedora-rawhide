@@ -45,7 +45,7 @@ RUN systemd-sysusers
 RUN systemd-tmpfiles --remove --create
 RUN mkdir -p /var/log/journal
 # debug: RUN ! test -f /var/lib/systemd/random-seed
-# test-addon: VOLUME [ "/var/log/journal", "/var/tmp", "/var/lib/tpm2-tss/system/keystore" ]
+# test-addon: VOLUME [ "/var/log/journal", "/var/tmp" ]
 # test: systemd-container-diff.sh list-dependencies-fedora-38.out /dev/null docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
