@@ -188,6 +188,35 @@ to upgrade the configuration and data. Of course, keeping backup
 of the data directory for cases when the upgrade process fails
 is recommended.
 
+## Running on Windows with Docker Compose
+The freeipa server requires systemd inside the container.  By default on Windows Subsystem for Linux (WSL) systemd is disabled and [must be enabled](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#systemd-support):
+
+Step 1: Stop Docker Desktop.
+Step 2: Configure WSL distro and shut it down:
+```
+C:\Users\john>bash
+john@COMPUTER:/mnt/c/Users/john$ echo -e "[boot]\nsystemd=true" | sudo tee -a /etc/wsl.conf > /dev/null
+john@COMPUTER:/mnt/c/Users/john$ exit
+wsl --shutdown
+```
+Step 3: Start Docker Desktop
+Step 4: Run `docker compose up`
+where __docker-compose.yml__ is:
+```
+services:
+  ipa:
+    image: freeipa/freeipa-server:rocky-9-4.10.2
+    hostname: ipa.example.com
+    container_name: ipa
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    environment:
+      IPA_SERVER_INSTALL_OPTS: '-r EXAMPLE.COM -N -U'
+      PASSWORD: password
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+```
+
 ## Backup and restore
 
 Speaking of backups: the FreeIPA server container stores all
