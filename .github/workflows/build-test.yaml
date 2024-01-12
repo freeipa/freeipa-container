@@ -372,70 +372,10 @@ jobs:
       - name: Run K3s and master in it
         run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }}
 
-  test-k3s-20-04:
-    name: Run with K3s on Ubuntu 20.04
-    runs-on: ubuntu-20.04
-    needs: [ build ]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ fedora-39 ]
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        with:
-          name: freeipa-server-${{ matrix.os }}
-      - name: Decrypt artifacts that were encrypted after build
-        uses: ./.github/actions/decrypt-file
-        if: ${{ startsWith(matrix.os, 'rhel-') }}
-        with:
-          file: freeipa-server-${{ matrix.os }}.tar.gz
-          secret: ${{ secrets.UPLOAD_SECRET }}
-      - name: Unzip the image
-        run: gunzip freeipa-server-${{ matrix.os }}.tar.gz
-      - name: Run K3s and master in it
-        run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }} freeipa-server-${{ matrix.os }}.tar
-
-  test-k3s-docker-20-04:
-    name: Run with K3s with docker on Ubuntu 20.04
-    runs-on: ubuntu-20.04
-    needs: [ build ]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ fedora-39 ]
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        with:
-          name: freeipa-server-${{ matrix.os }}
-      - name: Decrypt artifacts that were encrypted after build
-        uses: ./.github/actions/decrypt-file
-        if: ${{ startsWith(matrix.os, 'rhel-') }}
-        with:
-          file: freeipa-server-${{ matrix.os }}.tar.gz
-          secret: ${{ secrets.UPLOAD_SECRET }}
-      - name: Download latest cri-dockerd
-        run: curl -s ${{ github.api_url }}/repos/Mirantis/cri-dockerd/releases/latest | jq -r '.assets[].browser_download_url' | grep focal_amd64.deb | tee /dev/stderr | xargs curl -LO
-      - name: Install cri-dockerd
-        run: sudo apt install -y ./cri-dockerd_*.deb
-      - name: Unset network-plugin
-        run: |
-          sudo mkdir /etc/systemd/system/cri-docker.service.d
-          ( echo '[Service]' ; echo 'ExecStart=' ; sed 's/ExecStart=.*/& --network-plugin=/;t;d' /lib/systemd/system/cri-docker.service ) | sudo tee /etc/systemd/system/cri-docker.service.d/network-plugin.conf
-          sudo systemctl daemon-reload
-          sudo systemctl restart cri-docker
-      - name: Load image
-        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
-      - name: Run K3s and master in it
-        run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }}
-
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-22.04
-    needs: [ test-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s, test-k3s-20-04, test-k3s-docker-20-04 ]
+    needs: [ test-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
