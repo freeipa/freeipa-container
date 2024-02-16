@@ -39,7 +39,7 @@ jobs:
           && sudo apt-get update -y \
           && sudo apt-get install -y podman skopeo
         if: matrix.docker == 'podman'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Separate git work tree with just the files needed for build
         run: git worktree add --no-checkout ../minimize-for-build
       - name: Populate with the Dockerfile
@@ -92,7 +92,7 @@ jobs:
         with:
           file: freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
           secret: ${{ secrets.UPLOAD_SECRET }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
           path: freeipa-server-${{ matrix.os }}
@@ -122,9 +122,9 @@ jobs:
         os: [ fedora-38, rhel-9, rhel-8, almalinux-9 ]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -159,8 +159,8 @@ jobs:
             protected_regular: unset
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -190,8 +190,8 @@ jobs:
         os: [ fedora-39, centos-8-stream ]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -218,8 +218,8 @@ jobs:
         os: [ fedora-39, rhel-9, rhel-8, centos-8-stream, rocky-9, rocky-8, almalinux-8 ]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -258,9 +258,9 @@ jobs:
             data-from: centos-8
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -288,8 +288,8 @@ jobs:
             data-from: fedora-38
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -319,8 +319,8 @@ jobs:
             data-from: fedora-38
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -346,9 +346,9 @@ jobs:
         os: [ fedora-rawhide, fedora-39, rhel-9, rhel-8, centos-8-stream ]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Decrypt artifacts that were encrypted after build
@@ -383,7 +383,7 @@ jobs:
         os: [ fedora-rawhide, fedora-39, fedora-38, centos-8-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
     timeout-minutes: 30
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
       - name: Prepare authentication file
