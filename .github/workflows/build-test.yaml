@@ -141,6 +141,37 @@ jobs:
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
+  test-rootless-docker:
+    name: Run with rootless docker
+    runs-on: ubuntu-22.04
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ fedora-rawhide, fedora-39, centos-8-stream, rhel-9, rocky-9, almalinux-9 ]
+        readonly: [ --read-only ]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo systemctl disable --now docker.service docker.socket
+      - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: freeipa-server-${{ matrix.os }}
+      - name: Decrypt artifacts that were encrypted after build
+        uses: ./.github/actions/decrypt-file
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        with:
+          file: freeipa-server-${{ matrix.os }}.tar.gz
+          secret: ${{ secrets.UPLOAD_SECRET }}
+      - name: Load image
+        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - name: Run master and replica
+        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+      - name: Run partial tests
+        if: ${{ failure() }}
+        run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+
   test-docker-20-04:
     name: Run with docker on Ubuntu 20.04
     runs-on: ubuntu-20.04
@@ -375,7 +406,7 @@ jobs:
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-22.04
-    needs: [ test-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s ]
+    needs: [ test-docker, test-rootless-docker, test-docker-20-04, test-podman, test-rootless-podman, test-upgrade, test-upgrade-20-04, test-k3s ]
     if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false

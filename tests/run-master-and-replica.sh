@@ -80,11 +80,18 @@ function run_ipa_container() {
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
 		if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-			# we assume unified cgroup v2 and docker with userns remapping enabled
-			OPTS="--sysctl net.ipv6.conf.all.disable_ipv6=0"
+			# cgroup v2
+			if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
+				OPTS="--cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
+			else
+				# docker with userns remapping enabled
+				:
+			fi
 		else
-			OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
+			# cgroup v1
+			OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro"
 		fi
+		OPTS="$OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi
 	if [ -n "$seccomp" ] ; then
 		OPTS="$OPTS --security-opt seccomp=$seccomp"
@@ -138,6 +145,14 @@ elif [ "$readonly" == "--read-only" ] ; then
 	readonly_run="$readonly --dns=127.0.0.1"
 fi
 
+skip_opts=
+if [ -f /sys/fs/cgroup/cgroup.controllers ] \
+	&& [ "$docker" == docker ] \
+	&& $docker info --format '{{ .ClientInfo.Context }}' | grep -q rootless ; then
+	skip_opts=--skip-mem-check
+fi
+
+
 fresh_install=true
 if [ -f "$VOLUME/build-id" ] ; then
 	# If we were given already populated volume, just run the container
@@ -152,7 +167,7 @@ else
 	if [ "$(id -u)" != 0 -a "$docker" == podman -a "$replica" != none ] ; then
 		dns_opts="$dns_opts --ip-address=172.29.0.1"
 	fi
-	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts --no-ntp $ca
+	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts $skip_opts --no-ntp $ca
 
 	if [ -n "$ca" ] ; then
 		$docker rm -f freeipa-master
@@ -160,7 +175,7 @@ else
 		$sudo cp tests/generate-external-ca.sh $VOLUME/
 		$docker run --rm -v $VOLUME:/data:Z --entrypoint /data/generate-external-ca.sh "$IMAGE"
 		# For external CA, provide the certificate for the second stage
-		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --no-ntp \
+		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $skip_opts --no-ntp \
 			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
 	fi
 fi
@@ -227,7 +242,7 @@ SETUP_CA=--setup-ca
 if [ $(( $RANDOM % 2 )) == 0 ] ; then
 	SETUP_CA=
 fi
-run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin $SETUP_CA --no-ntp
+run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin $SETUP_CA $skip_opts --no-ntp
 date
 if $docker diff freeipa-master | tee /dev/stderr | grep . ; then
 	exit 1
