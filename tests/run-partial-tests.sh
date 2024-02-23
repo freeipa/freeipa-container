@@ -21,11 +21,17 @@ function run_and_wait_for () {
 	OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
+		OPTS="--tmpfs /run --tmpfs /tmp --sysctl net.ipv6.conf.all.disable_ipv6=0"
 		if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-			# we assume unified cgroup v2 and docker with userns remapping enabled
-			OPTS="--tmpfs /run --tmpfs /tmp --sysctl net.ipv6.conf.all.disable_ipv6=0"
+			# cgroup v2
+			if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
+				OPTS="$OPTS --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
+			else
+				# docker with userns remapping enabled
+				:
+			fi
 		else
-			OPTS="--tmpfs /run --tmpfs /tmp -v /sys/fs/cgroup:/sys/fs/cgroup:ro --sysctl net.ipv6.conf.all.disable_ipv6=0"
+			OPTS="$OPTS -v /sys/fs/cgroup:/sys/fs/cgroup:ro"
 		fi
 	fi
 	if [ -n "$seccomp" ] ; then
