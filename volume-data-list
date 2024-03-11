@@ -22,7 +22,7 @@
 /etc/pam.d/
 /etc/pki/ca-trust/
 /etc/pki/nssdb/
-/etc/pki/pki-tomcat
+/etc/pki/pki-tomcat/
 /etc/pkcs11/modules/
 /etc/rndc.key
 /etc/samba/
