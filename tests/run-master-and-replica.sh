@@ -154,6 +154,10 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ] \
 	&& [ "$docker" == docker ] \
 	&& $docker info --format '{{ .ClientInfo.Context }}' | grep -q rootless ; then
 	skip_opts=--skip-mem-check
+elif [ -e /sys/fs/cgroup/unified ] \
+	&& [ "$CGROUP_UNIFIED_IGNORE" != 1 ] \
+	&& [ "$docker" == docker ] ; then
+	skip_opts=--skip-mem-check
 fi
 
 
