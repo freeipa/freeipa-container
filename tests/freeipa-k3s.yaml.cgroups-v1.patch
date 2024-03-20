@@ -6,7 +6,7 @@
        mountPath: /data
 +    - name: cgroups
 +      mountPath: /sys/fs/cgroup
-+      readOnly: true
++      readOnly: false
      ports:
      - containerPort: 80
        protocol: TCP
@@ -16,4 +16,4 @@
        claimName: freeipa-data-pvc
 +  - name: cgroups
 +    hostPath:
-+      path: /sys/fs/cgroup
++      path: /sys/fs/cgroup/unified

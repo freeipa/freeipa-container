@@ -89,7 +89,11 @@ function run_ipa_container() {
 			fi
 		else
 			# cgroup v1
-			OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro"
+			if [ -e /sys/fs/cgroup/unified ] && [ "$CGROUP_UNIFIED_IGNORE" != 1 ] ; then
+				OPTS="-v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw"
+			else
+				OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro"
+			fi
 		fi
 		OPTS="$OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi

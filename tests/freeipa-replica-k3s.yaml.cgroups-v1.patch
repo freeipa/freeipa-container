@@ -1,12 +1,12 @@
 --- tests/freeipa-replica-k3s.yaml
 +++ tests/freeipa-replica-k3s.yaml
-@@ -77,6 +77,9 @@ spec:
+@@ -77,6 +77,8 @@ spec:
      volumeMounts:
      - name: freeipa-server-data
        mountPath: /data
 +    - name: cgroups
 +      mountPath: /sys/fs/cgroup
-+      readOnly: true
++      readOnly: false
      ports:
      - containerPort: 80
        protocol: TCP
@@ -16,4 +16,4 @@
        claimName: freeipa-replica-pvc
 +  - name: cgroups
 +    hostPath:
-+      path: /sys/fs/cgroup
++      path: /sys/fs/cgroup/unified

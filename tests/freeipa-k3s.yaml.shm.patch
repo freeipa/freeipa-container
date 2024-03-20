@@ -3,7 +3,7 @@
 @@ -66,6 +66,8 @@
      - name: cgroups
        mountPath: /sys/fs/cgroup
-       readOnly: true
+       readOnly: false
 +    - mountPath: /dev/shm
 +      name: dshm
      ports:
@@ -12,7 +12,7 @@
 @@ -104,3 +106,6 @@
    - name: cgroups
      hostPath:
-       path: /sys/fs/cgroup
+       path: /sys/fs/cgroup/unified
 +  - name: dshm
 +    emptyDir:
 +      medium: Memory
