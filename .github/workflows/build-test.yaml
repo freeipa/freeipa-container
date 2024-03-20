@@ -183,10 +183,6 @@ jobs:
             readonly: --read-only
           - os: centos-8-stream
             readonly: --read-only
-          - os: centos-7
-            protected_regular: unset
-          - os: rhel-7
-            protected_regular: unset
     timeout-minutes: 30
     steps:
       - run: ls -la /sys/fs/cgroup/unified
