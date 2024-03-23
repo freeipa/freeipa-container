@@ -1,0 +1,96 @@
+--- /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2021-11-11 19:04:00.000000000 +0000
++++ /usr/lib/python3.9/site-packages/ipaplatform/base/paths.py	2021-12-01 08:07:44.447878661 +0000
+@@ -355,7 +355,7 @@
+     VAR_LOG_AUDIT = "/var/log/audit/audit.log"
+     VAR_LOG_HTTPD_DIR = "/var/log/httpd"
+     VAR_LOG_HTTPD_ERROR = "/var/log/httpd/error_log"
+-    IPABACKUP_LOG = "/var/log/ipabackup.log"
++    IPABACKUP_LOG = "/data/var/log/ipabackup.log"
+     IPACLIENT_INSTALL_LOG = "/var/log/ipaclient-install.log"
+     IPACLIENT_UNINSTALL_LOG = "/var/log/ipaclient-uninstall.log"
+     IPACLIENTSAMBA_INSTALL_LOG = "/var/log/ipaclientsamba-install.log"
+@@ -363,7 +363,7 @@
+     IPAREPLICA_CA_INSTALL_LOG = "/var/log/ipareplica-ca-install.log"
+     IPAREPLICA_CONNCHECK_LOG = "/var/log/ipareplica-conncheck.log"
+     IPAREPLICA_INSTALL_LOG = "/var/log/ipareplica-install.log"
+-    IPARESTORE_LOG = "/var/log/iparestore.log"
++    IPARESTORE_LOG = "/data/var/log/iparestore.log"
+     IPASERVER_ENABLESID_LOG = "/var/log/ipaserver-enable-sid.log"
+     IPASERVER_INSTALL_LOG = "/var/log/ipaserver-install.log"
+     IPASERVER_ADTRUST_INSTALL_LOG = "/var/log/ipaserver-adtrust-install.log"
+--- /usr/lib/tmpfiles.d/var.conf	2018-10-29 00:59:14.000000000 +0000
++++ /usr/lib/tmpfiles.d/var.conf	2018-12-14 10:37:58.607898037 +0000
+@@ -12,9 +12,9 @@
+ L /var/run - - - - ../run
+ 
+ d /var/log 0755 - - -
+-f /var/log/wtmp 0664 root utmp -
+-f /var/log/btmp 0660 root utmp -
+-f /var/log/lastlog 0664 root utmp -
++L /var/log/wtmp - - - - /data/var/log/wtmp
++L /var/log/btmp - - - - /data/var/log/btmp
++L /var/log/lastlog - - - - /data/var/log/lastlog
+ 
+ d /var/cache 0755 - - -
+
+#
+# Workaround https://issues.redhat.com/browse/RHEL-20465
+#
+--- /usr/lib/python3.9/site-packages/pki/server/__init__.py	2024-02-21 21:03:00.000000000 +0000
++++ /usr/lib/python3.9/site-packages/pki/server/__init__.py	2024-03-23 11:50:13.324528547 +0000
+@@ -105,7 +105,7 @@
+ class PKIServer(object):
+ 
+     BASE_DIR = '/var/lib/pki'
+-    CONFIG_DIR = '/etc/pki'
++    CONFIG_DIR = '/data/etc/pki'
+     LOG_DIR = '/var/log/pki'
+     SHARE_DIR = '/usr/share/pki'
+     REGISTRY_DIR = SYSCONFIG_DIR + '/pki'
+#
+# Workaround https://github.com/freeipa/freeipa-container/issues/313
+#
+--- /usr/lib64/python3.9/shutil.py	2019-12-18 18:48:49.000000000 +0000
++++ /usr/lib64/python3.9/shutil.py	2020-03-11 16:17:24.727098610 +0000
+@@ -160,6 +160,8 @@
+                 raise
+             return
+         for name in names:
++            if name == 'security.selinux':
++                continue
+             try:
+                 value = os.getxattr(src, name, follow_symlinks=follow_symlinks)
+                 os.setxattr(dst, name, value, follow_symlinks=follow_symlinks)
+#
+# rndc-confgen does not seem to write through the
+# /etc/rndc.key -> /data/etc/rndc.key symlink
+#
+--- /usr/libexec/generate-rndc-key.sh	2021-01-22 19:46:55.000000000 +0000
++++ /usr/libexec/generate-rndc-key.sh	2021-01-25 08:00:24.598827718 +0000
+@@ -15,18 +15,18 @@
+
+ # This script generates /etc/rndc.key if doesn't exist AND if there is no rndc.conf
+
+-if [ ! -s /etc/rndc.key -a ! -s /etc/rndc.conf ]; then
+-  echo -n $"Generating /etc/rndc.key:"
+-  if /usr/sbin/rndc-confgen -a -A hmac-sha256 > /dev/null 2>&1
++if [ ! -s /data/etc/rndc.key -a ! -s /etc/rndc.conf ]; then
++  echo -n $"Generating /data/etc/rndc.key:"
++  if /usr/sbin/rndc-confgen -c /data/etc/rndc.key -a -A hmac-sha256 > /dev/null 2>&1
+   then
+-    chmod 640 /etc/rndc.key
+-    chown root:named /etc/rndc.key
+-    [ -x /sbin/restorecon ] && /sbin/restorecon /etc/rndc.key
+-    success $"/etc/rndc.key generation"
++    chmod 640 /data/etc/rndc.key
++    chown root:named /data/etc/rndc.key
++    [ -x /sbin/restorecon ] && /sbin/restorecon /data/etc/rndc.key
++    success $"/data/etc/rndc.key generation"
+     echo
+   else
+     rc=$?
+-    failure $"/etc/rndc.key generation"
++    failure $"/data/etc/rndc.key generation"
+     echo
+     exit $rc
+   fi
