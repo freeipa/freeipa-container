@@ -1,0 +1,69 @@
+name: tests/run-partial-tests.sh
+
+on:
+  schedule:
+    - cron: '42 3 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Full set of tests
+        required: true
+        type: boolean
+        default: false
+      os:
+        description: OS / Dockerfile
+        type: string
+      docker:
+        description: docker or podman
+        type: choice
+        options:
+          - docker
+          - podman
+
+jobs:
+  gen-matrix:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.dispatch-matrix.outputs.matrix }}${{ steps.default-matrix.outputs.matrix }}
+    steps:
+      - id: default-matrix
+        run: |
+          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-39', 'fedora-38', 'centos-9-stream', 'centos-8-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
+          'docker': [ 'docker', 'podman' ], \
+          'include': [ \
+            { 'os': 'centos-7', 'docker': 'docker', 'runs-on': 'ubuntu-20.04', 'cgroup-unified-ignore': '1', 'protected_regular': 'unset' }, \
+            { 'os': 'rhel-9', 'docker': 'podman' }, \
+            { 'os': 'rhel-8', 'docker': 'podman' } \
+          ] \
+          }" | tee -a $GITHUB_OUTPUT
+        if: github.event_name != 'workflow_dispatch' || inputs.full
+      - id: dispatch-matrix
+        run: |
+          echo "matrix={'os': [ '${{ inputs.os }}' ], 'docker': [ '${{ inputs.docker }}' ]}" | tee -a $GITHUB_OUTPUT
+        if: github.event_name == 'workflow_dispatch' && ! inputs.full
+
+  test:
+    runs-on: ${{ matrix.runs-on || 'ubuntu-22.04' }}
+    needs: [ gen-matrix ]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.gen-matrix.outputs.matrix) }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install podman 4.*
+        uses: ./.github/actions/install-podman-4
+        if: matrix.docker == 'podman' && matrix.runs-on != 'ubuntu-20.04'
+      - uses: ./.github/actions/docker-cgroups-ubuntu-22
+        if: matrix.docker == 'docker' && matrix.runs-on != 'ubuntu-20.04'
+      - run: sudo sysctl fs.protected_regular=0
+        if: ${{ matrix.protected_regular == 'unset' }}
+      - name: For RHEL builds, use entitlements
+        if: ${{ startsWith(matrix.os, 'rhel-') }}
+        uses: ./.github/actions/podman-entitlement
+        with:
+          org: ${{ secrets.REDHAT_ORG }}
+          activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
+      - name: Run partial tests
+        run: CGROUP_UNIFIED_IGNORE=${{ matrix.cgroup-unified-ignore }} docker=${{ matrix.docker }} tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
