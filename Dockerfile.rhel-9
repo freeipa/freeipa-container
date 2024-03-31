@@ -23,7 +23,6 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
-# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh
 
 # Minimize the systemd setup
@@ -39,11 +38,13 @@ RUN systemctl set-default container-ipa.target
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
+# podman in systemd mode mounts /var/log/journal volume which creates
+# the directory anyway and pollutes podman diff, just pre-create it
 RUN mkdir /var/log/journal
 # debug: RUN ! test -f /var/lib/systemd/random-seed
 RUN systemd-tmpfiles --remove --create
 # debug: RUN ! test -f /var/lib/systemd/random-seed
-# test-addon: VOLUME [ "/var/log/journal", "/var/tmp" ]
+# test-addon: VOLUME [ "/var/tmp" ]
 # test: systemd-container-diff.sh list-dependencies-rhel-9.out /dev/null docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
@@ -54,7 +55,6 @@ ADD hostnamectl-wrapper /usr/bin/nisdomainname
 COPY patches/ipa-rhel-9.patch /root
 RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-rhel-9.patch | tee /dev/null | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
 
-# test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
@@ -78,7 +78,7 @@ RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
-VOLUME [ "/tmp", "/run", "/data", "/var/log/journal" ]
+VOLUME [ "/tmp", "/run", "/data" ]
 
 COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]

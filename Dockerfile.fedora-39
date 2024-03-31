@@ -25,7 +25,6 @@ RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
 
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
-# test-addon: VOLUME [ "/var/log/journal" ]
 # test: systemd-container-failed.sh
 
 # Minimize the systemd setup
@@ -43,9 +42,9 @@ RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
 RUN systemd-sysusers
 RUN systemd-tmpfiles --remove --create
-RUN mkdir -p /var/log/journal
+# debug: RUN test -d /var/log/journal
 # debug: RUN ! test -f /var/lib/systemd/random-seed
-# test-addon: VOLUME [ "/var/log/journal", "/var/tmp" ]
+# test-addon: VOLUME [ "/var/tmp" ]
 # test: systemd-container-diff.sh list-dependencies-fedora-38.out /dev/null docker-diff-minimal-fedora-23.out
 
 # Prepare for basic ipa-server-install in container
@@ -53,7 +52,6 @@ RUN mkdir -p /var/log/journal
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
 
-# test-addon: VOLUME [ "/var/log/journal" ]
 ## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
@@ -73,7 +71,7 @@ RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
 RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
 
 RUN echo 2.0 > /etc/volume-version
-VOLUME [ "/tmp", "/run", "/data", "/var/log/journal" ]
+VOLUME [ "/tmp", "/run", "/data" ]
 
 COPY init-data-minimal /usr/local/sbin/init
 ENTRYPOINT [ "/usr/local/sbin/init" ]
