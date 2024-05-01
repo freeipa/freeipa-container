@@ -34,6 +34,20 @@
  d /var/cache 0755 - - -
 
 #
+# Workaround https://issues.redhat.com/browse/RHEL-20465
+#
+--- /usr/lib/python3.9/site-packages/pki/server/__init__.py	2024-02-21 21:03:00.000000000 +0000
++++ /usr/lib/python3.9/site-packages/pki/server/__init__.py	2024-03-23 11:50:13.324528547 +0000
+@@ -105,7 +105,7 @@
+ class PKIServer(object):
+ 
+     BASE_DIR = '/var/lib/pki'
+-    CONFIG_DIR = '/etc/pki'
++    CONFIG_DIR = '/data/etc/pki'
+     LOG_DIR = '/var/log/pki'
+     SHARE_DIR = '/usr/share/pki'
+     REGISTRY_DIR = SYSCONFIG_DIR + '/pki'
+#
 # Workaround https://github.com/freeipa/freeipa-container/issues/313
 #
 --- /usr/lib64/python3.9/shutil.py	2019-12-18 18:48:49.000000000 +0000
