@@ -247,7 +247,7 @@ jobs:
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
   test-podman:
-    name: Run with sudo podman
+    name: Run with sudo podman 4
     runs-on: ubuntu-22.04
     needs: [ build ]
     strategy:
@@ -257,6 +257,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Install podman 4.*
+        uses: ./.github/actions/install-podman-4
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -275,7 +277,7 @@ jobs:
         run: docker='sudo podman' tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
   test-rootless-podman:
-    name: Run with rootless podman
+    name: Run with rootless podman 4
     runs-on: ubuntu-22.04
     needs: [ build ]
     strategy:
@@ -285,6 +287,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Install podman 4.*
+        uses: ./.github/actions/install-podman-4
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -343,7 +347,7 @@ jobs:
         run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-upgrade-podman:
-    name: Upgrade from older version with podman
+    name: Upgrade from older version with podman 4
     runs-on: ubuntu-22.04
     needs: [ build ]
     strategy:
@@ -355,6 +359,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Install podman 4.*
+        uses: ./.github/actions/install-podman-4
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
