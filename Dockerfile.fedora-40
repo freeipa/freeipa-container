@@ -1,6 +1,9 @@
 # Clone from the Fedora 40 image
 FROM registry.fedoraproject.org/fedora:40
 
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1941142
+COPY resolv.conf hostname /etc/
+
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
 
