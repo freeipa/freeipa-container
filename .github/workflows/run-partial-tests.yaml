@@ -29,7 +29,7 @@ jobs:
     steps:
       - id: default-matrix
         run: |
-          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'centos-8-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
+          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
           'docker': [ 'docker', 'podman' ], \
           'include': [ \
             { 'os': 'centos-7', 'docker': 'docker', 'runs-on': 'ubuntu-20.04', 'cgroup-unified-ignore': '1', 'protected_regular': 'unset' }, \
