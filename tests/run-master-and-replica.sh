@@ -89,10 +89,8 @@ function run_ipa_container() {
 			fi
 		else
 			# cgroup v1
-			if [ -e /sys/fs/cgroup/unified ] && [ "$CGROUP_UNIFIED_IGNORE" != 1 ] ; then
+			if [ -e /sys/fs/cgroup/unified ] ; then
 				OPTS="-v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw"
-			else
-				OPTS="-v /sys/fs/cgroup:/sys/fs/cgroup:ro"
 			fi
 		fi
 		OPTS="$OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0"
@@ -155,7 +153,6 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ] \
 	&& $docker info --format '{{ .ClientInfo.Context }}' | grep -q rootless ; then
 	skip_opts=--skip-mem-check
 elif [ -e /sys/fs/cgroup/unified ] \
-	&& [ "$CGROUP_UNIFIED_IGNORE" != 1 ] \
 	&& [ "$docker" == docker ] ; then
 	skip_opts=--skip-mem-check
 fi

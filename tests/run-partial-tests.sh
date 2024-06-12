@@ -32,10 +32,8 @@ function run_and_wait_for () {
 			fi
 		else
 			# cgroup v1
-			if [ -e /sys/fs/cgroup/unified ] && [ "$CGROUP_UNIFIED_IGNORE" != 1 ] ; then
+			if [ -e /sys/fs/cgroup/unified ] ; then
 				OPTS="$OPTS -v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw"
-			else
-				OPTS="$OPTS -v /sys/fs/cgroup:/sys/fs/cgroup:ro"
 			fi
 		fi
 	fi

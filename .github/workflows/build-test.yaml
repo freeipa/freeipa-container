@@ -197,47 +197,6 @@ jobs:
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
 
-  test-docker-20-04-cgroups-v1:
-    name: Run with docker on Ubuntu 20.04 with forced cgroups v1
-    runs-on: ubuntu-20.04
-    needs: [ build ]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: fedora-40
-            readonly: --read-only
-          - os: centos-9-stream
-            readonly: --read-only
-          - os: centos-7
-            protected_regular: unset
-          - os: rhel-7
-            protected_regular: unset
-    env:
-      CGROUP_UNIFIED_IGNORE: 1
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: freeipa-server-${{ matrix.os }}
-      - name: Decrypt artifacts that were encrypted after build
-        uses: ./.github/actions/decrypt-file
-        if: ${{ startsWith(matrix.os, 'rhel-') }}
-        with:
-          file: freeipa-server-${{ matrix.os }}.tar.gz
-          secret: ${{ secrets.UPLOAD_SECRET }}
-      - name: Load image
-        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
-      - name: Disable fs.protected_regular
-        if: ${{ matrix.protected_regular == 'unset' }}
-        run: sudo sysctl fs.protected_regular=0
-      - name: Run master and replica
-        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
-      - name: Run partial tests
-        if: ${{ failure() }}
-        run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
-
   test-podman:
     name: Run with sudo podman 4
     runs-on: ubuntu-22.04

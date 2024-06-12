@@ -32,7 +32,6 @@ jobs:
           echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9' ], \
           'docker': [ 'docker', 'podman' ], \
           'include': [ \
-            { 'os': 'centos-7', 'docker': 'docker', 'runs-on': 'ubuntu-20.04', 'cgroup-unified-ignore': '1', 'protected_regular': 'unset' }, \
             { 'os': 'rhel-9', 'docker': 'podman' }, \
             { 'os': 'rhel-8', 'docker': 'podman' } \
           ] \
@@ -66,4 +65,4 @@ jobs:
           org: ${{ secrets.REDHAT_ORG }}
           activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
       - name: Run partial tests
-        run: CGROUP_UNIFIED_IGNORE=${{ matrix.cgroup-unified-ignore }} docker=${{ matrix.docker }} tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+        run: docker=${{ matrix.docker }} tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
