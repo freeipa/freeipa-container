@@ -275,7 +275,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-40, rhel-9, rhel-8, centos-9-stream, rocky-9, rocky-8, almalinux-8 ]
+        os: [ fedora-40, rhel-9, rhel-8, centos-9-stream, rocky-9, rocky-8 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -442,7 +442,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8, centos-7 ]
+        os: [ fedora-rawhide, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, centos-7 ]
     timeout-minutes: 30
     steps:
       - uses: actions/download-artifact@v4
