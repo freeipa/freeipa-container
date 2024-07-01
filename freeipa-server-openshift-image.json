@@ -68,17 +68,6 @@
                             "kind": "DockerImage",
                             "name": "quay.io/freeipa/freeipa-server:centos-9-stream"
                         }
-                    },
-                    {
-                        "name": "rhel-7",
-                        "annotations": {
-                            "openshift.io/display-name": "Identity Management Server on RHEL 7",
-                            "tags": "idm, freeipa, identity management"
-                        },
-                        "from": {
-                            "kind": "DockerImage",
-                            "name": "registry.access.redhat.com/rhel7/ipa-server"
-                        }
                     }
                 ]
             }

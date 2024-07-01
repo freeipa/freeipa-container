@@ -21,8 +21,6 @@ jobs:
             docker: podman
           - os: rhel-8
             docker: podman
-          - os: rhel-7
-            docker: podman
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
