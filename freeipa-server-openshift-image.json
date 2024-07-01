@@ -70,17 +70,6 @@
                         }
                     },
                     {
-                        "name": "centos-7",
-                        "annotations": {
-                            "openshift.io/display-name": "FreeIPA Server on CentOS 7",
-                            "tags": "freeipa, identity management"
-                        },
-                        "from": {
-                            "kind": "DockerImage",
-                            "name": "quay.io/freeipa/freeipa-server:centos-7"
-                        }
-                    },
-                    {
                         "name": "rhel-7",
                         "annotations": {
                             "openshift.io/display-name": "Identity Management Server on RHEL 7",

@@ -112,14 +112,6 @@ so invoking `docker run` with option
 
 should work.
 
-As a last resort, on cgroups v1-only systems, it may be necessary to
-invoke `docker run` with option
-
-    -v /sys/fs/cgroup:/sys/fs/cgroup:ro
-
-Use of cgroups v1 is needed to run ancient CentOS 7 / RHEL 7 based
-FreeIPA containers.
-
 On SELinux enabled systems, it may be also necessary to enable running
 systemd in containers by setting SELinux boolean `container_manage_cgroup`
 on the host with
