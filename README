@@ -327,6 +327,14 @@ or
 
 which can uncover the general issues with running systemd in containers.
 
+If the container fails to start, exits without message or has a general issue, 
+read all of the log files in `data/var/log/` if you mapped volume according
+to directions
+
+``` bash
+tail data/var/log/*
+```
+
 ## CI in GitHub Actions
 
 To check the general health of the project, see
