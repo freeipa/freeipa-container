@@ -327,13 +327,13 @@ or
 
 which can uncover the general issues with running systemd in containers.
 
-If the container fails to start, exits without message or has a general issue, 
-read all of the log files in `data/var/log/` if you mapped volume according
-to directions
-
+If the container fails to start, exits without message or has a general issue
+during first run/install
 ``` bash
-tail data/var/log/*
+tail data/var/log/ipa-server-configure-first.log data/var/log/ipa-server-configure-first.log
 ```
+
+If it has a general issue after install see look at logs in `data/var/log`
 
 ## CI in GitHub Actions
 
