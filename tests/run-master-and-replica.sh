@@ -229,7 +229,7 @@ $docker rm -f freeipa-master
 $sudo mv $VOLUME/build-id $VOLUME/build-id.initial
 uuidgen | $sudo tee $VOLUME/build-id
 $sudo touch -r $VOLUME/build-id.initial $VOLUME/build-id
-run_ipa_container $IMAGE freeipa-master
+run_ipa_container $IMAGE freeipa-master $dns_opts
 
 # Wait for the services to start to the point when SSSD is operational
 for i in $( seq 1 20 ) ; do

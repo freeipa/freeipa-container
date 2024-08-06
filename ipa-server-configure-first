@@ -29,31 +29,40 @@ test ! -f /run/ipa/debug-trace || set -x
 HOSTNAME=$( cat /data/hostname )
 
 function update_server_ip_address () {
-	CURRENT_IP=$( dig +short -t A $HOSTNAME )
+	CURRENT_IP="$( dig +short -t A $HOSTNAME ) $( dig +short -t AAAA $HOSTNAME )"
+	CURRENT_IP=$(echo $CURRENT_IP | xargs -n1 | sort | xargs)
 	MY_IP=''
 	if [ -f /run/ipa/ipa-server-ip ] ; then
 		MY_IP=$( cat /run/ipa/ipa-server-ip )
-		if [ "$CURRENT_IP" == "$MY_IP" ] ; then
+		if [ "$CURRENT_IP" == "$(echo $MY_IP | xargs -n1 | sort | xargs)" ] ; then
 			return
 		fi
 	else
-		for i in $( /sbin/ip addr show | awk '/inet .*global/ { split($2,a,"/"); print a[1]; }' ) ; do
-			if [ "$CURRENT_IP" == "$i" ] ; then
-				return
-			fi
-			if [ -z "$MY_IP" ] ; then
-				MY_IP="$i"
-			fi
-		done
+		INTERFACES_IPS=$( /sbin/ip addr show | awk '/inet(6?) .*global/ { split($2,a,"/"); print a[1]; }' )
+		INTERFACES_IPS=$(echo $INTERFACES_IPS | xargs -n1 | sort | xargs)
+		if [ "$INTERFACES_IPS" == "$CURRENT_IP" ] ; then
+			return
+		fi
+		MY_IP="$INTERFACES_IPS"
 	fi
 
 	kdestroy -A
 	kinit -k
 	(
-		echo "update add $HOSTNAME 180 A $MY_IP"
+		for m in $MY_IP ; do
+			DNS_TYPE_RECORD='A'
+			if [[ "$m" =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]] ; then
+				DNS_TYPE_RECORD='AAAA'
+			fi
+			echo "update add $HOSTNAME 180 $DNS_TYPE_RECORD $m"
+		done
 		for i in $CURRENT_IP ; do
-			if [ "$i" != "$MY_IP" ] ; then
-				echo "update delete $HOSTNAME A $i"
+			DNS_TYPE_RECORD='A'
+			if [[ "$i" =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]] ; then
+				DNS_TYPE_RECORD='AAAA'
+			fi
+			if [[ ! "$MY_IP" =~ "$i" ]] ; then
+				echo "update delete $HOSTNAME $DNS_TYPE_RECORD $i"
 			fi
 		done
 		echo "send"
@@ -62,8 +71,9 @@ function update_server_ip_address () {
 	kdestroy -A
 
 	while true ; do
-		NEW_IP=$( dig +short -t A $HOSTNAME )
-		if [ "$NEW_IP" == "$MY_IP" ] ; then
+		NEW_IP="$( dig +short -t A $HOSTNAME ) $( dig +short -t AAAA $HOSTNAME )"
+		NEW_IP=$(echo $NEW_IP | xargs -n1 | sort | xargs)
+		if [ "$NEW_IP" == "$(echo $MY_IP | xargs -n1 | sort | xargs)" ] ; then
 			break
 		fi
 		sleep 1
@@ -73,7 +83,7 @@ function update_server_ip_address () {
 function wait_for_dns () {
 	local TIMEOUT="$1"
 	local WAIT_UNTIL="$((SECONDS + TIMEOUT))"
-	while ! host -t A $HOSTNAME > /dev/null ; do
+	while ! (host -t A $HOSTNAME > /dev/null && host -t AAAA $HOSTNAME > /dev/null) ; do
 		if [[ "$SECONDS" -lt "$WAIT_UNTIL" ]]; then
 			sleep 1
 			continue
