@@ -1,6 +1,11 @@
 # Clone from the CentOS 7
 FROM quay.io/centos/centos:centos7
 
+# Use the vault repo since CentOS 7 is EOL 
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+
 # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1941142
 COPY resolv.conf hostname /etc/
 
