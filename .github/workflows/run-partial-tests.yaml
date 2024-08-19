@@ -29,7 +29,7 @@ jobs:
     steps:
       - id: default-matrix
         run: |
-          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9' ], \
+          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
           'docker': [ 'docker', 'podman' ], \
           'include': [ \
             { 'os': 'rhel-9', 'docker': 'podman' }, \
