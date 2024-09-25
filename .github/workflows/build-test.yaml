@@ -263,6 +263,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: fedora-rawhide
+            data-from: fedora-40
           - os: fedora-40
             data-from: fedora-39
           - os: fedora-40
