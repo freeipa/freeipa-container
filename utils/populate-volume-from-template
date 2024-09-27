@@ -45,14 +45,15 @@ while [ -n "$VOLUME" ] ; do
 		fi
 		if ! [ -e "$VOLUME/$f" ] ; then
 			tar cf - "$f" | ( cd "$VOLUME" && tar xf - )
+			continue
 		elif [ "$f" == "build-id" ] ; then
-			true
+			continue
 		elif [ -L "$f" ] && [ -L "$VOLUME/$f" ] ; then
 			if [ "$( readlink $f )" != "$( readlink $VOLUME/$f )" ] ; then
 				echo "There are symlinks $f in both $VOLUME-template $VOLUME, with different targets, leaving in $VOLUME as is."
 			fi
 		elif [ -L "$f" ] && ! [ -L "$VOLUME/$f" ] ; then
-			echo "There is symlink $f in $VOLUME-template and not on $VOLUME, leaving in $VOLUME as is."
+			echo "There is symlink $f in $VOLUME-template and not on $VOLUME, leaving $VOLUME as is."
 		elif ! [ -L "$f" ] && [ -L "$VOLUME/$f" ] ; then
 			echo "There is symlink $f in $VOLUME and not on $VOLUME-template, leaving in $VOLUME as is."
 		elif [ -f "$VOLUME/$f" ] && ! cmp -s "$VOLUME/$f" "$VOLUME-template/$f" ; then
@@ -95,6 +96,10 @@ while [ -n "$VOLUME" ] ; do
 				cp -vfp "$VOLUME-template/$f" "$VOLUME/$f"
 			fi
 		fi
+		[ -e "$VOLUME/$f" ] || continue
+		chgrp -c -h --reference="$f" "$VOLUME/$f"
+		chown -c -h --reference="$f" "$VOLUME/$f"
+		[ -L "$VOLUME/$f" ] || chmod -c --reference="$f" "$VOLUME/$f"
 	done
 	rm -rf "$VOLUME/.configfiles" "$VOLUME/.configfiles-noreplace"
 	tar cf - .configfiles .configfiles-noreplace | ( cd "$VOLUME" && tar xf - )
