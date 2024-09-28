@@ -59,8 +59,6 @@ jobs:
         if: matrix.docker == 'podman' && matrix.runs-on != 'ubuntu-20.04'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.docker == 'docker' && matrix.runs-on != 'ubuntu-20.04'
-      - run: sudo sysctl fs.protected_regular=0
-        if: ${{ matrix.protected_regular == 'unset' }}
       - name: For RHEL builds, use entitlements
         if: ${{ startsWith(matrix.os, 'rhel-') }}
         uses: ./.github/actions/podman-entitlement

@@ -148,9 +148,6 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
-      - name: Disable fs.protected_regular
-        if: ${{ matrix.protected_regular == 'unset' }}
-        run: sudo sysctl fs.protected_regular=0
       - name: Run master and replica
         run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
