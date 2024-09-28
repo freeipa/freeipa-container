@@ -29,13 +29,16 @@ jobs:
     steps:
       - id: default-matrix
         run: |
-          echo "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
-          'docker': [ 'docker', 'podman' ], \
-          'include': [ \
-            { 'os': 'rhel-9', 'docker': 'podman' }, \
-            { 'os': 'rhel-8', 'docker': 'podman' } \
-          ] \
-          }" | tee -a $GITHUB_OUTPUT
+          (
+          echo -n "matrix={'os': [ 'fedora-rawhide', 'fedora-40', 'fedora-39', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-9', 'almalinux-8' ], \
+          'docker': [ 'docker', 'podman' ] "
+          if [ -n "${{ secrets.REDHAT_ORG }}" -a -n "${{ secrets.REDHAT_ACTIVATIONKEY }}" ] ; then
+            echo -n ", 'include': [ \
+              { 'os': 'rhel-9', 'docker': 'podman' }, \
+              { 'os': 'rhel-8', 'docker': 'podman' } \
+              ]"
+          fi
+          echo "}" ) | tee -a $GITHUB_OUTPUT
         if: github.event_name != 'workflow_dispatch' || inputs.full
       - id: dispatch-matrix
         run: |
