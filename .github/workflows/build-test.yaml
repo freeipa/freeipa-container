@@ -76,13 +76,19 @@ jobs:
           - os: fedora-40
           - os: fedora-40
             readonly: --read-only
+            volume: freeipa-data
           - os: fedora-40
             readonly: --read-only
             ca: --external-ca
           - os: fedora-rawhide
+          - os: fedora-rawhide
+            readonly: --read-only
+            ca: --external-ca
+            volume: freeipa-data
           - os: centos-9-stream
           - os: centos-9-stream
             readonly: --read-only
+            volume: freeipa-data
           - os: centos-9-stream
             readonly: --read-only
             ca: --external-ca
@@ -96,8 +102,10 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - run: docker volume create ${{ matrix.volume }}
+        if: ${{ matrix.volume }} == freeipa-data
       - name: Run master and replica
-        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} VOLUME=${{ matrix.volume }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -109,8 +117,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-40, rocky-9, almalinux-8 ]
-        readonly: [ --read-only ]
+        include:
+          - os: fedora-rawhide
+            readonly: --read-only
+          - os: fedora-40
+            readonly: --read-only
+            volume: freeipa-data
+          - os: rocky-9
+            readonly: --read-only
+          - os: almalinux-8
+            readonly: --read-only
+            volume: freeipa-data
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -121,8 +138,10 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+      - run: docker volume create ${{ matrix.volume }}
+        if: ${{ matrix.volume }} == freeipa-data
       - name: Run master and replica
-        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: readonly=${{ matrix.readonly }} ca=${{ matrix.ca }} VOLUME=${{ matrix.volume }} seccomp=${{ matrix.seccomp }} replica=${{ matrix.replica }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -185,7 +204,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-40, centos-9-stream, rocky-9, almalinux-8 ]
+        include:
+          - os: fedora-40
+            readonly: --read-only
+            volume: freeipa-data
+          - os: almalinux-9
+            readonly: --read-only
+            volume: freeipa-data
+          - os: rocky-8
+            readonly: --read-only
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -196,8 +223,10 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | podman load
-      - name: Run master
-        run: docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+      - run: podman volume create ${{ matrix.volume }}
+        if: ${{ matrix.volume }} == freeipa-data
+      - name: Run master and replica
+        run: docker=podman VOLUME=${{ matrix.volume }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
       - name: Run partial tests
         if: ${{ failure() }}
         run: docker=podman tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}

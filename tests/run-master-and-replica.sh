@@ -11,6 +11,20 @@ sudo=sudo
 
 BASE=ipa1
 VOLUME=${VOLUME:-/tmp/freeipa-test-$$/data}
+if test "$VOLUME" != "${VOLUME#/}" ; then
+	mkdir -p "$VOLUME"
+fi
+
+function setup_sudo() {
+	if test "$VOLUME" == "${VOLUME#/}" ; then
+		sudo="$docker run --rm -i --security-opt label=disable -v $VOLUME:/$VOLUME docker.io/library/busybox"
+	elif test -O $VOLUME/build-id ; then
+		sudo=
+	else
+		sudo=sudo
+	fi
+}
+setup_sudo
 
 function wait_for_ipa_container() {
 	set +x
@@ -43,9 +57,6 @@ function wait_for_ipa_container() {
 		fi
 	done
 	date
-	if test -O $VOLUME/build-id ; then
-		sudo=
-	fi
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		exit "$EXIT_STATUS"
 	fi
@@ -55,7 +66,7 @@ function wait_for_ipa_container() {
 	if $docker diff "$N" | tee /dev/stderr | grep . ; then
 		exit 1
 	fi
-	MACHINE_ID=$( cat $VOLUME/etc/machine-id )
+	MACHINE_ID=$( $sudo cat $VOLUME/etc/machine-id )
 	# Check that journal landed on volume and not in host's /var/log/journal
 	$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
 	if [ -e /var/log/journal/$MACHINE_ID ] ; then
@@ -73,9 +84,15 @@ function run_ipa_container() {
 	HOSTNAME=ipa.example.test
 	if [ "$N" == "freeipa-replica" ] ; then
 		HOSTNAME=replica.example.test
-		VOLUME=/tmp/freeipa-test-$$/data-replica
+		if test "$VOLUME" == "${VOLUME#/}" ; then
+			VOLUME=$VOLUME-$$-replica
+			$docker volume create $VOLUME
+		else
+			VOLUME=/tmp/freeipa-test-$$/data-replica
+			mkdir -p $VOLUME
+		fi
+		setup_sudo
 	fi
-	mkdir -p $VOLUME
 	OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
@@ -159,7 +176,7 @@ fi
 
 
 fresh_install=true
-if [ -f "$VOLUME/build-id" ] ; then
+if $sudo test -f "$VOLUME/build-id" ; then
 	# If we were given already populated volume, just run the container
 	fresh_install=false
 	run_ipa_container $IMAGE freeipa-master exit-on-finished
@@ -177,7 +194,8 @@ else
 	if [ -n "$ca" ] ; then
 		$docker rm -f freeipa-master
 		date
-		$sudo cp tests/generate-external-ca.sh $VOLUME/
+		cat tests/generate-external-ca.sh | $sudo tee $VOLUME/generate-external-ca.sh > /dev/null
+		$sudo chmod a+x $VOLUME/generate-external-ca.sh
 		$docker run --rm -v $VOLUME:/data:Z --entrypoint /data/generate-external-ca.sh "$IMAGE"
 		# For external CA, provide the certificate for the second stage
 		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $skip_opts --no-ntp \

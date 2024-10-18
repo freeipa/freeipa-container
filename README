@@ -141,6 +141,14 @@ and with docker using
 When running in rootless mode, make sure the volume directory on
 the host is owned by uid which becomes uid 0 in the container.
 
+Of course, the volume can also be created in the container system,
+for example with
+
+    podman volume create freeipa-data
+    podman run --name freeipa-server-container -ti \
+        -h ipa.example.test --read-only \
+        -v freeipa-data:/data:Z <image> [ ... ]
+
 ### Initial FreeIPA master setup
 
 Upon the first invocation with empty directory mounted to `/data`,
