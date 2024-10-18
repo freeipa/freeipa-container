@@ -217,9 +217,7 @@ jobs:
           - os: fedora-40
             data-from: fedora-38
           - os: rocky-8
-            data-from: centos-8
-          - os: almalinux-8
-            data-from: centos-8
+            data-from: centos-8-certs-updated-data
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -244,6 +242,8 @@ jobs:
         include:
           - os: fedora-40
             data-from: fedora-39
+          - os: almalinux-8
+            data-from: centos-8-certs-updated-data
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
