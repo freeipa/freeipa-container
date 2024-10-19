@@ -45,18 +45,6 @@ jobs:
               "body": "This issue was automatically created by GitHub Action\n\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.\n",
               "labels": ["image-build-fail" ]
               }'
-      - name: Check resulting labels
-        run: |
-          skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
-          diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
-        shell: bash
-        if: matrix.docker != 'podman'
-      - name: Check resulting labels
-        run: |
-          skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
-          diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
-        shell: bash
-        if: matrix.docker == 'podman'
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
       - name: Save image
@@ -66,6 +54,11 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
           path: freeipa-server-${{ matrix.os }}
           retention-days: 1
+      - name: Check resulting labels
+        run: |
+          skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels'
+          diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels' ) || true
+        shell: bash
 
   test-docker:
     name: Run with docker
