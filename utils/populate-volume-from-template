@@ -97,7 +97,6 @@ while [ -n "$VOLUME" ] ; do
 			fi
 		fi
 		[ -e "$VOLUME/$f" ] || continue
-		chgrp -c -h --reference="$f" "$VOLUME/$f"
 		chown -c -h --reference="$f" "$VOLUME/$f"
 		[ -L "$VOLUME/$f" ] || chmod -c --reference="$f" "$VOLUME/$f"
 	done
