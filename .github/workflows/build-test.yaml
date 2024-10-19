@@ -49,11 +49,13 @@ jobs:
         run: |
           skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
           diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-daemon:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
+        shell: bash
         if: matrix.docker != 'podman'
       - name: Check resulting labels
         run: |
           skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels'
           diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect containers-storage:localhost/freeipa-server:${{ matrix.os }} | jq '.Labels' ) || true
+        shell: bash
         if: matrix.docker == 'podman'
       - name: Create directory for artifacts
         run: mkdir freeipa-server-${{ matrix.os }}
