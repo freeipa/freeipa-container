@@ -18,10 +18,14 @@ fi
 function setup_sudo() {
 	if test "$VOLUME" == "${VOLUME#/}" ; then
 		sudo="$docker run --rm -i --security-opt label=disable -v $VOLUME:/$VOLUME docker.io/library/busybox"
-	elif test -O $VOLUME/build-id ; then
-		sudo=
 	else
-		sudo=sudo
+		$docker run --rm -v $VOLUME:/data:Z docker.io/library/busybox touch /data/.test-permissions
+		if echo test > $VOLUME/.test-permissions ; then
+			sudo=
+		else
+			sudo=sudo
+		fi
+		rm -f $VOLUME/.test-permissions || :
 	fi
 }
 setup_sudo
