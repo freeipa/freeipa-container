@@ -70,17 +70,32 @@ function update_server_ip_address () {
 	done
 }
 
+function wait_for_dns () {
+	local TIMEOUT="$1"
+	local WAIT_UNTIL="$((SECONDS + TIMEOUT))"
+	while ! host -t A $HOSTNAME > /dev/null ; do
+		if [[ "$SECONDS" -lt "$WAIT_UNTIL" ]]; then
+			sleep 1
+			continue
+		fi
+		return 1
+	done
+        return 0
+}
+
 if [ "$1" == update-self-ip-address ] ; then
 	exec >> /var/log/ipa-server-run.log 2>&1
 	echo "$(date) $0 $@"
 
 	if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 		# Wait until DNS is up and running and resolving
-		while ! host -t A $HOSTNAME > /dev/null ; do
-			sleep 1
-		done
-		update_server_ip_address
-		host $HOSTNAME
+		if wait_for_dns 60; then
+			update_server_ip_address
+			host $HOSTNAME
+		else
+			echo "Unable to resolve \"${HOSTNAME}\". Is --dns=127.0.0.1 set for the container?" >&2
+			exit 2
+		fi
 	else
 		echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
 	fi
@@ -211,10 +226,12 @@ else
 
 		if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
-			while ! host -t A $HOSTNAME > /dev/null ; do
-				sleep 1
-			done
-			update_server_ip_address
+			if wait_for_dns 180; then
+				update_server_ip_address
+			else
+				echo "Unable to resolve \"${HOSTNAME}\". Is --dns=127.0.0.1 set for the container?" >&2
+				exit 2
+			fi
 		else
 			echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
 		fi
