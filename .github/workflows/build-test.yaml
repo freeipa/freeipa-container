@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        os: [ fedora-rawhide, fedora-41, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
         docker: [ docker ]
     timeout-minutes: 15
     steps:
@@ -68,13 +68,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-40
-          - os: fedora-40
+          - os: fedora-41
+          - os: fedora-41
             readonly: --read-only
             volume: freeipa-data
-          - os: fedora-40
+          - os: fedora-41
             readonly: --read-only
-            ca: --external-ca
           - os: fedora-rawhide
           - os: fedora-rawhide
             readonly: --read-only
@@ -87,7 +86,7 @@ jobs:
           - os: centos-9-stream
             readonly: --read-only
             ca: --external-ca
-        os: [ fedora-39, almalinux-9, rocky-8 ]
+        os: [ fedora-40, fedora-39, almalinux-9, rocky-8 ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +114,7 @@ jobs:
         include:
           - os: fedora-rawhide
             readonly: --read-only
-          - os: fedora-40
+          - os: fedora-41
             readonly: --read-only
             volume: freeipa-data
           - os: rocky-9
@@ -149,7 +148,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-40
+          - os: fedora-41
             readonly: --read-only
           - os: centos-9-stream
             readonly: --read-only
@@ -175,7 +174,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-40, centos-9-stream ]
+        os: [ fedora-41, centos-9-stream ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -200,7 +199,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-40
+          - os: fedora-41
             readonly: --read-only
             volume: freeipa-data
           - os: almalinux-9
@@ -235,11 +234,13 @@ jobs:
       matrix:
         include:
           - os: fedora-rawhide
+            data-from: fedora-41
+          - os: fedora-41
+            data-from: fedora-41
+          - os: fedora-41
             data-from: fedora-40
           - os: fedora-40
             data-from: fedora-39
-          - os: fedora-40
-            data-from: fedora-38
           - os: rocky-8
             data-from: centos-8-certs-updated-data
     timeout-minutes: 20
@@ -264,8 +265,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-40
-            data-from: fedora-39
+          - os: fedora-41
+            data-from: fedora-40
           - os: almalinux-8
             data-from: centos-8-certs-updated-data
     timeout-minutes: 20
@@ -293,8 +294,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: fedora-40
-            data-from: fedora-39
+          - os: fedora-41
+            data-from: fedora-41
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -315,7 +316,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-40, rocky-9, almalinux-8, centos-9-stream ]
+        os: [ fedora-rawhide, fedora-41, rocky-9, almalinux-8, centos-9-stream ]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -346,7 +347,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        os: [ fedora-rawhide, fedora-41, fedora-40, fedora-39, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
     timeout-minutes: 30
     steps:
       - uses: actions/download-artifact@v4
