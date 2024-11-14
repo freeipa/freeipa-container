@@ -292,12 +292,6 @@ and also use the `--add-host` option to the `docker run` / `podman run`
 with the same IP address, especially when running the container
 as read only.
 
-Alternatively, the `IPA_SERVER_IP` environment variable via the
-`-e` option to `docker run` / `podman run` can be used to
-define what IP address should the FreeIPA server put to DNS as its
-address. Using this mechanism will however not update the `ipa-ca`
-record.
-
 ## Debugging
 
 The container scripts provide some options for debugging:

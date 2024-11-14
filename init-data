@@ -271,8 +271,35 @@ if [ $SHOW_LOG == 1 ] ; then
 	)
 fi
 
-if [ -n "$IPA_SERVER_IP" ] ; then
-	echo "$IPA_SERVER_IP" > /run/ipa/ipa-server-ip
+function parse_ip_address () {
+	if [ $# -eq 0 ] ; then
+		echo "You need to pass argument with file path to this function"
+		exit 1
+	fi
+	local IPS=''
+	IFS=$'\n'
+	for i in $( cat $1 ) ; do
+		if [[ "$i" =~ ^'--ip-address'.*$ ]] ; then
+			if [ -z "$IPS" ] ; then
+				IPS=${i:13}
+				continue
+			fi
+			IPS="${IPS} ${i:13}"
+		fi
+	done
+	unset IFS
+	echo "$IPS"
+}
+IPA_SERVER_IPS=''
+IPA_SERVER_IPS=$(parse_ip_address $DATA_OPTIONS_FILE)
+RUN_IPA_SERVER_IPS=$(parse_ip_address $OPTIONS_FILE)
+
+if [ -n "$RUN_IPA_SERVER_IPS" ] ; then
+	IPA_SERVER_IPS=$RUN_IPA_SERVER_IPS
+fi
+
+if [ -n "$IPA_SERVER_IPS" ] ; then
+	echo "$IPA_SERVER_IPS" > /run/ipa/ipa-server-ip
 fi
 
 exec /usr/sbin/init --show-status=false $SYSTEMD_OPTS
