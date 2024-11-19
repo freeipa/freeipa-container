@@ -276,19 +276,21 @@ function parse_ip_address () {
 		echo "You need to pass argument with file path to this function"
 		exit 1
 	fi
-	local IPS=''
-	IFS=$'\n'
-	for i in $( cat $1 ) ; do
-		if [[ "$i" =~ ^'--ip-address'.*$ ]] ; then
-			if [ -z "$IPS" ] ; then
-				IPS=${i:13}
-				continue
+	if [ -f "$1" ] ; then
+		local IPS=''
+		IFS=$'\n'
+		for i in $( cat $1 ) ; do
+			if [[ "$i" =~ ^'--ip-address'.*$ ]] ; then
+				if [ -z "$IPS" ] ; then
+					IPS=${i:13}
+					continue
+				fi
+				IPS="${IPS} ${i:13}"
 			fi
-			IPS="${IPS} ${i:13}"
-		fi
-	done
-	unset IFS
-	echo "$IPS"
+		done
+		unset IFS
+		echo "$IPS"
+	fi
 }
 IPA_SERVER_IPS=''
 IPA_SERVER_IPS=$(parse_ip_address $DATA_OPTIONS_FILE)
