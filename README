@@ -292,11 +292,18 @@ and also use the `--add-host` option to the `docker run` / `podman run`
 with the same IP address, especially when running the container
 as read only.
 
-Alternatively, the `IPA_SERVER_IP` environment variable via the
-`-e` option to `docker run` / `podman run` can be used to
-define what IP address should the FreeIPA server put to DNS as its
-address. Using this mechanism will however not update the `ipa-ca`
-record.
+By default the container will attempt to update the FreeIPA
+server's IPv4 address in the internal DNS server to its internal
+address (as seen in the container) upon each startup, using the
+systemd service `ipa-server-update-self-ip-address` in the container.
+You can disable this mechanism by setting the `IPA_SERVER_IP`
+environment variable to `no-update`, via the `-e` option to
+`docker run` / `podman run`, or by exec-ing to the container and running
+`systemctl disable ipa-server-update-self-ip-address.service`.
+
+Alternatively, the `IPA_SERVER_IP` environment variable can be
+used to force the IPv4 address DNS record to a specific value.
+Using this mechanism will however not update the `ipa-ca` record.
 
 ## Debugging
 

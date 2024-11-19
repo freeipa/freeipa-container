@@ -103,7 +103,7 @@ spec:
     - name: IPA_SERVER_INSTALL_OPTS
       value: "-U -r CLUSTER.LOCAL --setup-dns --no-forwarders --no-ntp --ip-address=10.43.201.201"
     - name: IPA_SERVER_IP
-      value: 10.43.201.201
+      value: no-update
     readinessProbe:
       exec:
         command: [ "/usr/bin/systemctl", "status", "ipa" ]

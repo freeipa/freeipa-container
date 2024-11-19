@@ -27,6 +27,10 @@ set -e
 test ! -f /run/ipa/debug-trace || set -x
 
 HOSTNAME=$( cat /data/hostname )
+IPA_SERVER_IP=
+if [ -f /run/ipa/ipa-server-ip ] ; then
+	IPA_SERVER_IP=$( cat /run/ipa/ipa-server-ip )
+fi
 
 function update_server_ip_address () {
 	CURRENT_IP=$( dig +short -t A $HOSTNAME )
@@ -87,7 +91,9 @@ if [ "$1" == update-self-ip-address ] ; then
 	exec >> /var/log/ipa-server-run.log 2>&1
 	echo "$(date) $0 $@"
 
-	if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+	if [ "$IPA_SERVER_IP" == no-update ] ; then
+		echo "FreeIPA server IP address update disabled, skipping update-self-ip-address."
+	elif systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ; then
 		# Wait until DNS is up and running and resolving
 		if wait_for_dns 60; then
 			update_server_ip_address
@@ -224,7 +230,7 @@ else
 			exit
 		fi
 
-		if systemctl is-active -q named named-pkcs11 || [ -f /run/ipa/ipa-server-ip ] ; then
+		if [ "$IPA_SERVER_IP" != no-update ] && ( systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ) ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			if wait_for_dns 180; then
 				update_server_ip_address
