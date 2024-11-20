@@ -87,7 +87,7 @@ jobs:
             readonly: --read-only
             ca: --external-ca
         os: [ fedora-40, fedora-39, almalinux-9, rocky-8 ]
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
@@ -122,7 +122,7 @@ jobs:
           - os: almalinux-8
             readonly: --read-only
             volume: freeipa-data
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - run: sudo systemctl disable --now docker.service docker.socket
@@ -175,7 +175,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-41, centos-9-stream ]
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - name: Install podman 4.*
@@ -317,7 +317,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-41, rocky-9, almalinux-8, centos-9-stream ]
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
