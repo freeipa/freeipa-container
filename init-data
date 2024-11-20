@@ -202,7 +202,9 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 	fi
 	if [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' -o "$COMMAND" = 'ipa-replica-install' ] ; then
-			echo "$IPA_SERVER_INSTALL_OPTS" >> $OPTIONS_FILE
+			for item in $IPA_SERVER_INSTALL_OPTS ; do
+				printf '%q\n' $item >> $OPTIONS_FILE
+			done
 		else
 			echo "Warning: ignoring environment variable IPA_SERVER_INSTALL_OPTS." >&2
 		fi
@@ -278,20 +280,30 @@ function parse_ip_address () {
 	fi
 	if [ -f "$1" ] ; then
 		local IPS=''
-		IFS=$'\n'
-		for i in $( cat $1 ) ; do
-			if [[ "$i" =~ ^'--ip-address'.*$ ]] ; then
-				if [ -z "$IPS" ] ; then
-					IPS=${i:13}
+		IFS=$'\n' read -d '' -r -a lines < $1
+		for i in ${!lines[@]} ; do
+			if [[ "${lines[i]}" =~ ^'--ip-address'.*$ ]] ; then
+				# check that the parameter value is in the same line
+				if [ -n "$(echo ${lines[i]} | cut -s -d '=' -f 2)" -o -n "$(echo ${lines[i]} | cut -s -d ' ' -f 2)" ] ; then
+					if [ -z "$IPS" ] ; then
+						IPS=${lines[i]:13}
+						continue
+					fi
+					IPS="${IPS} ${lines[i]:13}"
 					continue
 				fi
-				IPS="${IPS} ${i:13}"
+				if [ -z "$IPS" ] ; then
+					IPS=${lines[i+1]}
+					continue
+				fi
+				IPS="$IPS ${lines[i+1]}"
 			fi
 		done
 		unset IFS
 		echo "$IPS"
 	fi
 }
+
 IPA_SERVER_IPS=''
 IPA_SERVER_IPS=$(parse_ip_address $DATA_OPTIONS_FILE)
 RUN_IPA_SERVER_IPS=$(parse_ip_address $OPTIONS_FILE)
@@ -302,6 +314,11 @@ fi
 
 if [ -n "$IPA_SERVER_IPS" ] ; then
 	echo "$IPA_SERVER_IPS" > /run/ipa/ipa-server-ip
+fi
+
+# for compatibility with oldest freeipa versions
+if [ -n "$IPA_SERVER_IP" ] ; then
+	echo "$IPA_SERVER_IP" > /run/ipa/ipa-server-ip
 fi
 
 exec /usr/sbin/init --show-status=false $SYSTEMD_OPTS
