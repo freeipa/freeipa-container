@@ -95,6 +95,8 @@ spec:
         secretKeyRef:
           name: freeipa-server-password
           key: admin.password
+    - name: IPA_SERVER_IP
+      value: 10.43.202.202
     readinessProbe:
       exec:
         command: [ "/usr/bin/systemctl", "status", "ipa" ]

@@ -51,10 +51,12 @@ if ! test -f /etc/resolv.conf.backup ; then
 	sudo mv /etc/resolv.conf /etc/resolv.conf.backup
 fi
 sudo systemctl stop systemd-resolved.service || :
-echo nameserver $( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service ) | sudo tee /etc/resolv.conf
+IPA_SERVER_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service )
+echo nameserver $IPA_SERVER_IP | sudo tee /etc/resolv.conf
 curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
 curl -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep -q utilisateur
 echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
+dig +short $IPA_SERVER_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_SERVER_IP
 kill $MASTER_LOGS_PID 2> /dev/null || :
 trap - EXIT
 
@@ -77,5 +79,9 @@ IPA_REPLICA_HOSTNAME=$( kubectl exec pod/freeipa-replica -- hostname -f )
 curl -Lk https://$IPA_REPLICA_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
 curl -H "Referer: https://$IPA_REPLICA_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_REPLICA_HOSTNAME/ipa/i18n_messages | grep -q utilisateur
 echo Secret123 | kubectl exec -i pod/freeipa-replica -- kinit admin
+IPA_REPLICA_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-replica-service )
+dig +short $IPA_REPLICA_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_REPLICA_IP
 kill $REPLICA_LOGS_PID 2> /dev/null || :
 trap - EXIT
+
+echo OK $0.
