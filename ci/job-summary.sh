@@ -2,13 +2,19 @@
 
 set -e
 
+# To make debugging easier, we will output to stdout when run on terminal
+[ -t 0 ] || exec >> $GITHUB_STEP_SUMMARY
+
+if [ "$1" == --legend ] ; then
+	echo ---
+	echo 'Legend: 🟢 — new image, compared to the one in registry; 🔷 — test is run with image that matches one in registry'
+	exit
+fi
+
 DIR="$1"
 TITLE="$2"
 
 cd $DIR
-
-# To make debugging easier, we will output to stdout when run on terminal
-[ -t 0 ] || exec >> $GITHUB_STEP_SUMMARY
 
 echo "## $TITLE"
 
@@ -94,7 +100,13 @@ while read d ; do
 		yq '.jobs.build.strategy.matrix.os[]' < ../.github/workflows/build-test.yaml \
 			| while read i ; do
 				echo -n '      <td>'
-				[ -f "$d/os=$i" ] && echo -n '🟢' || true
+				if test -f "$d/os=$i" ; then
+					if test -f ../fresh-image/$i ; then
+						echo -n '🟢'
+					else
+						echo -n '🔷'
+					fi
+				fi
 				echo '</td>'
 			done
 		echo '    </tr>'

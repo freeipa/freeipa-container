@@ -57,8 +57,27 @@ jobs:
       - name: Check resulting labels
         run: |
           skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels'
-          diff -u <( skopeo inspect docker://quay.io/freeipa/freeipa-server:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels' ) || true
+          CHECK_REPO=quay.io/freeipa/freeipa-server
+          diff -u <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels' ) || true
+          mkdir fresh-image
+          if cmp \
+            <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} \
+              | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) \
+            <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz \
+              | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) ; then
+            echo Newly built freeipa-server:${{ matrix.os }} is the same as image at $CHECK_REPO.
+          else
+            echo ${{ matrix.os }} > fresh-image/${{ matrix.os }}
+            echo "fresh-image=true" >> $GITHUB_OUTPUT
+          fi
         shell: bash
+        id: check-fresh-image
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fresh-image-${{ matrix.os }}
+          path: fresh-image
+          retention-days: 1
+        if: steps.check-fresh-image.outputs.fresh-image == 'true'
 
   master-and-replica:
     name: Run
@@ -338,9 +357,15 @@ jobs:
   job-summary:
     name: FreeIPA tests summary
     runs-on: ubuntu-latest
+    needs: [ build ]
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fresh-image-*
+          path: fresh-image
+          merge-multiple: true
       - run: |
           yq '.jobs.master-and-replica.strategy.matrix.include[] | "run/runtime=" + .runtime + "/readonly=" + (.readonly // "") + "/ca=" + (.ca // "") + "/volume=" + (.volume // "") + "/runs-on=" + .runs-on + "/os=" + .os' < .github/workflows/build-test.yaml \
               | while read f ; do mkdir -p "$( dirname "$f" )" ; touch "$f" ; done
@@ -353,6 +378,7 @@ jobs:
           yq '.jobs.test-k3s.strategy.matrix.os[] | "k8s/kubernetes=k3s/os=" + .' < .github/workflows/build-test.yaml \
               | while read f ; do mkdir -p "$( dirname "$f" )" ; touch "$f" ; done
           ci/job-summary.sh k8s 'Test in Kubernetes'
+      - run: ci/job-summary.sh --legend
 
   test-subscription:
     # Workaround https://github.com/actions/runner/issues/1138
