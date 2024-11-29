@@ -36,8 +36,8 @@ STOPSIGNAL RTMIN+3
 # Minimize the systemd setup
 RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l \! -lname /dev/null | xargs rm -v
 RUN systemctl mask systemd-logind.service
-COPY patches/minimal-fedora-39.patch /root/
-RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-39.patch
+COPY patches/minimal-fedora-42.patch /root/
+RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-42.patch
 # debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
 
 RUN ln -s /usr/lib/systemd/system/dbus-broker.service /usr/lib/systemd/system/dbus.service
