@@ -62,6 +62,13 @@ function wait_for_ipa_container() {
 	done
 	date
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
+		if [ "$N" == "freeipa-replica" ] ; then
+			$sudo tail -100 $VOLUME/var/log/ipareplica-install.log
+		else
+			$sudo tail -100 $VOLUME/var/log/ipaserver-install.log
+		fi
+		echo '---'
+		$sudo tail -150 $VOLUME/var/log/ipaclient-install.log
 		exit "$EXIT_STATUS"
 	fi
 	if ! $sudo grep '^2' $VOLUME/volume-version ; then
