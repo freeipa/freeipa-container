@@ -229,8 +229,9 @@ else
 			systemctl poweroff
 			exit
 		fi
-
-		if [ "$IPA_SERVER_IP" != no-update ] && ( systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ) ; then
+		if [ "$IPA_SERVER_IP" == no-update ] ; then
+			echo "FreeIPA server IP address update disabled, skipping update-self-ip-address."
+		elif ( systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ) ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			if wait_for_dns 180; then
 				update_server_ip_address
