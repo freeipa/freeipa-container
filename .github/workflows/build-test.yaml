@@ -220,7 +220,7 @@ jobs:
       - run: podman volume create ${{ matrix.volume }}
         if: ${{ matrix.volume }} == freeipa-data
       - name: Run master and replica
-        run: docker=podman VOLUME=${{ matrix.volume }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+        run: docker=podman VOLUME=${{ matrix.volume }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
       - name: Run partial tests
         if: ${{ failure() }}
         run: docker=podman tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
@@ -417,5 +417,5 @@ jobs:
       - name: Build image
         run: podman build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
       - name: Run master
-        run: docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }} && podman pod ls -q | xargs podman pod rm -f
+        run: docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
