@@ -250,8 +250,8 @@ for i in $( seq 1 20 ) ; do
 done
 (
 set -x
-$docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep -q '\.*\..*\.'
-$docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -Fq '0 100 389 ipa.example.test.'
+seq 15 -1 0 | while read i ; do $docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep -q '\.*\..*\.' && break ; sleep 5 ; [ $i == 0 ] && false ; done
+seq 15 -1 0 | while read i ; do $docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -Fq '0 100 389 ipa.example.test.' && break ; sleep 5 ; [ $i == 0 ] && false ; done
 
 $docker exec freeipa-master bash -c 'yes Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
