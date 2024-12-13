@@ -255,7 +255,7 @@ jobs:
       - name: Populate volume with data
         run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --security-opt label=disable --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
       - name: Run master and replica
-        run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-upgrade-podman:
     name: Upgrade from older version with podman 4
@@ -284,7 +284,7 @@ jobs:
       - name: Copy the content of the volume to directory
         run: mkdir /tmp/freeipa-data && podman run --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
       - name: Run master and replica
-        run: docker=podman VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: docker=podman VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-upgrade-20-04:
     name: Upgrade from older version or build on Ubuntu 20.04
@@ -307,7 +307,7 @@ jobs:
       - name: Populate volume with data
         run: docker volume create loaded-data && docker create --name loaded-data -v loaded-data:/data:z quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop && mkdir /tmp/freeipa-data && docker run --security-opt label=disable --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
       - name: Run master and replica
-        run: VOLUME=/tmp/freeipa-data replica=none tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-k3s:
     name: Run with K3s with docker
