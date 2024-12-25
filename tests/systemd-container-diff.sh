@@ -11,7 +11,7 @@ D="$4"
 docker=${docker:-docker}
 
 $docker exec $C systemctl status --no-pager -l
-FAILED=$( $docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend | tee /dev/stderr | sed 's/ .*//' | sort )
+FAILED=$( $docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend --plain | tee /dev/stderr | sed 's/ .*//' | sort )
 for s in $FAILED ; do
 	$docker exec $C systemctl status $s --no-pager -l || :
 done
