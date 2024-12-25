@@ -4,13 +4,13 @@ FROM registry.fedoraproject.org/fedora:rawhide
 # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1941142
 COPY resolv.conf hostname /etc/
 
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
+RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
+
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
-	&& dnf install -y --setopt=install_weak_deps=False shadow-utils \
-	&& groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy \
-	&& groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad freeipa-healthcheck freeipa-client-epn patch \
 	&& dnf clean all
 
