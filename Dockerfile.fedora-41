@@ -6,6 +6,7 @@ COPY resolv.conf hostname /etc/
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
+RUN groupadd -g 285 sssd; useradd -u 285 -g 285 -c 'User for sssd' -r -d /run/sssd/ -s '/sbin/nologin' sssd
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
@@ -14,7 +15,7 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad freeipa-healthcheck freeipa-client-epn patch \
 	&& dnf clean all
 
-# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285):" | wc -l ) -eq 5
 
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
 RUN systemctl mask rpc-gssd.service
