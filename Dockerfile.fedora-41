@@ -24,6 +24,8 @@ RUN mkdir /usr/lib/systemd/system/sssd.service.d
 # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=2334087
 RUN ( echo '[Service]' ; sed '/^CapabilityBoundingSet=/!d; s/CAP_DAC_READ_SEARCH/& CAP_DAC_OVERRIDE/' /usr/lib/systemd/system/sssd.service ) > /usr/lib/systemd/system/sssd.service.d/capabilities.conf
 RUN setcap cap_dac_override+ep /usr/libexec/sssd/ldap_child
+# Stop the sssd.service from changing the /etc/sssd symlink
+RUN ( echo '[Service]' ; echo 'ExecStartPre=' ; sed '/ExecStartPre/!d; s/-R/-R -H/g' /usr/lib/systemd/system/sssd.service ) > /usr/lib/systemd/system/sssd.service.d/avoid-chown-chmod-on-image.conf
 
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
