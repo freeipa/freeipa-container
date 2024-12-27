@@ -143,6 +143,9 @@ if [ "$1" == upgrade ] ; then
 		if ! grep -q "\b$HOSTNAME\b" /etc/hosts ; then
 			echo "127.0.0.2 $HOSTNAME" >> /etc/hosts
 		fi
+		echo "NOTE:" >&2
+		echo "Consider setting --dns=127.0.0.1 when using internal DNS server." >&2
+		echo "The mechanism which sets it now will be removed from images in April 2025." >&2
 	fi
 	# Removing kdcinfo.* which is likely to hold old IP address
 	rm -rf /var/lib/sss/pubconf/kdcinfo.*
@@ -207,6 +210,11 @@ else
 		usage "The container has to have fully-qualified hostname defined."
 	fi
 
+	resolv_conf_has_localhost=false
+	if grep '^nameserver 127\.0\.0\.1$' /etc/resolv.conf ; then
+		resolv_conf_has_localhost=true
+	fi
+
 	STDIN=/dev/stdin
 	STDOUT=/dev/stdout
 	STDERR=/dev/stderr
@@ -231,13 +239,18 @@ else
 		fi
 		if [ "$IPA_SERVER_IP" == no-update ] ; then
 			echo "FreeIPA server IP address update disabled, skipping update-self-ip-address."
-		elif ( systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ) ; then
+		elif systemctl is-active -q named named-pkcs11 || [ -n "$IPA_SERVER_IP" ] ; then
 			cp -f /etc/resolv.conf /data/etc/resolv.conf.ipa
 			if wait_for_dns 180; then
 				update_server_ip_address
 			else
 				echo "Unable to resolve \"${HOSTNAME}\". Is --dns=127.0.0.1 set for the container?" >&2
 				exit 2
+			fi
+			if systemctl is-active -q named named-pkcs11 && ! $resolv_conf_has_localhost ; then
+				echo "NOTE:" >&2
+				echo "Consider setting --dns=127.0.0.1 when using internal DNS server." >&2
+				echo "The mechanism which sets it now will be removed from images in April 2025." >&2
 			fi
 		else
 			echo "FreeIPA server does not run DNS server, skipping update-self-ip-address."
