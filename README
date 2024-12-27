@@ -62,9 +62,14 @@ to be running.
 ## Running FreeIPA server container
 
 While in an ideal case the use of FreeIPA server container can simplify
-the setup, prior experience with FreeIPA is definitely useful. Getting
-the container set up and running can be also more challenging than
-other typical containerized workloads.
+the setup, prior experience with FreeIPA is definitely useful. For the
+general FreeIPA topics, refer to the
+[FreeIPA documentation](https://www.freeipa.org/page/Documentation.html).
+Here we only focus on the aspects that are specific to running FreeIPA
+containerized.
+
+Note that getting the FreeIPA container set up and running can be more
+challenging than other typical containerized workloads.
 
 ### Running the container
 
