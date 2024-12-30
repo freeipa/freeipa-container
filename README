@@ -264,11 +264,8 @@ If you receive error like
 
 you might need to use `ipa-server-install` option `--skip-mem-check`.
 
-When running DNS server (the `--setup-dns` argument to
-`ipa-server-install`) in a container with read-only root filesystem
-(the `--read-only` option to `podman run` or `docker run`), the setup
-code in the container won't be able to edit `/etc/resolv.conf` in the
-container to point it to itself. Add `--dns=127.0.0.1` option to the
+When running DNS server (the `--setup-dns` argument to `ipa-server-install`)
+in the FreeIPA container, add `--dns=127.0.0.1` option to the
 `podman run` or `docker run` invocation to allow the FreeIPA server
 to reach its own DNS server.
 

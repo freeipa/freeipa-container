@@ -133,7 +133,7 @@ function run_ipa_container() {
 	(
 	set -x
 	umask 0
-	$docker run $readonly_run -d --name "$N" $OPTS \
+	$docker run -d --name "$N" $OPTS \
 		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
 		-e PASSWORD=Secret123 "$IMAGE" "$@"
 	)
@@ -142,9 +142,9 @@ function run_ipa_container() {
 
 IMAGE="$1"
 
-readonly_run="$readonly"
+DOCKER_RUN_OPTS="--dns=127.0.0.1"
 if [ "$readonly" == "--read-only" ] ; then
-	readonly_run="$readonly --dns=127.0.0.1"
+	DOCKER_RUN_OPTS="$DOCKER_RUN_OPTS --read-only"
 fi
 
 skip_opts=
@@ -238,9 +238,11 @@ if [ "$replica" = 'none' ] ; then
 fi
 
 # Setup replica
-readonly_run="$readonly"
 MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
 DOCKER_RUN_OPTS="--dns=$MASTER_IP"
+if [ "$readonly" == "--read-only" ] ; then
+	DOCKER_RUN_OPTS="$DOCKER_RUN_OPTS --read-only"
+fi
 if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
 	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
 fi
