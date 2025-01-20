@@ -35,7 +35,7 @@ if [ -z "$BASE_DIGEST" ] ; then
 fi
 test -n "$BASE_DIGEST"
 
-IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install )
+IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install /usr/bin/ipa-server-install | grep '^[1-9]' )
 test -n "$IPA_VERSION"
 RPM_QA_SHA=$( $docker run --rm --entrypoint rpm "$TAG" -qa | LC_COLLATE=C sort | sha256sum | sed 's/ .*//' )
 test -n "$RPM_QA_SHA"
