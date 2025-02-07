@@ -9,11 +9,13 @@ RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d 
 RUN groupadd -g 285 sssd; useradd -u 285 -g 285 -c 'User for sssd' -r -d /run/sssd/ -s '/sbin/nologin' sssd
 
 # Workaround 1615948
-RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
+RUN ln -s /bin/false /usr/local/bin/systemd-machine-id-setup
+RUN rpm --eval '%_install_script_path' | sed 's#^#%_install_script_path /usr/local/bin:# ' > /usr/lib/rpm/macros.d/macros.usr-local-bin
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install --allowerasing -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad freeipa-healthcheck freeipa-client-epn patch \
 	&& dnf clean all
+RUN rm -f /usr/lib/rpm/macros.d/macros.usr-local-bin
 
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285):" | wc -l ) -eq 5
 
