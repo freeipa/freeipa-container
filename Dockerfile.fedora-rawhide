@@ -34,7 +34,7 @@ RUN ( echo '[Service]' ; echo 'ExecStartPre=' ; sed '/ExecStartPre/!d; s/-R/-R -
 # debug: RUN test "$container" = oci
 
 # Establish reasonably low open files limit in the container
-RUN echo "DefaultLimitNOFILE=1024" >> /etc/systemd/system.conf
+COPY DefaultLimitNOFILE.conf /usr/lib/systemd/system.conf.d/DefaultLimitNOFILE.conf
 
 ENTRYPOINT [ "/usr/sbin/init" ]
 STOPSIGNAL RTMIN+3
