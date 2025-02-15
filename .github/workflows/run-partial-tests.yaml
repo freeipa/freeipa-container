@@ -26,7 +26,6 @@ on:
         options:
           - ubuntu-24.04
           - ubuntu-22.04
-          - ubuntu-20.04
 
 jobs:
   gen-matrix:
@@ -66,7 +65,7 @@ jobs:
         uses: ./.github/actions/install-podman-4
         if: matrix.docker == 'podman' && inputs.runs-on == 'ubuntu-22.04'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
-        if: matrix.docker == 'docker' && inputs.runs-on != 'ubuntu-20.04'
+        if: matrix.docker == 'docker'
       - name: For RHEL builds, use entitlements
         if: ${{ startsWith(matrix.os, 'rhel-') }}
         uses: ./.github/actions/podman-entitlement
