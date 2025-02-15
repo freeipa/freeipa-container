@@ -129,6 +129,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo systemctl disable --now docker.service docker.socket
+      - run: |
+          cat <<EOT | sudo tee "/etc/apparmor.d/home.runner.bin.rootlesskit"
+          # ref: https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
+          abi <abi/4.0>,
+          include <tunables/global>
+          /home/runner/bin/rootlesskit flags=(unconfined) {
+            userns,
+            # Site-specific additions and overrides. See local/README for details.
+            include if exists <local/home.runner.bin.rootlesskit>
+          }
+          EOT
+          sudo systemctl restart apparmor.service
       - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
       - uses: actions/download-artifact@v4
         with:
