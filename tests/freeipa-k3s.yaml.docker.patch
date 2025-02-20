@@ -1,7 +1,6 @@
---- tests/freeipa-k3s.yaml	2022-08-02 10:26:58.635861666 +0200
-+++ tests/freeipa-k3s.yaml	2022-08-02 10:26:46.127840868 +0200
-@@ -97,4 +97,8 @@
-       failureThreshold: 3
+--- tests/freeipa-k3s.yaml
++++ tests/freeipa-k3s.yaml
+@@ -123,3 +123,7 @@ spec:
    subdomain: dom1
    setHostnameAsFQDN: true
 +  securityContext:
