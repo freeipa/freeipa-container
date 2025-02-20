@@ -11,6 +11,11 @@ if [ -z "$DOCKERFILE" ] ; then
 	exit 1
 fi
 
+if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
+	echo "We expect to only run on cgroups v2 systems." >&2
+	exit 1
+fi
+
 export docker=${docker:-docker}
 
 function run_and_wait_for () {
@@ -22,19 +27,11 @@ function run_and_wait_for () {
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
 		OPTS="--tmpfs /run --tmpfs /tmp --sysctl net.ipv6.conf.all.disable_ipv6=0"
-		if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-			# cgroup v2
-			if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
-				OPTS="$OPTS --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
-			else
-				# docker with userns remapping enabled
-				:
-			fi
+		if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
+			OPTS="$OPTS --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
 		else
-			# cgroup v1
-			if [ -e /sys/fs/cgroup/unified ] ; then
-				OPTS="$OPTS -v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw"
-			fi
+			# docker with userns remapping enabled
+			:
 		fi
 	fi
 	if [ -n "$seccomp" ] ; then

@@ -110,7 +110,7 @@ general. On the other hand, it is a global daemon configuration so it
 will affect other containers as well.
 
 With docker on systems with cgroups v1, there is often a hybrid setup
-present with cgroups v2 available as `/sys/fs/cgroup/unified`,
+present with cgroups v2 as well, available as `/sys/fs/cgroup/unified`,
 so invoking `docker run` with option
 
     -v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw

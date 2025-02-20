@@ -3,6 +3,11 @@
 set -e
 set -x
 
+if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
+	echo "We expect to only run on cgroups v2 systems." >&2
+	exit 1
+fi
+
 umask 0007
 
 docker=${docker:-docker}
@@ -107,19 +112,11 @@ function run_ipa_container() {
 	OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
-		if [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-			# cgroup v2
-			if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
-				OPTS="--cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
-			else
-				# docker with userns remapping enabled
-				:
-			fi
+		if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
+			OPTS="--cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
 		else
-			# cgroup v1
-			if [ -e /sys/fs/cgroup/unified ] ; then
-				OPTS="-v /sys/fs/cgroup/unified:/sys/fs/cgroup:rw"
-			fi
+			# docker with userns remapping enabled
+			:
 		fi
 		OPTS="$OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0"
 	fi
@@ -148,12 +145,8 @@ if [ "$readonly" == "--read-only" ] ; then
 fi
 
 skip_opts=
-if [ -f /sys/fs/cgroup/cgroup.controllers ] \
-	&& [ "$docker" == docker ] \
+if [ "$docker" == docker ] \
 	&& $docker info --format '{{ .ClientInfo.Context }}' | grep -q rootless ; then
-	skip_opts=--skip-mem-check
-elif [ -e /sys/fs/cgroup/unified ] \
-	&& [ "$docker" == docker ] ; then
 	skip_opts=--skip-mem-check
 fi
 
