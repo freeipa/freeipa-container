@@ -46,9 +46,6 @@ done
 
 /usr/local/bin/populate-volume-from-template /tmp
 
-# Workaround 1373562
-mkdir -p /run/lock
-
 DATA=/data
 DATA_TEMPLATE=/data-template
 
