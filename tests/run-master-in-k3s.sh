@@ -8,7 +8,7 @@ if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
 	exit 1
 fi
 
-OPTS="--kubelet-arg=cgroup-driver=systemd"
+OPTS=
 if [ -e /var/run/docker.sock ] ; then
 	OPTS="$OPTS --docker --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
 	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
