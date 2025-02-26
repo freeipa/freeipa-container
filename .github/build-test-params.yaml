@@ -46,5 +46,8 @@ test-upgrade:
   count: 7
 
 k3s:
+  runs-on:
+    ubuntu-24.04: 2
+    ubuntu-22.04: 1
   count: 5
 

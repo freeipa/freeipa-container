@@ -220,7 +220,7 @@ jobs:
 
   test-k3s:
     name: Run with K3s with docker
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runs-on }}
     needs: [ build, test-plan ]
     strategy:
       fail-fast: false

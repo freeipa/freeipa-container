@@ -78,7 +78,8 @@ then
 	| [
 		(.k3s | .os[$fresh[]] = 1),
 		[ {
-		"os": ($fresh | repeat_array(3), $os)[]
+		"os": ($fresh | repeat_array(3), $os)[],
+		"runs-on": $runson | frequency_to_list
 		}
 		| select([. | contains(($exclude // [])[])] | any | not)
 		]
