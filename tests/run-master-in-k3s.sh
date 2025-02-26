@@ -17,9 +17,6 @@ fi
 curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 $OPTS
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
-if [ -n "$2" ] ; then
-	sudo k3s ctr images import "$2"
-fi
 kubectl get pods --all-namespaces
 ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
 
