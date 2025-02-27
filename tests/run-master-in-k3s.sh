@@ -44,6 +44,7 @@ MASTER_LOGS_PID=$!
 trap "kill $MASTER_LOGS_PID 2> /dev/null || : ; trap - EXIT" EXIT
 ( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $MASTER_LOGS_PID ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-server
+kubectl exec freeipa-server -- cat /proc/1/uid_map | tee /dev/stderr | grep -q '^ *0 *[1-9]'
 PV_DIR=$( kubectl get pvc/freeipa-data-pvc -o 'jsonpath={.spec.volumeName}_{.metadata.namespace}_{.metadata.name}' )
 ls -la /var/lib/rancher/k3s/storage/$PV_DIR
 IPA_SERVER_HOSTNAME=$( kubectl exec pod/freeipa-server -- hostname -f )
@@ -71,6 +72,7 @@ REPLICA_LOGS_PID=$!
 trap "kill $REPLICA_LOGS_PID 2> /dev/null || : ; trap - EXIT" EXIT
 ( set +x ; while true ; do if kubectl get pod/freeipa-replica | grep -q '\b1/1\b' ; then kill $REPLICA_LOGS_PID ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-replica
+kubectl exec freeipa-replica -- cat /proc/1/uid_map | tee /dev/stderr | grep -q '^ *0 *[1-9]'
 PV_DIR=$( kubectl get pvc/freeipa-replica-pvc -o 'jsonpath={.spec.volumeName}_{.metadata.namespace}_{.metadata.name}' )
 ls -la /var/lib/rancher/k3s/storage/$PV_DIR
 IPA_REPLICA_HOSTNAME=$( kubectl exec pod/freeipa-replica -- hostname -f )
