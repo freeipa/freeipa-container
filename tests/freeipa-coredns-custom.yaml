@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kube-system
+  name: coredns-custom
+data:
+  freeipa.server: |
+    dom1.default.svc.cluster.local:53 {
+        errors
+        cache 30
+        forward . 10.43.201.201
+    }
