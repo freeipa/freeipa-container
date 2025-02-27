@@ -14,8 +14,8 @@ if [ -e /var/run/docker.sock ] ; then
 	patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
 	patch tests/freeipa-replica-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
 fi
-curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 $OPTS
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config $OPTS
+sudo chown -R $( id -u ):$( id -g ) ~/.kube
 ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
 kubectl get pods --all-namespaces
 ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
