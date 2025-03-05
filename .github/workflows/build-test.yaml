@@ -335,6 +335,25 @@ jobs:
           ${{ secrets.REGISTRY_TARGET_LIST }}
           EOF
 
+  job-summary:
+    name: FreeIPA tests summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          yq '.jobs.master-and-replica.strategy.matrix.include[] | "run/runtime=" + .runtime + "/readonly=" + (.readonly // "") + "/ca=" + (.ca // "") + "/volume=" + (.volume // "") + "/runs-on=" + .runs-on + "/os=" + .os' < .github/workflows/build-test.yaml \
+              | while read f ; do mkdir -p "$( dirname "$f" )" ; touch "$f" ; done
+          ci/job-summary.sh run 'Test master + replica'
+      - run: |
+          yq '.jobs.test-upgrade.strategy.matrix.include[] | "upgrade/runtime=" + .runtime + "/runs-on=" + .runs-on + "/data-from=" + .data-from + "/os=" + .os' < .github/workflows/build-test.yaml \
+              | while read f ; do mkdir -p "$( dirname "$f" )" ; touch "$f" ; done
+          ci/job-summary.sh upgrade 'Test upgrade from older installation'
+      - run: |
+          yq '.jobs.test-k3s.strategy.matrix.os[] | "k8s/kubernetes=k3s/os=" + .' < .github/workflows/build-test.yaml \
+              | while read f ; do mkdir -p "$( dirname "$f" )" ; touch "$f" ; done
+          ci/job-summary.sh k8s 'Test in Kubernetes'
+
   test-subscription:
     # Workaround https://github.com/actions/runner/issues/1138
     name: Prerequisite for RHEL builds
