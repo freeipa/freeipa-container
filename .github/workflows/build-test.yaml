@@ -88,6 +88,7 @@ jobs:
       matrix-run: ${{ steps.produce-matrix.outputs.matrix-run }}
       matrix-test-upgrade: ${{ steps.produce-matrix.outputs.matrix-test-upgrade }}
       matrix-k3s: ${{ steps.produce-matrix.outputs.matrix-k3s }}
+      matrix-push: ${{ steps.produce-matrix.outputs.matrix-push }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -114,6 +115,8 @@ jobs:
               | ( echo -n 'matrix-test-upgrade=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
           jq -f ci/generate-test-matrix.jq -c --arg job k3s .github/build-test-data.json \
               | ( echo -n 'matrix-k3s=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
+          jq -c '[{"os": (.["fresh-os"] // [])[]}]' .github/build-test-data.json \
+              | ( echo -n 'matrix-push=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
         shell: bash
       - run: |
           echo '${{ steps.produce-matrix.outputs.matrix-run }}' \
@@ -238,12 +241,12 @@ jobs:
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-24.04
-    needs: [ master-and-replica, test-upgrade, test-k3s ]
-    if: github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
+    needs: [ master-and-replica, test-upgrade, test-k3s, test-plan ]
+    if: needs.test-plan.outputs.matrix-push != '[]' && github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-41, fedora-40, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        include: ${{ fromJSON(needs.test-plan.outputs.matrix-push ) }}
     timeout-minutes: 30
     steps:
       - uses: actions/download-artifact@v4
@@ -259,14 +262,6 @@ jobs:
           set -e
           f=docker-archive:freeipa-server-${{ matrix.os }}.tar.gz
           while read r ; do
-            if cmp \
-              <( skopeo inspect $r:${{ matrix.os }} \
-                | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) \
-              <( skopeo inspect $f \
-                | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) ; then
-              echo Built freeipa-server:${{ matrix.os }} is the same as image at ${r#docker://}, not pushing
-              continue
-            fi
             echo Copying freeipa-server:${{ matrix.os }} to ${r#docker://}
             skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
             VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' $f | sed 's/-.*//' )
