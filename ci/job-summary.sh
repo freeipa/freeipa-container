@@ -84,7 +84,7 @@ EOS
 prev_depth=999
 while read d ; do
 	depth=$( echo "$d" | sed 's%/%\n%g' | wc -l )
-	if [ $depth -lt $prev_depth ] ; then
+	if [ $depth -le $prev_depth ] ; then
 		echo '    <tr>'
 	fi
 	prev_depth=$depth
