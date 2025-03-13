@@ -10,13 +10,13 @@ run:
     docker: 2
   readonly:
     --read-only: 3
-    "": 1
+    "": null
   ca:
     "": 3
     --external-ca: 1
   volume:
     freeipa-data: 1
-    "": 1
+    "": null
   count: 23
   exclude:
     # Workaround https://github.com/freeipa/freeipa-container/issues/660
