@@ -18,6 +18,10 @@ run:
     freeipa-data: 1
     "": 1
   count: 23
+  exclude:
+    # Workaround https://github.com/freeipa/freeipa-container/issues/660
+    - runtime: sudo podman
+      runs-on: ubuntu-22.04
 
 test-upgrade:
   runs-on:

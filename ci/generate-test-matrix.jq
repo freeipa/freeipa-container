@@ -25,7 +25,7 @@ def random_select($count):
 | (if $ARGS.named["count"] != null then $ARGS.named["count"] | tonumber else .[ $ARGS.named["job"] ].count end) as $count
 | if $ARGS.named["job"] == "run"
 then
-	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume }
+	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume, $exclude }
 	| [ {
 		"os": ($fresh | repeat_array(3), $os)[],
 		"runs-on": $runson | frequency_to_list,
@@ -33,23 +33,28 @@ then
 		"readonly": $readonly | frequency_to_list,
 		"ca": $ca | frequency_to_list,
 		"volume": $volume | frequency_to_list
-	} ]
+		}
+		| select([. | contains(($exclude // [])[])] | any | not)
+	]
 else if $ARGS.named["job"] == "test-upgrade"
 then
-	.["test-upgrade"] as { "runs-on": $runson, $runtime, $volume, "upgrade-to-from": $upgrade }
+	.["test-upgrade"] as { "runs-on": $runson, $runtime, $volume, "upgrade-to-from": $upgrade, $exclude }
 	| [ {
 		"os": (($fresh | repeat_array(3), $os) | map(select(in($upgrade))))[],
 		"runs-on": $runson | frequency_to_list,
 		"runtime": $runtime | frequency_to_list
-	}
-	| .["data-from"] = $upgrade[.os][]
+		}
+		| .["data-from"] = $upgrade[.os][]
+		| select([. | contains(($exclude // [])[])] | any | not)
 	]
 else if $ARGS.named["job"] == "k3s"
 then
-	.k3s as { "runs-on": $runson }
+	.k3s as { "runs-on": $runson, $exclude }
 	| [ {
 		"os": ($fresh | repeat_array(3), $os)[]
-	} ]
+		}
+		| select([. | contains(($exclude // [])[])] | any | not)
+	]
 else
 	error("Unknown job")
 end
