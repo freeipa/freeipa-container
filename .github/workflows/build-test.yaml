@@ -207,7 +207,7 @@ jobs:
           }
           EOT
           sudo systemctl restart apparmor.service
-        if: matrix.runtime == 'docker rootless'
+        if: matrix.runs-on == 'ubuntu-24.04' && matrix.runtime == 'docker rootless'
       - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
         if: matrix.runtime == 'docker rootless'
       - name: Install podman 4.*
