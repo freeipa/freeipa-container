@@ -75,7 +75,7 @@ end,
 "    <tr>",
 	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ] | th(2; 1) else empty end,
 	if $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ] | th(2; 1) else empty end,
-	if $ARGS.named["job"] == "k3s" then [ "Kubernetes", "Runs on Ubuntu" ] | th(2; 1) else empty end,
+	if $ARGS.named["job"] == "k3s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ] | th(2; 1) else empty end,
 	( build_os_list | os_group ),
 "    </tr>",
 "  </thead>",
@@ -94,7 +94,7 @@ end,
 	else if $ARGS.named["job"] == "test-upgrade"
 	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row["fresh-image"]
 	else if $ARGS.named["job"] == "k3s"
-	then .k3s[ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
+	then .k3s[ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
 	end
 	end
 	end

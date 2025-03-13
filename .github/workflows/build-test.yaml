@@ -219,7 +219,7 @@ jobs:
         run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-k3s:
-    name: Run with K3s with docker
+    name: Run in K3s
     runs-on: ${{ matrix.runs-on }}
     needs: [ build, test-plan ]
     strategy:
@@ -227,15 +227,31 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.test-plan.outputs.matrix-k3s ) }}
     timeout-minutes: 30
+    env:
+      CRIO_VERSION: v1.32
     steps:
       - uses: actions/checkout@v4
+      - run: test -f /sys/fs/cgroup/cgroup.controllers
+      - uses: ./.github/actions/install-crio
+        if: matrix.runtime == 'cri-o'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
+        if: matrix.runtime == 'docker'
+      - uses: ./.github/actions/install-k3s
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
+      - run: sudo apt install -y skopeo
+        if: matrix.runtime == 'cri-o'
+      - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
+        if: matrix.runtime == 'cri-o'
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
-      - name: Run K3s and master in it
+        if: matrix.runtime == 'docker'
+      - run: patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+        if: matrix.runtime == 'docker'
+      - run: patch tests/freeipa-replica-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+        if: matrix.runtime == 'docker'
+      - name: Run master and replica in K3s
         run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }}
 
   push-after-success:

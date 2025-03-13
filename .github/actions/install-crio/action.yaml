@@ -1,0 +1,17 @@
+name: Install and start CRI-O
+runs:
+  using: composite
+  steps:
+    - run: |
+        [ -n "$CRIO_VERSION" ] || exit 1
+        curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key \
+            | gpg --dearmor | sudo tee /etc/apt/keyrings/cri-o-apt-keyring.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/stable:/$CRIO_VERSION/deb/ /" \
+            | sudo tee /etc/apt/sources.list.d/cri-o.list
+
+        sudo apt update
+        sudo apt install -y cri-o
+
+        sudo cp /etc/cni/net.d/10-crio-bridge.conflist.disabled /etc/cni/net.d/10-crio-bridge.conflist
+        sudo systemctl start crio.service
+      shell: bash -euxo pipefail {0}

@@ -17,7 +17,7 @@ run:
   volume:
     freeipa-data: 1
     "": null
-  count: 23
+  count: 19
   exclude:
     # Workaround https://github.com/freeipa/freeipa-container/issues/660
     - runtime: sudo podman
@@ -49,5 +49,8 @@ k3s:
   runs-on:
     ubuntu-24.04: 2
     ubuntu-22.04: 1
-  count: 5
+  runtime:
+    cri-o: 1
+    docker: 1
+  count: 9
 

@@ -74,6 +74,7 @@ metadata:
     app: freeipa-server
 spec:
   restartPolicy: Never
+  hostUsers: false
   containers:
   - name: freeipa-server
     image: localhost/freeipa-server:latest

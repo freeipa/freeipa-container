@@ -1,0 +1,36 @@
+name: Install and start K3s
+runs:
+  using: composite
+  steps:
+    - run: |
+        export INSTALL_K3S_EXEC
+        if [ -e /var/run/crio/crio.sock ] ; then
+            INSTALL_K3S_EXEC="--container-runtime-endpoint /var/run/crio/crio.sock \
+                  --kubelet-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-apiserver-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-controller-manager-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-scheduler-arg feature-gates=UserNamespacesSupport=true"
+        elif [ -e /var/run/docker.sock ] ; then
+            INSTALL_K3S_EXEC="--docker --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+        fi
+        curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config
+        sudo chown -R $( id -u ):$( id -g ) ~/.kube
+        if [ -e /var/run/crio/crio.sock ] ; then
+            ( echo '[crio.network]' ; echo 'plugin_dirs = [ "/var/lib/rancher/k3s/data/cni" ]' ) | sudo tee /etc/crio/crio.conf.d/20-cni.conf
+            sudo systemctl restart crio.service
+        fi
+        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
+        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
+        kubectl get pods --all-namespaces
+
+        # Make local-path provisioner on userns remapped docker setup on cgroups v2 work
+        # -- the pods of the cluster run remapped as well
+        sudo mkdir -p /var/lib/rancher/k3s/storage
+        sudo chown $( id -u ) /var/lib/rancher/k3s/storage
+
+        ( set +x ; for i in $( seq 1 10 ) ; do ip link show cni0 > /dev/null && break ; sleep 3 ; done )
+        sudo resolvectl dns cni0 $( kubectl get -n kube-system service/kube-dns -o 'jsonpath={.spec.clusterIP}' )
+        sudo resolvectl domain cni0 cluster.local
+
+        kubectl apply -f tests/freeipa-coredns-custom.yaml
+      shell: bash -euxo pipefail {0}

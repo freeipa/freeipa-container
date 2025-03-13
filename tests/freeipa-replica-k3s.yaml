@@ -68,6 +68,7 @@ metadata:
     app: freeipa-replica
 spec:
   restartPolicy: Never
+  hostUsers: false
   containers:
   - name: freeipa-replica
     image: localhost/freeipa-server:latest

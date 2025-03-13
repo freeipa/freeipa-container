@@ -74,12 +74,13 @@ then
 	]
 else if $ARGS.named["job"] == "k3s"
 then
-	.k3s as { "runs-on": $runson, $exclude }
+	.k3s as { "runs-on": $runson, $runtime, $exclude }
 	| [
 		(.k3s | .os[$fresh[]] = 1),
 		[ {
 		"os": ($fresh | repeat_array(3), $os)[],
-		"runs-on": $runson | frequency_to_list
+		"runs-on": $runson | frequency_to_list,
+		"runtime": $runtime | frequency_to_list
 		}
 		| select([. | contains(($exclude // [])[])] | any | not)
 		]
