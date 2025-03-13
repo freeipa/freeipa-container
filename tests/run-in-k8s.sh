@@ -17,8 +17,14 @@ trap "kill $MASTER_LOGS_PID 2> /dev/null || : ; trap - EXIT" EXIT
 ( set +x ; while true ; do if kubectl get pod/freeipa-server | grep -q '\b1/1\b' ; then kill $MASTER_LOGS_PID ; break ; else sleep 5 ; fi ; done )
 kubectl describe pod/freeipa-server
 kubectl exec freeipa-server -- cat /proc/1/uid_map | tee /dev/stderr | grep -q '^ *0 *[1-9]'
+LOCAL_PATH_NS=
+for ns in local-path-storage kube-system ; do
+	if kubectl get -n $ns configmap/local-path-config ; then LOCAL_PATH_NS=$ns ; fi
+done
+LOCAL_PATH_DIR=$( kubectl get -n $LOCAL_PATH_NS configmap/local-path-config -o jsonpath="{.data['config\.json']}" \
+	| jq -r '.nodePathMap[] | select(.node == "DEFAULT_PATH_FOR_NON_LISTED_NODES").paths[0]' )
 PV_DIR=$( kubectl get pvc/freeipa-data-pvc -o 'jsonpath={.spec.volumeName}_{.metadata.namespace}_{.metadata.name}' )
-ls -la /var/lib/rancher/k3s/storage/$PV_DIR
+ls -la $LOCAL_PATH_DIR/$PV_DIR
 IPA_SERVER_HOSTNAME=$( kubectl exec pod/freeipa-server -- hostname -f )
 IPA_SERVER_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service )
 seq 15 -1 0 | while read i ; do dig +short $IPA_SERVER_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_SERVER_IP && break ; sleep 5 ; [ $i == 0 ] && false ; done
@@ -46,7 +52,7 @@ trap "kill $REPLICA_LOGS_PID 2> /dev/null || : ; trap - EXIT" EXIT
 kubectl describe pod/freeipa-replica
 kubectl exec freeipa-replica -- cat /proc/1/uid_map | tee /dev/stderr | grep -q '^ *0 *[1-9]'
 PV_DIR=$( kubectl get pvc/freeipa-replica-pvc -o 'jsonpath={.spec.volumeName}_{.metadata.namespace}_{.metadata.name}' )
-ls -la /var/lib/rancher/k3s/storage/$PV_DIR
+ls -la $LOCAL_PATH_DIR/$PV_DIR
 IPA_REPLICA_HOSTNAME=$( kubectl exec pod/freeipa-replica -- hostname -f )
 IPA_REPLICA_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-replica-service )
 dig +short $IPA_REPLICA_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_REPLICA_IP

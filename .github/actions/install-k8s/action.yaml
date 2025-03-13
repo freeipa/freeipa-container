@@ -1,0 +1,58 @@
+name: Install and start Kubernetes with CRI-O as runtime
+runs:
+  using: composite
+  steps:
+    - run: |
+        if [ -z "${KUBERNETES_VERSION-}" -a -e /var/run/crio/crio.sock -a -n "$CRIO_VERSION" ] ; then
+            KUBERNETES_VERSION=$CRIO_VERSION
+        fi
+        [ -n "$KUBERNETES_VERSION" ] || exit 1
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key \
+            | gpg --dearmor | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" \
+            | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+        sudo apt update
+        sudo apt install -y kubelet kubeadm kubectl
+
+        sudo modprobe br_netfilter
+        sudo sysctl -w net.ipv4.ip_forward=1
+        sudo sudo iptables -A FORWARD -o cni0 -j ACCEPT
+
+        CONFIG=tests/k8s-usernamespacessuport-allow-swap.yaml
+        if [ -e /var/run/crio/crio.sock ] ; then
+            CONFIG="$CONFIG tests/k8s-initconfiguration-crio.yaml"
+        fi
+
+        if ! cat $CONFIG | sudo kubeadm init --config /dev/stdin ; then
+            set +e
+            sudo systemctl status kubelet
+            sudo journalctl -xeu kubelet
+            exit 1
+        fi
+
+        mkdir ~/.kube
+        sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $( id -u ):$( id -g ) ~/.kube/config
+        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
+        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
+        kubectl get pods --all-namespaces
+
+        kubectl taint nodes $( hostname ) node-role.kubernetes.io/control-plane:NoSchedule-
+        kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+        # Remove the extremely permissive ACLs / mask that GitHub runners have on /opt
+        sudo mkdir /opt/local-path-provisioner
+        sudo setfacl -b /opt/local-path-provisioner
+
+        ( set +x ; for i in $( seq 1 10 ) ; do ip link show cni0 > /dev/null && break ; sleep 3 ; done )
+        sudo resolvectl dns cni0 $( kubectl get -n kube-system service/kube-dns -o 'jsonpath={.spec.clusterIP}' )
+        sudo resolvectl domain cni0 cluster.local
+
+        kubectl apply -f tests/freeipa-coredns-custom.yaml
+        if ! kubectl get configmap -n kube-system coredns -o yaml | grep -F 'import /etc/coredns/custom/*.server' ; then
+            ( kubectl get configmap -n kube-system coredns -o=jsonpath='{.data.Corefile}' ;
+                kubectl get configmap -n kube-system coredns-custom -o=jsonpath="{.data['freeipa\.server']}" ) \
+            | kubectl create --dry-run=client -n kube-system configmap coredns --from-file=Corefile=/dev/stdin -o yaml \
+            | kubectl apply -n kube-system -f -
+        fi
+      shell: bash -euxo pipefail {0}

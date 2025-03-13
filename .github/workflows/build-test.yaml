@@ -219,7 +219,7 @@ jobs:
         run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-k8s:
-    name: Run in K3s
+    name: Run in K8s
     runs-on: ${{ matrix.runs-on }}
     needs: [ build, test-plan ]
     strategy:
@@ -236,7 +236,12 @@ jobs:
         if: matrix.runtime == 'cri-o'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
+      - uses: ./.github/actions/install-k8s
+        env:
+          KUBERNETES_VERSION: v1.32
+        if: matrix.kubernetes == 'kubeadm init'
       - uses: ./.github/actions/install-k3s
+        if: matrix.kubernetes == 'k3s'
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}
@@ -251,7 +256,7 @@ jobs:
         if: matrix.runtime == 'docker'
       - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
-      - name: Run master and replica in K3s
+      - name: Run master and replica in K8s
         run: tests/run-in-k8s.sh localhost/freeipa-server:${{ matrix.os }}
 
   push-after-success:
