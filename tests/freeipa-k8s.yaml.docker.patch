@@ -1,5 +1,5 @@
---- tests/freeipa-k3s.yaml
-+++ tests/freeipa-k3s.yaml
+--- tests/freeipa-k8s.yaml
++++ tests/freeipa-k8s.yaml
 @@ -123,3 +123,7 @@ spec:
    subdomain: dom1
    setHostnameAsFQDN: true

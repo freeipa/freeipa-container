@@ -3,7 +3,7 @@
 set -e
 set -x
 
-kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-k3s.yaml )
+kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-k8s.yaml )
 ( set +x ; while kubectl get pod/freeipa-server | tee /dev/stderr | grep -Eq '\bPending\b|\bContainerCreating\b' ; do sleep 5 ; done )
 if ! kubectl get pod/freeipa-server | grep -q '\bRunning\b' ; then
 	kubectl describe pod/freeipa-server
@@ -31,7 +31,7 @@ echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
 kill $MASTER_LOGS_PID 2> /dev/null || :
 trap - EXIT
 
-kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-replica-k3s.yaml )
+kubectl create -f <( sed "s#image:.*#image: $1#" tests/freeipa-replica-k8s.yaml )
 ( set +x ; while kubectl get pod/freeipa-replica | tee /dev/stderr | grep -Eq '\bPending\b|\bContainerCreating\b' ; do sleep 5 ; done )
 if ! kubectl get pod/freeipa-replica | grep -q '\bRunning\b' ; then
 	kubectl describe pod/freeipa-replica

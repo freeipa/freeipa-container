@@ -72,14 +72,15 @@ then
 		| select([. | contains(($exclude // [])[])] | any | not)
 		]
 	]
-else if $ARGS.named["job"] == "k3s"
+else if $ARGS.named["job"] == "k8s"
 then
-	.k3s as { "runs-on": $runson, $runtime, $exclude }
+	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
 	| [
-		(.k3s | .os[$fresh[]] = 1),
+		(.k8s | .os[$fresh[]] = 1),
 		[ {
 		"os": ($fresh | repeat_array(3), $os)[],
 		"runs-on": $runson | frequency_to_list,
+		"kubernetes": $kubernetes | frequency_to_list,
 		"runtime": $runtime | frequency_to_list
 		}
 		| select([. | contains(($exclude // [])[])] | any | not)
@@ -95,5 +96,5 @@ end
 	.[1] | random_select($count; $ensure | del((..|nulls), (.[]|scalars), (.[]|arrays)))
 		 | if ( .os as $os | $fresh | any(. == $os) ) then .["fresh-image"] = true end
 ]
-| sort_by(.os, .["runs-on"], .runtime, .readonly, .ca, .volume, .["data-from"])
+| sort_by(.os, .["runs-on"], .kubernetes, .runtime, .readonly, .ca, .volume, .["data-from"])
 

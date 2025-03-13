@@ -87,7 +87,7 @@ jobs:
     outputs:
       matrix-run: ${{ steps.produce-matrix.outputs.matrix-run }}
       matrix-test-upgrade: ${{ steps.produce-matrix.outputs.matrix-test-upgrade }}
-      matrix-k3s: ${{ steps.produce-matrix.outputs.matrix-k3s }}
+      matrix-k8s: ${{ steps.produce-matrix.outputs.matrix-k8s }}
       matrix-push: ${{ steps.produce-matrix.outputs.matrix-push }}
     steps:
       - uses: actions/checkout@v4
@@ -113,8 +113,8 @@ jobs:
               | ( echo -n 'matrix-run=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
           jq -f ci/generate-test-matrix.jq -c --arg job test-upgrade .github/build-test-data.json \
               | ( echo -n 'matrix-test-upgrade=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
-          jq -f ci/generate-test-matrix.jq -c --arg job k3s .github/build-test-data.json \
-              | ( echo -n 'matrix-k3s=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
+          jq -f ci/generate-test-matrix.jq -c --arg job k8s .github/build-test-data.json \
+              | ( echo -n 'matrix-k8s=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
           jq -c '[{"os": (.["fresh-os"] // [])[]}]' .github/build-test-data.json \
               | ( echo -n 'matrix-push=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
         shell: bash
@@ -127,8 +127,8 @@ jobs:
               | jq -rf ci/test-matrix-to-html.jq --arg job test-upgrade --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
         shell: bash
       - run: |
-          echo '${{ steps.produce-matrix.outputs.matrix-k3s }}' \
-              | jq -rf ci/test-matrix-to-html.jq --arg job k3s --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.produce-matrix.outputs.matrix-k8s }}' \
+              | jq -rf ci/test-matrix-to-html.jq --arg job k8s --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
         shell: bash
       - run: jq -n -rf ci/test-matrix-to-html.jq --arg job legend >> $GITHUB_STEP_SUMMARY
         shell: bash
@@ -218,14 +218,14 @@ jobs:
       - name: Run master and replica
         run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
-  test-k3s:
+  test-k8s:
     name: Run in K3s
     runs-on: ${{ matrix.runs-on }}
     needs: [ build, test-plan ]
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.test-plan.outputs.matrix-k3s ) }}
+        include: ${{ fromJSON(needs.test-plan.outputs.matrix-k8s ) }}
     timeout-minutes: 30
     env:
       CRIO_VERSION: v1.32
@@ -247,17 +247,17 @@ jobs:
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
         if: matrix.runtime == 'docker'
-      - run: patch tests/freeipa-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+      - run: patch tests/freeipa-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
-      - run: patch tests/freeipa-replica-k3s.yaml < tests/freeipa-k3s.yaml.docker.patch
+      - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
       - name: Run master and replica in K3s
-        run: tests/run-master-in-k3s.sh localhost/freeipa-server:${{ matrix.os }}
+        run: tests/run-in-k8s.sh localhost/freeipa-server:${{ matrix.os }}
 
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-24.04
-    needs: [ master-and-replica, test-upgrade, test-k3s, test-plan ]
+    needs: [ master-and-replica, test-upgrade, test-k8s, test-plan ]
     if: needs.test-plan.outputs.matrix-push != '[]' && github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false

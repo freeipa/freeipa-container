@@ -65,7 +65,7 @@ end,
 		then "Test master + replica"
 	else if $ARGS.named["job"] == "test-upgrade"
 		then "Test upgrade from older installation"
-	else if $ARGS.named["job"] == "k3s"
+	else if $ARGS.named["job"] == "k8s"
 		then "Test in Kubernetes"
 	end
 	end
@@ -75,7 +75,7 @@ end,
 "    <tr>",
 	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ] | th(2; 1) else empty end,
 	if $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ] | th(2; 1) else empty end,
-	if $ARGS.named["job"] == "k3s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ] | th(2; 1) else empty end,
+	if $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ] | th(2; 1) else empty end,
 	( build_os_list | os_group ),
 "    </tr>",
 "  </thead>",
@@ -87,14 +87,14 @@ end,
 | .[].readonly? |= if . == null then empty else if . == "--read-only" then "yes (ro)" else "rw" end end
 | .[].ca? |= if . == null then empty else if . == "--external-ca" then "external" else "no" end end
 | .[].volume? |= if . == null then empty else if . == "freeipa-data" then "volume" else "dir" end end
-| sort_by(.runtime, .readonly, .ca, .volume, -(.["runs-on"] // 0 | tonumber), .["data-from"])
+| sort_by(.kubernetes, .runtime, .readonly, .ca, .volume, -(.["runs-on"] // 0 | tonumber), .["data-from"])
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
 	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
 	else if $ARGS.named["job"] == "test-upgrade"
 	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row["fresh-image"]
-	else if $ARGS.named["job"] == "k3s"
-	then .k3s[ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
+	else if $ARGS.named["job"] == "k8s"
+	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
 	end
 	end
 	end
