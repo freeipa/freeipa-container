@@ -19,9 +19,20 @@ def random_select($count; $ensure):
 		(
 		if (($ensure != null) and ($ensure | length > 0))
 		then
-			( $ensure | keys[ now * 1000000 % length] ) as $category
-			| ( $ensure[$category] | keys[ now * 1000000 % length ] ) as $value
-			| [ .[] | select(.[$category] == $value) ]
+			[ foreach ($ensure | keys[]) as $k ({};
+				( $ensure[$k] | keys[ now * 1000000 % length ] ) as $kk
+				| .[$k] = $kk;
+				.
+				),
+				[]
+			]
+			| reverse
+			| until(.[0] | length > 0;
+				[ . as $dot
+				| [ $in[] | select(contains($dot[1])) ]
+				,
+				$dot[2:][]])
+			| .[0]
 		end
 		)
 		| .[ now * 1000000 % length ]
@@ -41,7 +52,7 @@ def random_select($count; $ensure):
 then
 	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume, $exclude }
 	| [
-		(.run | .os[$fresh[]] = 1),
+		(.run | .os[(if $fresh | length > 0 then $fresh else $os end)[]] = 1),
 		[ {
 		"os": ($fresh | repeat_array(3), $os)[],
 		"runs-on": $runson | frequency_to_list,
@@ -61,7 +72,7 @@ then
 		.["test-upgrade"]
 		| .["data-from"][(.["upgrade-to-from"][$fresh[]] // [])[]] = 1
 		| del(.["upgrade-to-from"])
-		| .os[($fresh | map(select(in($upgrade))))[]] = 1
+		| .os[((if $fresh | length > 0 then $fresh else $os end) | map(select(in($upgrade))))[]] = 1
 		),
 		[ {
 		"os": (($fresh | repeat_array(3), $os) | map(select(in($upgrade))))[],
@@ -76,7 +87,7 @@ else if $ARGS.named["job"] == "k8s"
 then
 	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
 	| [
-		(.k8s | .os[$fresh[]] = 1),
+		(.k3s | .os[(if $fresh | length > 0 then $fresh else $os end)[]] = 1),
 		[ {
 		"os": ($fresh | repeat_array(3), $os)[],
 		"runs-on": $runson | frequency_to_list,
