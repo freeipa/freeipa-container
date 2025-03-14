@@ -27,8 +27,8 @@ PV_DIR=$( kubectl get pvc/freeipa-data-pvc -o 'jsonpath={.spec.volumeName}_{.met
 ls -la $LOCAL_PATH_DIR/$PV_DIR
 IPA_SERVER_HOSTNAME=$( kubectl exec pod/freeipa-server -- hostname -f )
 IPA_SERVER_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-server-service )
-seq 15 -1 0 | while read i ; do dig +short $IPA_SERVER_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_SERVER_IP && break ; sleep 5 ; [ $i == 0 ] && false ; done
-seq 15 -1 0 | while read i ; do dig +short -t srv _ldap._tcp.${IPA_SERVER_HOSTNAME#*.} | tee /dev/stderr | grep -Fq "0 100 389 $IPA_SERVER_HOSTNAME." && break ; sleep 5 ; [ $i == 0 ] && false ; done
+seq 60 -1 0 | while read i ; do dig +short $IPA_SERVER_HOSTNAME | tee /dev/stderr | grep -Fq $IPA_SERVER_IP && break ; sleep 5 ; [ $i == 0 ] && false ; done
+seq 60 -1 0 | while read i ; do dig +short -t srv _ldap._tcp.${IPA_SERVER_HOSTNAME#*.} | tee /dev/stderr | grep -Fq "0 100 389 $IPA_SERVER_HOSTNAME." && break ; sleep 5 ; [ $i == 0 ] && false ; done
 
 curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
 curl -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep -q utilisateur
