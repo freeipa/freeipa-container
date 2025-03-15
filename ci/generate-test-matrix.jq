@@ -22,7 +22,6 @@ def random_select($count; $ensure):
 			( $ensure | keys[ now * 1000000 % length] ) as $category
 			| ( $ensure[$category] | keys[ now * 1000000 % length ] ) as $value
 			| [ .[] | select(.[$category] == $value) ]
-		else $in
 		end
 		)
 		| .[ now * 1000000 % length ]
