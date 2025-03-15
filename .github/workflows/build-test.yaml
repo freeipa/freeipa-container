@@ -10,13 +10,24 @@ on:
 jobs:
   build:
     name: Build image
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     strategy:
       fail-fast: false
       matrix:
         os: [ fedora-rawhide, fedora-41, fedora-40, centos-10-stream, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
-        arch: [ x86_64 ]
+        arch: [ x86_64, arm64 ]
         docker: [ docker ]
+        exclude:
+          - os: fedora-40
+            arch: arm64
+          - os: centos-10-stream
+            arch: x86_64
+          - os: centos-9-stream
+            arch: arm64
+          - os: almalinux-8
+            arch: arm64
+          - os: rocky-8
+            arch: arm64
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -149,7 +160,7 @@ jobs:
 
   master-and-replica:
     name: Run
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
     strategy:
       fail-fast: false
@@ -176,7 +187,7 @@ jobs:
           }
           EOT
           sudo systemctl restart apparmor.service
-        if: matrix.runs-on == 'ubuntu-24.04' && matrix.runtime == 'docker rootless'
+        if: startsWith(matrix.runs-on, 'ubuntu-24.04') && matrix.runtime == 'docker rootless'
       - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
         if: matrix.runtime == 'docker rootless'
       - name: Install podman 4.*
@@ -200,7 +211,7 @@ jobs:
 
   test-upgrade:
     name: Upgrade
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
     strategy:
       fail-fast: false
@@ -234,7 +245,7 @@ jobs:
 
   test-k8s:
     name: Run in K8s
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
     strategy:
       fail-fast: false
