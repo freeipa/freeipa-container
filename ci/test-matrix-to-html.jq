@@ -24,10 +24,10 @@ def build_os_list:
 
 def os_grouping:
 	{
-	"fedora-": "Fedora",
-	"centos-": "CentOS Stream",
-	"almalinux-": "AlmaLinux",
-	"rocky-": "Rocky Linux"
+	"^fedora-": "Fedora",
+	"^centos-(.+)-stream$": "CentOS Stream",
+	"^almalinux-": "AlmaLinux",
+	"^rocky-": "Rocky Linux"
 	}
 ;
 
@@ -35,7 +35,11 @@ def os_group:
 	[
 		.[] as $os
 		| os_grouping
-		| reduce keys[] as $k ([$os, "", $os]; if $os | startswith($k) then . = [$k, os_grouping[$k], $os[($k | length):]] end)
+		| reduce keys[] as $k ([$os, "", $os];
+			if $os | test($k)
+				then . = [$k, os_grouping[$k],
+					($os | match($k) | .captures[0].string // $os[(.offset + .length):])]
+			end)
 	]
 	| reduce .[] as $r ([]; if $r[0] == .[-1][0] then .[-1][2] += [ $r[2] ] else . + [[ $r[0], $r[1], [ $r[2] ]]] end)
 	|
