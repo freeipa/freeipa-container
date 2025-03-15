@@ -54,6 +54,9 @@ jobs:
           name: freeipa-server-${{ matrix.os }}
           path: freeipa-server-${{ matrix.os }}
           retention-days: 1
+      - name: Check for nopush
+        run: if yq '.push.exclude[]' .github/build-test-params.yaml | grep -F ${{ matrix.os }} ; then echo "nopush=true" >> $GITHUB_OUTPUT ; fi
+        id: check-nopush
       - name: Check resulting labels
         run: |
           skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels'
@@ -72,6 +75,7 @@ jobs:
           fi
         shell: bash
         id: check-fresh-image
+        if: steps.check-nopush.outputs.nopush != 'true'
       - uses: actions/upload-artifact@v4
         with:
           name: fresh-image-${{ matrix.os }}
@@ -115,7 +119,7 @@ jobs:
               | ( echo -n 'matrix-test-upgrade=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
           jq -f ci/generate-test-matrix.jq -c --arg job k8s .github/build-test-data.json \
               | ( echo -n 'matrix-k8s=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
-          jq -c '[{"os": (.["fresh-os"] // [])[]}]' .github/build-test-data.json \
+          jq -c '[{"os": ((.["fresh-os"] // []) - (.nopush // []))[]}]' .github/build-test-data.json \
               | ( echo -n 'matrix-push=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
         shell: bash
       - run: |

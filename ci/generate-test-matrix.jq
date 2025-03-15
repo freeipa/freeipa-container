@@ -35,7 +35,8 @@ def random_select($count; $ensure):
 ;
 
 .["build-os"] as $os
-| (.["fresh-os"] // []) as $fresh
+| (.push.exclude // []) as $nopush
+| ((.["fresh-os"] // []) - $nopush) as $fresh
 | (if $ARGS.named["count"] != null then $ARGS.named["count"] | tonumber else .[ $ARGS.named["job"] ].count end) as $count
 | if $ARGS.named["job"] == "run"
 then
@@ -95,6 +96,7 @@ end
 | [
 	.[1] | random_select($count; $ensure | del((..|nulls), (.[]|scalars), (.[]|arrays)))
 		 | if ( .os as $os | $fresh | any(. == $os) ) then .["fresh-image"] = true end
+		 | if ( .os as $os | $nopush | any(. == $os) ) then .["nopush"] = true end
 ]
 | sort_by(.os, .["runs-on"], .kubernetes, .runtime, .readonly, .ca, .volume, .["data-from"])
 

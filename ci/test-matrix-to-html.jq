@@ -57,7 +57,10 @@ def os_group:
 |
 if $ARGS.named["job"] == "legend"
 	then "---",
-		"Legend: 🟢 — new image, compared to the one in registry; 🔷 — test is run with image that matches one in registry",
+		"Legend: "
+			+ "🟢 — new image, compared to the one in registry; "
+			+ "🔷 — test is run with image that matches one in registry; "
+			+ "🔶 — test is run for image that does not get pushed to registry",
 		halt
 	else empty
 end,
@@ -88,13 +91,14 @@ end,
 | .[].ca? |= if . == null then empty else if . == "--external-ca" then "external" else "no" end end
 | .[].volume? |= if . == null then empty else if . == "freeipa-data" then "volume" else "dir" end end
 | sort_by(.kubernetes, .runtime, .readonly, .ca, .volume, -(.["runs-on"] // 0 | tonumber), .["data-from"])
+| [ .[] | .status = if .nopush then "nopush" else if .["fresh-image"] then "fresh-image" else false end end ]
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
-	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
+	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ] = $row.status
 	else if $ARGS.named["job"] == "test-upgrade"
-	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row["fresh-image"]
+	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row.status
 	else if $ARGS.named["job"] == "k8s"
-	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row["fresh-image"]
+	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row.status
 	end
 	end
 	end
@@ -112,7 +116,9 @@ end,
 		.[1] as $values
 		| build_os_list[] as $os
 		| [ if $values | has($os) then
-			if $values[$os] then "🟢" else "🔷" end
+			if $values[$os]? == "fresh-image" then "🟢" else
+			if $values[$os]? == "nopush" then "🔶"
+			else "🔷" end end
 			else "" end ] | td(1)
 	else empty end
 	),
