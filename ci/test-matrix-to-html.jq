@@ -25,7 +25,7 @@ def build_os_list:
 def os_grouping:
 	{
 	"fedora-": "Fedora",
-	"centos-9-stream": "CentOS Stream 9",
+	"centos-": "CentOS Stream",
 	"almalinux-": "AlmaLinux",
 	"rocky-": "Rocky Linux"
 	}

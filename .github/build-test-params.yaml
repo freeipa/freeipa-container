@@ -60,3 +60,7 @@ k8s:
     - kubernetes: kubeadm init
       runtime: docker
 
+push:
+  exclude:
+    - centos-10-stream
+

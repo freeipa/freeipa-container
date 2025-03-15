@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-41, fedora-40, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        os: [ fedora-rawhide, fedora-41, fedora-40, centos-10-stream, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
         docker: [ docker ]
     timeout-minutes: 15
     steps:
