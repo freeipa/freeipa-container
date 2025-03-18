@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ fedora-rawhide, fedora-41, fedora-40, centos-10-stream, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        arch: [ x86_64 ]
         docker: [ docker ]
     timeout-minutes: 15
     steps:
@@ -46,42 +47,46 @@ jobs:
               "labels": ["image-build-fail" ]
               }'
       - name: Create directory for artifacts
-        run: mkdir freeipa-server-${{ matrix.os }}
+        run: mkdir freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Save image
-        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz
+        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz
       - uses: actions/upload-artifact@v4
         with:
-          name: freeipa-server-${{ matrix.os }}
-          path: freeipa-server-${{ matrix.os }}
+          name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
+          path: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
           retention-days: 1
-      - name: Check for nopush
-        run: if yq '.push.exclude[]' .github/build-test-params.yaml | grep -F ${{ matrix.os }} ; then echo "nopush=true" >> $GITHUB_OUTPUT ; fi
-        id: check-nopush
+      - run: |
+          mkdir -p build-status/${{ matrix.os }}-${{ matrix.arch }}
+          ( echo "- os: ${{ matrix.os }}" ; echo "  arch: ${{ matrix.arch }}" ) > build-status/${{ matrix.os }}-${{ matrix.arch }}/build-dist
+        shell: bash
       - name: Check resulting labels
         run: |
-          skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels'
+          skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels'
           CHECK_REPO=quay.io/freeipa/freeipa-server
-          diff -u <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz | jq '.Labels' ) || true
-          mkdir fresh-image
+          diff -u <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels' ) || true
           if cmp \
             <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} \
               | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) \
-            <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}/freeipa-server-${{ matrix.os }}.tar.gz \
+            <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz \
               | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) ; then
             echo Newly built freeipa-server:${{ matrix.os }} is the same as image at $CHECK_REPO.
           else
-            echo ${{ matrix.os }} > fresh-image/${{ matrix.os }}
-            echo "fresh-image=true" >> $GITHUB_OUTPUT
+            cp build-status/${{ matrix.os }}-${{ matrix.arch }}/build-dist build-status/${{ matrix.os }}-${{ matrix.arch }}/fresh-image
           fi
         shell: bash
-        id: check-fresh-image
-        if: steps.check-nopush.outputs.nopush != 'true'
+      - name: Check for nopush
+        run: |
+          if yq '.push.exclude[]' .github/build-test-params.yaml -o json \
+              | jq -c --arg os "${{ matrix.os }}" --arg arch "${{ matrix.arch }}" '. as $input | ( $ARGS.named | { os, arch } | with_entries(select(.value != null))) | select(contains($input))' \
+              | grep .  ; then
+            rm -f build-status/${{ matrix.os }}-${{ matrix.arch }}/fresh-image
+          fi
+        shell: bash
       - uses: actions/upload-artifact@v4
         with:
-          name: fresh-image-${{ matrix.os }}
-          path: fresh-image
+          name: build-status-${{ matrix.os }}-${{ matrix.arch }}
+          path: build-status
           retention-days: 1
-        if: steps.check-fresh-image.outputs.fresh-image == 'true'
 
   test-plan:
     name: FreeIPA test plan
@@ -93,21 +98,24 @@ jobs:
       matrix-test-upgrade: ${{ steps.produce-matrix.outputs.matrix-test-upgrade }}
       matrix-k8s: ${{ steps.produce-matrix.outputs.matrix-k8s }}
       matrix-push: ${{ steps.produce-matrix.outputs.matrix-push }}
+      matrix-push-data: ${{ steps.produce-matrix.outputs.matrix-push-data }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: fresh-image-*
-          path: fresh-image
+          pattern: build-status-*
+          path: build-status
           merge-multiple: true
       - name: Amend the .github/build-test-params.yaml with information about built images
         run: |
-          mkdir -p fresh-image
           (
-              echo 'build-os:'
-              ( yq '.jobs.build.strategy.matrix.os[]' .github/workflows/build-test.yaml | sed 's/^/  - /' )
-              echo 'fresh-os:'
-              ls fresh-image | sed 's/^/  - /'
+              echo 'build-dist:'
+              yq '.jobs.build.strategy.matrix | .arch as $arch | .os[] + "-" + $arch[]' .github/workflows/build-test.yaml \
+              | while read i ; do
+                if [ -f build-status/$i/build-dist ] ; then cat build-status/$i/build-dist ; fi
+              done
+              echo 'fresh-dist:'
+              cat build-status/*/fresh-image || :
               cat .github/build-test-params.yaml
           ) | yq . - -o json | tee .github/build-test-data.json
         shell: bash
@@ -119,20 +127,22 @@ jobs:
               | ( echo -n 'matrix-test-upgrade=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
           jq -f ci/generate-test-matrix.jq -c --arg job k8s .github/build-test-data.json \
               | ( echo -n 'matrix-k8s=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
-          jq -c '[{"os": ((.["fresh-os"] // []) - (.nopush // []))[]}]' .github/build-test-data.json \
+          jq -f ci/generate-test-matrix.jq -c --arg job push .github/build-test-data.json \
               | ( echo -n 'matrix-push=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
+          jq -f ci/generate-test-matrix.jq -c --arg job push-data .github/build-test-data.json \
+              | ( echo -n 'matrix-push-data=' >> $GITHUB_OUTPUT ; tee -a $GITHUB_OUTPUT )
         shell: bash
       - run: |
           echo '${{ steps.produce-matrix.outputs.matrix-run }}' \
-              | jq -rf ci/test-matrix-to-html.jq --arg job run --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
+              | jq -rf ci/test-matrix-to-html.jq --arg job run --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
         shell: bash
       - run: |
           echo '${{ steps.produce-matrix.outputs.matrix-test-upgrade }}' \
-              | jq -rf ci/test-matrix-to-html.jq --arg job test-upgrade --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
+              | jq -rf ci/test-matrix-to-html.jq --arg job test-upgrade --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
         shell: bash
       - run: |
           echo '${{ steps.produce-matrix.outputs.matrix-k8s }}' \
-              | jq -rf ci/test-matrix-to-html.jq --arg job k8s --argjson build-os "$( jq -c '.["build-os"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
+              | jq -rf ci/test-matrix-to-html.jq --arg job k8s --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
         shell: bash
       - run: jq -n -rf ci/test-matrix-to-html.jq --arg job legend >> $GITHUB_STEP_SUMMARY
         shell: bash
@@ -174,9 +184,9 @@ jobs:
         if: matrix.runs-on == 'ubuntu-22.04' && (matrix.runtime == 'podman' || matrix.runtime == 'sudo podman')
       - uses: actions/download-artifact@v4
         with:
-          name: freeipa-server-${{ matrix.os }}
+          name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
-        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | $runtime load
+        run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | $runtime load
       - run: $runtime volume create ${{ matrix.volume }}
         if: matrix.volume == 'freeipa-data'
       - name: Run master and replica
@@ -208,9 +218,9 @@ jobs:
         if: matrix.runs-on == 'ubuntu-22.04' && (matrix.runtime == 'podman' || matrix.runtime == 'sudo podman')
       - uses: actions/download-artifact@v4
         with:
-          name: freeipa-server-${{ matrix.os }}
+          name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
-        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | $runtime load
+        run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | $runtime load
       - name: Prepare volume with data (docker)
         run: $runtime volume create loaded-data && $runtime create --name loaded-data -v loaded-data:/data:z quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop
         if: matrix.runtime == 'docker' || matrix.runtime == 'docker rootless'
@@ -248,13 +258,13 @@ jobs:
         if: matrix.kubernetes == 'k3s'
       - uses: actions/download-artifact@v4
         with:
-          name: freeipa-server-${{ matrix.os }}
+          name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - run: sudo apt install -y skopeo
         if: matrix.runtime == 'cri-o'
-      - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
+      - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
         if: matrix.runtime == 'cri-o'
       - name: Load image
-        run: gunzip < freeipa-server-${{ matrix.os }}.tar.gz | docker load
+        run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | docker load
         if: matrix.runtime == 'docker'
       - run: patch tests/freeipa-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
@@ -271,12 +281,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.test-plan.outputs.matrix-push ) }}
+        os: ${{ fromJSON(needs.test-plan.outputs.matrix-push ) }}
     timeout-minutes: 30
     steps:
+      - run: |
+          ARCHES=$( jq -cn '${{ needs.test-plan.outputs.matrix-push-data }} | map(select(.os == "${{ matrix.os }}")) | .[].arch' )
+          echo "arches=$ARCHES" | tee -a $GITHUB_OUTPUT
+          ( echo -n "arches_num=" ; echo "$ARCHES" | jq -r 'length' ) | tee -a $GITHUB_OUTPUT
+          ( echo -n "arch0=" ; echo "$ARCHES" | jq -r '.[0]' ) | tee -a $GITHUB_OUTPUT
+        id: get-arches
       - uses: actions/download-artifact@v4
         with:
-          name: freeipa-server-${{ matrix.os }}
+          name: freeipa-server-${{ matrix.os }}-${{ steps.get-arches.outputs.arch0 }}
+        if: steps.get-arches.outputs.arches_num == 1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: freeipa-server-${{ matrix.os }}-*
+          merge-multiple: true
+        if: steps.get-arches.outputs.arches_num != 1
+      - run: |
+          echo '${{ steps.get-arches.outputs.arches }}' \
+          | jq -r '.[] | "docker-archive:freeipa-server-${{ matrix.os }}-" + . + ".tar.gz"' \
+          | xargs podman manifest create freeipa-server:${{ matrix.os }}
+        if: steps.get-arches.outputs.arches_num != 1
       - name: Prepare authentication file
         run: |
           cat > auth.json << 'EOF'
@@ -285,13 +312,17 @@ jobs:
       - name: Copy ${{ matrix.os }} to registries
         run: |
           set -e
-          f=docker-archive:freeipa-server-${{ matrix.os }}.tar.gz
+          f=docker-archive:freeipa-server-${{ matrix.os }}-${{ steps.get-arches.outputs.arch0 }}.tar.gz
           while read r ; do
             echo Copying freeipa-server:${{ matrix.os }} to ${r#docker://}
-            skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
+            if [ "${{ steps.get-arches.outputs.arches_num }}" -eq 1 ] ; then
+              skopeo copy --authfile=auth.json $f $r:${{ matrix.os }}
+            else
+              podman manifest push --authfile=auth.json freeipa-server:${{ matrix.os }} $r:${{ matrix.os }}
+            fi
             VERSION=$( skopeo inspect --format='{{index .Labels "org.opencontainers.image.version"}}' $f | sed 's/-.*//' )
             test -n "$VERSION"
-            skopeo copy --authfile=auth.json $r:${{ matrix.os }} $r:${{ matrix.os }}-$VERSION
+            skopeo copy --authfile=auth.json --all $r:${{ matrix.os }} $r:${{ matrix.os }}-$VERSION
             echo Tagged as ${{ matrix.os }}-$VERSION as well
           done << 'EOF'
           ${{ secrets.REGISTRY_TARGET_LIST }}

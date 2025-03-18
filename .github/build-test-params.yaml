@@ -62,5 +62,5 @@ k8s:
 
 push:
   exclude:
-    - centos-10-stream
+    - os: centos-10-stream
 

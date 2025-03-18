@@ -18,8 +18,8 @@ def td($rowspan):
 		+ "</td>"
 ;
 
-def build_os_list:
-	$ARGS.named["build-os"] // ["fedora-rawhide"]
+def build_dist_list:
+	$ARGS.named["build-dist"] // [{ "os": "fedora-rawhide", "arch": "x86_64" }]
 ;
 
 def os_grouping:
@@ -31,9 +31,10 @@ def os_grouping:
 	}
 ;
 
-def os_group:
+def dist_group:
+	(
 	[
-		.[] as $os
+		.[].os as $os
 		| os_grouping
 		| reduce keys[] as $k ([$os, "", $os];
 			if $os | test($k)
@@ -52,7 +53,23 @@ def os_group:
 	"    </tr>",
 	"    <tr>",
 	(
-		[ .[][2][] | select(. != "") ] | th(1; 1)
+		.[][2]
+		| reduce .[] as $n ([];
+			if $n == "" then .
+			else
+				if $n == .[-1][1]
+				then .[-1][0] += 1
+				else . += [[1, $n]]
+				end
+			end)
+		| .[]
+		| .[0] as $colspan | [ .[1] ] | th(1; $colspan)
+	)
+	),
+	"    </tr>",
+	"    <tr>",
+	(
+		[ .[].arch | .[0:1] ] | th(1; 1)
 	)
 ;
 
@@ -83,9 +100,9 @@ end,
 	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ]
 	elif $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ]
 	else empty end
-	| th(2; 1)
+	| th(3; 1)
 	),
-	( build_os_list | os_group ),
+	( build_dist_list | dist_group ),
 "    </tr>",
 "  </thead>",
 "  <tbody>"
@@ -100,14 +117,21 @@ end,
 | [ .[] | .status = if .nopush then "nopush" else if .["fresh-image"] then "fresh-image" else false end end ]
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
-	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ] = $row.status
+	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "test-upgrade"
-	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row.status
+	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "k8s"
-	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row.status
+	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
 	end
 )
-| walk(if type == "object" then .[".rowspan"] = ([ .[][".rowspan"]? ] | add // 1) else . end)
+| walk(if type == "object"
+	then
+		if ([.[][".arches"]?] | length) > 0 or ([.[][".rowspan"]?] | length) > 0
+		then .[".rowspan"] = ([ .[][".rowspan"]? ] | add // 1)
+		else .[".arches"] = true
+		end
+	else .
+	end)
 | . as $data
 | [ path(.. | select(type == "object" and has(".rowspan"))) | select(length > 0)]
 | (.[-1] | length) as $max
@@ -118,10 +142,10 @@ end,
 	(
 	if .[0] | length == $max then
 		.[1] as $values
-		| build_os_list[] as $os
-		| [ if $values | has($os) then
-			if $values[$os]? == "fresh-image" then "🟢"
-			elif $values[$os]? == "nopush" then "🔶"
+		| build_dist_list[] as $os
+		| [ if ($values | has($os.os)) and ($values[$os.os] | has($os.arch)) then
+			if $values[$os.os][$os.arch] == "fresh-image" then "🟢"
+			elif $values[$os.os][$os.arch] == "nopush" then "🔶"
 			else "🔷" end
 			else "" end ] | td(1)
 	else empty end
