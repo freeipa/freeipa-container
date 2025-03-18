@@ -11,6 +11,11 @@ def frequency_to_list:
 	| $k
 ;
 
+def xcontains($element):
+	. as $input |
+	[ $element | to_entries | .[] | $input[.key] == .value ] | all
+;
+
 def random_select($count; $ensure):
 	if $count <= 0 or length <= 0 then empty
 	else
@@ -29,7 +34,7 @@ def random_select($count; $ensure):
 			| reverse
 			| until(.[0] | length > 0;
 				[ . as $dot
-				| [ $in[] | select(contains($dot[1])) ]
+				| [ $in[] | select(xcontains($dot[1])) ]
 				,
 				$dot[2:][]])
 			| .[0]
@@ -61,7 +66,7 @@ then
 		"ca": $ca | frequency_to_list,
 		"volume": $volume | frequency_to_list
 		}
-		| select([. | contains(($exclude // [])[])] | any | not)
+		| select([. | xcontains(($exclude // [])[])] | any | not)
 		]
 	]
 else if $ARGS.named["job"] == "test-upgrade"
@@ -80,7 +85,7 @@ then
 		"runtime": $runtime | frequency_to_list
 		}
 		| .["data-from"] = $upgrade[.os][]
-		| select([. | contains(($exclude // [])[])] | any | not)
+		| select([. | xcontains(($exclude // [])[])] | any | not)
 		]
 	]
 else if $ARGS.named["job"] == "k8s"
@@ -94,7 +99,7 @@ then
 		"kubernetes": $kubernetes | frequency_to_list,
 		"runtime": $runtime | frequency_to_list
 		}
-		| select([. | contains(($exclude // [])[])] | any | not)
+		| select([. | xcontains(($exclude // [])[])] | any | not)
 		]
 	]
 else
