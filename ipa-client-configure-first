@@ -16,8 +16,6 @@
 
 set -e
 
-PRINCIPAL="${PRINCIPAL:-admin}"
-
 function usage () {
 	if [ -n "$1" ] ; then
 		echo $1 >&2
@@ -73,8 +71,14 @@ else
 			exit 1
 		fi
 	fi
+	 
+	IPA_CLIENT_INSTALL_CMD="/usr/sbin/ipa-client-install $IPA_CLIENT_INSTALL_OPTS $HOSTNAME_OPTS -p admin -w '$PASSWORD' -U --enable-dns-updates --no-nisdomain < /dev/null"
 
-	/usr/sbin/ipa-client-install $IPA_CLIENT_INSTALL_OPTS $HOSTNAME_OPTS -p "$PRINCIPAL" -w "$PASSWORD" -U --enable-dns-updates --no-nisdomain < /dev/null
+	if [[ "$IPA_CLIENT_INSTALL_OPTS" =~ -p[[:space:]] ]]; then
+		IPA_CLIENT_INSTALL_CMD=$(echo "$IPA_CLIENT_INSTALL_CMD" | sed 's/\s*-p[[:space:]]*admin//')
+	fi
+
+	eval "$IPA_CLIENT_INSTALL_CMD"
 	cp -f /etc/hostname /etc/hostname.ipa-client
 	echo "FreeIPA-enrolled."
 fi
