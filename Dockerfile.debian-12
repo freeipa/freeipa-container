@@ -1,0 +1,18 @@
+FROM debian:12-slim
+
+LABEL maintainer="arag0re.eth" version="0.1"
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -y && \
+    apt-get install -y freeipa-client hostname && \
+    apt-get clean
+
+ADD dbus.service /etc/systemd/system/dbus.service
+RUN ln -sf dbus.service /etc/systemd/system/messagebus.service
+    
+ADD systemctl /usr/bin/systemctl
+ADD ipa-client-configure-first /usr/sbin/ipa-client-configure-first
+
+RUN chmod -v +x /usr/bin/systemctl /usr/sbin/ipa-client-configure-first
+
+ENTRYPOINT ["/usr/sbin/ipa-client-configure-first"]
