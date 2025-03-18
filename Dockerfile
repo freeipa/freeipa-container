@@ -1,1 +1,1 @@
-Dockerfile.fedora-24
+Dockerfile.debian-12
