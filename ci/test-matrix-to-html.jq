@@ -70,19 +70,21 @@ if $ARGS.named["job"] == "legend"
 end,
 "## " + if $ARGS.named["job"] == "run"
 		then "Test master + replica"
-	else if $ARGS.named["job"] == "test-upgrade"
+	elif $ARGS.named["job"] == "test-upgrade"
 		then "Test upgrade from older installation"
-	else if $ARGS.named["job"] == "k8s"
+	elif $ARGS.named["job"] == "k8s"
 		then "Test in Kubernetes"
-	end
-	end
 	end,
 "<table>",
 "  <thead>",
 "    <tr>",
-	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ] | th(2; 1) else empty end,
-	if $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ] | th(2; 1) else empty end,
-	if $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ] | th(2; 1) else empty end,
+	(
+	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ]
+	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ]
+	elif $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ]
+	else empty end
+	| th(2; 1)
+	),
 	( build_os_list | os_group ),
 "    </tr>",
 "  </thead>",
@@ -99,12 +101,10 @@ end,
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
 	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ] = $row.status
-	else if $ARGS.named["job"] == "test-upgrade"
+	elif $ARGS.named["job"] == "test-upgrade"
 	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ] = $row.status
-	else if $ARGS.named["job"] == "k8s"
+	elif $ARGS.named["job"] == "k8s"
 	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ] = $row.status
-	end
-	end
 	end
 )
 | walk(if type == "object" then .[".rowspan"] = ([ .[][".rowspan"]? ] | add // 1) else . end)
@@ -120,9 +120,9 @@ end,
 		.[1] as $values
 		| build_os_list[] as $os
 		| [ if $values | has($os) then
-			if $values[$os]? == "fresh-image" then "🟢" else
-			if $values[$os]? == "nopush" then "🔶"
-			else "🔷" end end
+			if $values[$os]? == "fresh-image" then "🟢"
+			elif $values[$os]? == "nopush" then "🔶"
+			else "🔷" end
 			else "" end ] | td(1)
 	else empty end
 	),

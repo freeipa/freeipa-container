@@ -69,7 +69,7 @@ then
 		| select([. | xcontains(($exclude // [])[])] | any | not)
 		]
 	]
-else if $ARGS.named["job"] == "test-upgrade"
+elif $ARGS.named["job"] == "test-upgrade"
 then
 	.["test-upgrade"] as { "runs-on": $runson, $runtime, $volume, "upgrade-to-from": $upgrade, $exclude }
 	| [
@@ -88,7 +88,7 @@ then
 		| select([. | xcontains(($exclude // [])[])] | any | not)
 		]
 	]
-else if $ARGS.named["job"] == "k8s"
+elif $ARGS.named["job"] == "k8s"
 then
 	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
 	| [
@@ -104,8 +104,6 @@ then
 	]
 else
 	error("Unknown job")
-end
-end
 end
 | .[0] as $ensure
 | [
