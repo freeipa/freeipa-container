@@ -137,6 +137,14 @@ function run_ipa_container() {
 	wait_for_ipa_container "$N" "$@"
 }
 
+function check_uids_gids() {
+	local N="$1" ; shift
+	set -x
+	! $docker exec -w /data "$N" \
+		find . -xdev \( -uid +0 -o -gid +0 \) -exec stat --format="%u %g %n" {} \; 2> /dev/null \
+			| grep -v -E '^(0|65534|389|289|288|17|285|25|225|59) (0|65534|389|289|288|17|285|25|22|88|190|225|207|59) '
+}
+
 IMAGE="$1"
 
 DOCKER_RUN_OPTS="--dns=127.0.0.1"
@@ -225,6 +233,8 @@ if $fresh_install ; then
 fi
 )
 
+check_uids_gids freeipa-master
+
 if [ "$replica" = 'none' ] ; then
 	echo OK $0.
 	exit
@@ -252,4 +262,6 @@ if [ -z "$SETUP_CA" ] ; then
 	$docker exec freeipa-replica ipa-ca-install -p Secret123
 	$docker exec freeipa-replica systemctl is-system-running
 fi
+check_uids_gids freeipa-master
+check_uids_gids freeipa-replica
 echo OK $0.
