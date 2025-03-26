@@ -6,24 +6,21 @@ set -x
 #
 # Example of preparing data image for upgrade testing:
 # check /etc/hosts and /etc/resolv.conf
-# mkdir -p freeipa-server/data
-# replica=none docker=podman VOLUME=$(pwd)/freeipa-server/data tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-41
+# replica=none docker=podman VOLUME=volume-fedora-41-4.12.2 tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:volume-fedora-41-4.12.2
+# podman exec -ti freeipa-master bash and check /data/var/lib/ipa/sysrestore/*-resolv.conf
 # podman rm -f freeipa-master
-# check freeipa-server/data/var/lib/ipa/sysrestore/*-resolv.conf
-# tests/pack-data-as-image.sh freeipa-server data-fedora-41
+# tests/pack-data-as-image.sh volume-fedora-41-4.12.2 data-fedora-41-4.12.2
 # podman login quay.io
-# podman tag freeipa/freeipa-server:data-fedora-41 quay.io/freeipa/freeipa-server:data-fedora-41
-# TMPDIR=/tmp podman push quay.io/freeipa/freeipa-server:data-fedora-41
+# TMPDIR=/tmp podman push quay.io/freeipa/freeipa-server:data-fedora-41-4.12.2
 # podman login index.docker.io
-# podman tag freeipa/freeipa-server:data-fedora-41 docker.io/freeipa/freeipa-server:data-fedora-41
-# TMPDIR=/tmp podman push docker.io/freeipa/freeipa-server:data-fedora-41
+# podman tag quay.io/freeipa/freeipa-server:data-fedora-41-4.12.2 docker.io/freeipa/freeipa-server:data-fedora-41-4.12.2
+# TMPDIR=/tmp podman push docker.io/freeipa/freeipa-server:data-fedora-41-4.12.2
 #
 
-cd "$1"
-podman run --rm -v $(pwd)/data:/data:Z registry.fedoraproject.org/fedora:41 tar cf - data > data.tar
-SUM=$( sha256sum data.tar )
+podman volume export $1 > $1.tar
+SUM=$( sha256sum $1.tar )
 SUM=${SUM%% *}
-mv data.tar $SUM.tar
+mv $1.tar $SUM.tar
 DATE=$( TZ=Z date --iso-8601=ns | sed 's/,/./; s/+00:00/Z/' )
 cat <<EOF > config.json
 {
@@ -38,7 +35,7 @@ cat <<EOF > config.json
   "history": [
     {
       "created": "$DATE",
-      "created_by": "/bin/sh -c #(nop) DATA VOLUME"
+      "created_by": "/bin/sh -c #(nop) DATA VOLUME $1"
     }
   ]
 }
@@ -59,5 +56,5 @@ rm -f $SUM.tar $CSUM.json manifest.json
 echo "$CSUM" > "$2.image"
 
 TMPDIR=/tmp podman load -i "$2.tar.gz"
-podman tag $( cat $2.image ) freeipa/freeipa-server:$2
+podman tag $( cat $2.image ) quay.io/freeipa/freeipa-server:$2
 

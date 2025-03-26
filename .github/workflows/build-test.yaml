@@ -269,14 +269,15 @@ jobs:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | $runtime load
-      - name: Prepare volume with data (docker)
-        run: $runtime volume create loaded-data && $runtime create --name loaded-data -v loaded-data:/data:z quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop
-        if: matrix.runtime == 'docker' || matrix.runtime == 'docker rootless'
-      - name: Prepare volume with data (podman)
-        run: $runtime volume create loaded-data && $runtime run --name loaded-data -v loaded-data:/data:z quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} noop || true
-        if: matrix.runtime == 'podman' || matrix.runtime == 'sudo podman'
-      - name: Populate volume directory from volume
-        run: mkdir /tmp/freeipa-data && $runtime run --security-opt label=disable --volumes-from loaded-data -v /tmp/freeipa-data:/data-out:z --rm docker.io/library/busybox sh -c 'cd /data && cp -a . /data-out'
+      - name: Populate volume directory with data
+        run: |
+          mkdir -p /tmp/freeipa-data/image \
+            && skopeo copy docker://quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} dir:/tmp/freeipa-data/image \
+            && jq -r '.layers[].digest | sub("sha256:"; "")' /tmp/freeipa-data/image/manifest.json \
+                 | while read f ; do $runtime run --rm -v /tmp/freeipa-data:/data:z --workdir /data docker.io/library/busybox tar xf image/$f ; done \
+            && rm -rf /tmp/freeipa-data/image
+      - name: The old data-* images had /data directory, move the content one level up
+        run: if test -d /tmp/freeipa-data/data ; then sudo mv /tmp/freeipa-data /tmp/freeipa-data-x && sudo mv /tmp/freeipa-data-x/data /tmp/freeipa-data ; fi
       - name: Run master and replica
         run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
