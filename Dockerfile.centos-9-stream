@@ -40,6 +40,7 @@ RUN systemctl set-default container-ipa.target
 RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
 	&& mkdir /etc/systemd/system/container-ipa.target.wants \
 	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
+RUN systemd-sysusers
 # podman in systemd mode mounts /var/log/journal volume which creates
 # the directory anyway and pollutes podman diff, just pre-create it
 RUN mkdir /var/log/journal
