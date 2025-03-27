@@ -21,29 +21,31 @@ def random_select($count; $ensure):
 	else
 		. as $in
 		|
-		(
-		if (($ensure != null) and ($ensure | length > 0))
-		then
-			[ foreach ($ensure | keys[]) as $k ({};
-				( $ensure[$k] | .[ now * 1000000 % length ] ) as $kk
-				| .[$k] = $kk;
-				.
-				),
-				[]
-			]
-			| reverse
-			| until(.[0] | length > 0;
-				[ . as $dot
-				| [ $in[] | select(xcontains($dot[1])) ]
-				,
-				$dot[2:][]])
-			| .[0]
-		end
-		)
+		[ foreach ($ensure | keys[]) as $k ({};
+			( $ensure[$k] | .[ now * 1000000 % length ] ) as $kk
+			| .[$k] = $kk;
+			.
+			),
+			[]
+		]
+		| (if length > 1 then .[0] else {} end) as $always_remove
+		| reverse
+		| until((. | length < 2) or (.[0] | length > 0);
+			[ . as $dot
+			| [ $in[] | select(xcontains($dot[1])) ]
+			,
+			$dot[2:][]])
+		| if .[0] | length > 0 then .[0] else $in end
 		| .[ now * 1000000 % length ]
 		| . as $row
 		| $row,
-			($in - [ $row ] | random_select($count - 1; $row | to_entries | reduce .[] as $e ($ensure; if .[$e.key] then .[$e.key] -= [ $e.value ] end) | del(..|select(. == []))))
+			($in - [ $row ]
+				| random_select($count - 1;
+					($row + $always_remove)
+						| to_entries
+						| reduce .[] as $e ($ensure;
+							if .[$e.key] then .[$e.key] -= [ $e.value ] end)
+								| del(..|select(. == []))))
 
 	end
 ;
