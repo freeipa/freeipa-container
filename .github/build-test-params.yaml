@@ -17,7 +17,7 @@ run:
   volume:
     freeipa-data: 1
     "": null
-  count: 15
+  count: 13
   exclude:
     - arch: arm64
       runs-on: ubuntu-22.04
@@ -45,11 +45,20 @@ test-upgrade:
     fedora-40:
       - fedora-40-4.11.1
       - fedora-39-4.11.0
+    almalinux-9:
+      - centos-9-stream-4.10.0
+      - rocky-9-4.9.8
+    rocky-9:
+      - rocky-9-4.12.2
+      - almalinux-9-4.10.0
+    centos-9-stream:
+      - centos-9-stream-4.12.2
+      - almalinux-9-4.10.0
     almalinux-8:
       - centos-8-4.8.7
     rocky-8:
       - centos-8-4.8.7
-  count: 7
+  count: 11
   exclude:
     - arch: arm64
       runs-on: ubuntu-22.04
@@ -66,7 +75,7 @@ k8s:
   runtime:
     cri-o: 1
     docker: 1
-  count: 13
+  count: 11
   exclude:
     - arch: arm64
       runs-on: ubuntu-22.04
