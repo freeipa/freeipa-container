@@ -1,20 +1,55 @@
 name: Build and test FreeIPA containers
+run-name: Build and test FreeIPA containers${{ github.event_name == 'workflow_dispatch' && format(' ({0})', inputs.os) || ''}}
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      os:
+        description: OS / Dockerfile
+        type: choice
+        options:
+          - all
+          - fedora-rawhide
+          - fedora-41
+          - fedora-40
+          - centos-10-stream
+          - centos-9-stream
+          - rocky-9
+          - rocky-8
+          - almalinux-9
+          - almalinux-8
   schedule:
     - cron: '15 4 * * 1,3,5'
 
 jobs:
+  init:
+    name: Process workflow inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      os: ${{ steps.generate-os-list-dispatch-one.outputs.os }}${{ steps.generate-os-list-all.outputs.os }}
+    steps:
+      - id: generate-os-list-dispatch-one
+        if: github.event_name == 'workflow_dispatch' && inputs.os != 'all'
+        run: echo 'os=["${{ inputs.os }}"]' | tee $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        if: github.event_name != 'workflow_dispatch' || inputs.os == 'all'
+      - id: generate-os-list-all
+        if: github.event_name != 'workflow_dispatch' || inputs.os == 'all'
+        run: |
+          yq '.on.workflow_dispatch.inputs.os.options | map(select(. != "all"))' .github/workflows/build-test.yaml -o json \
+            | jq -c . | sed 's/^/os=/' | tee $GITHUB_OUTPUT
   build:
     name: Build image
     runs-on: ubuntu-24.04${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
+    needs: [ init ]
+    if: needs.init.outputs.os != '[]'
     strategy:
       fail-fast: false
       matrix:
-        os: [ fedora-rawhide, fedora-41, fedora-40, centos-10-stream, centos-9-stream, rocky-9, rocky-8, almalinux-9, almalinux-8 ]
+        os: ${{ fromJSON(needs.init.outputs.os ) }}
         arch: [ x86_64, arm64 ]
         docker: [ docker ]
         exclude:
@@ -121,7 +156,7 @@ jobs:
         run: |
           (
               echo 'build-dist:'
-              yq '.jobs.build.strategy.matrix | .arch as $arch | .os[] + "-" + $arch[]' .github/workflows/build-test.yaml \
+              yq '.jobs.build.strategy.matrix.arch as $arch | .on.workflow_dispatch.inputs.os.options | .[] + "-" + $arch[]' .github/workflows/build-test.yaml \
               | while read i ; do
                 if [ -f build-status/$i/build-dist ] ; then cat build-status/$i/build-dist ; fi
               done
@@ -162,6 +197,7 @@ jobs:
     name: Run
     runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
+    if: needs.test-plan.outputs.matrix-run != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -213,6 +249,7 @@ jobs:
     name: Upgrade
     runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
+    if: needs.test-plan.outputs.matrix-test-upgrade != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -247,6 +284,7 @@ jobs:
     name: Run in K8s
     runs-on: ${{ matrix.runs-on }}${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ build, test-plan ]
+    if: needs.test-plan.outputs.matrix-k8s != '[]'
     strategy:
       fail-fast: false
       matrix:
