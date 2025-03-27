@@ -95,7 +95,8 @@ then
 		"os": null, "arch": null,
 		"dist": (($fresh | repeat_array(3), $dist) | .[] | select($upgrade[.os])),
 		"runs-on": $runson | frequency_to_list,
-		"runtime": $runtime | frequency_to_list
+		"runtime": $runtime | frequency_to_list,
+		"volume": $volume | frequency_to_list
 		}
 		| . += .dist
 		| .["data-from"] = $upgrade[.os][]

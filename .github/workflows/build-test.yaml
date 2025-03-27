@@ -269,6 +269,11 @@ jobs:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
         run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | $runtime load
+      - name: Populate volume with data using image driver
+        run: |
+          $runtime pull quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} \
+            && $runtime volume create --driver image --opt image=quay.io/freeipa/freeipa-server:data-${{ matrix.data-from }} ${{ matrix.volume }}
+        if: matrix.volume == 'volume-image'
       - name: Populate volume directory with data
         run: |
           mkdir -p /tmp/freeipa-data/image \
@@ -276,8 +281,14 @@ jobs:
             && jq -r '.layers[].digest | sub("sha256:"; "")' /tmp/freeipa-data/image/manifest.json \
                  | while read f ; do $runtime run --rm -v /tmp/freeipa-data:/data:z --workdir /data docker.io/library/busybox tar xf image/$f ; done \
             && rm -rf /tmp/freeipa-data/image
+        if: matrix.volume == '' || matrix.volume == 'volume'
+      - name: Populate volume with data
+        run: |
+          $runtime volume create ${{ matrix.volume }} \
+            && $runtime run --rm -v /tmp/freeipa-data:/data-in:z -v ${{ matrix.volume }}:/data:z --workdir /data docker.io/library/busybox cp -a /data-in/. .
+        if: matrix.volume == 'volume'
       - name: Run master and replica
-        run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: docker="$runtime" VOLUME=${{ matrix.volume != '' && matrix.volume || '/tmp/freeipa-data' }} tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
   test-k8s:
     name: Run in K8s

@@ -97,7 +97,7 @@ end,
 "    <tr>",
 	(
 	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ]
-	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Upgrade from" ]
+	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Volume", "Upgrade from" ]
 	elif $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ]
 	else empty end
 	| th(3; 1)
@@ -112,14 +112,14 @@ end,
 .[]["runs-on"]? |= if . == null then empty else sub("^ubuntu-"; "") end
 | .[].readonly? |= if . == null then empty else if . == "--read-only" then "yes (ro)" else "rw" end end
 | .[].ca? |= if . == null then empty else if . == "--external-ca" then "external" else "no" end end
-| .[].volume? |= if . == null then empty else if . == "freeipa-data" then "volume" else "dir" end end
+| .[].volume? |= if . == null then empty else if . == "freeipa-data" then "volume" elif . == "" then "dir" end end
 | sort_by(.kubernetes, .runtime, .readonly, .ca, .volume, -(.["runs-on"] // 0 | tonumber), .["data-from"])
 | [ .[] | .status = if .nopush then "nopush" else if .["fresh-image"] then "fresh-image" else false end end ]
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
 	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "test-upgrade"
-	then .[ $row.runtime ][ $row["runs-on"] ][ $row[ "data-from" ] ][ $row.os ][ $row.arch ] = $row.status
+	then .[ $row.runtime ][ $row["runs-on"] ][ $row.volume ][ $row[ "data-from" ] ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "k8s"
 	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
 	end

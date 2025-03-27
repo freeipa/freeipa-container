@@ -32,6 +32,10 @@ test-upgrade:
   runtime:
     podman: 3
     docker: 1
+  volume:
+    volume-image: 1
+    volume: 1
+    "": 1
   upgrade-to-from:
     fedora-rawhide:
       - fedora-41-4.12.2
@@ -49,6 +53,8 @@ test-upgrade:
   exclude:
     - arch: arm64
       runs-on: ubuntu-22.04
+    - volume: volume-image
+      runtime: docker
 
 k8s:
   runs-on:
