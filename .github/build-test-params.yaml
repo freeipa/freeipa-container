@@ -34,17 +34,17 @@ test-upgrade:
     docker: 1
   upgrade-to-from:
     fedora-rawhide:
-      - fedora-41
+      - fedora-41-4.12.2
     fedora-41:
-      - fedora-41
-      - fedora-40
+      - fedora-41-4.12.2
+      - fedora-40-4.11.1
     fedora-40:
-      - fedora-40
-      - fedora-39
+      - fedora-40-4.11.1
+      - fedora-39-4.11.0
     almalinux-8:
-      - centos-8-certs-updated-data
+      - centos-8-4.8.7
     rocky-8:
-      - centos-8-certs-updated-data
+      - centos-8-4.8.7
   count: 7
   exclude:
     - arch: arm64

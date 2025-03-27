@@ -276,8 +276,6 @@ jobs:
             && jq -r '.layers[].digest | sub("sha256:"; "")' /tmp/freeipa-data/image/manifest.json \
                  | while read f ; do $runtime run --rm -v /tmp/freeipa-data:/data:z --workdir /data docker.io/library/busybox tar xf image/$f ; done \
             && rm -rf /tmp/freeipa-data/image
-      - name: The old data-* images had /data directory, move the content one level up
-        run: if test -d /tmp/freeipa-data/data ; then sudo mv /tmp/freeipa-data /tmp/freeipa-data-x && sudo mv /tmp/freeipa-data-x/data /tmp/freeipa-data ; fi
       - name: Run master and replica
         run: docker="$runtime" VOLUME=/tmp/freeipa-data tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
 
