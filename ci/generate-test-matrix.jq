@@ -53,6 +53,7 @@ def random_select($count; $ensure):
 .["build-dist"] as $dist
 | (.push.exclude // []) as $nopush
 | [(.["fresh-dist"] // []) | .[] | select([ xcontains($nopush[]) ] | any | not)] as $fresh
+| (if $fresh | length > 0 then $fresh else $dist end) as $fresh_or_dist
 | if $ARGS.named["job"] == "push-data"
 then
 	[ [ $fresh[].os ] | unique[] | . as $os
@@ -67,7 +68,7 @@ then
 	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume, $exclude }
 	| [
 		.run | to_entries | reduce .[] as $e ({}; .[$e.key] |= ( $e.value | objects | keys ))
-		| .dist |= [(if $fresh | length > 0 then $fresh else $dist end)[]],
+		| .dist |= $fresh_or_dist,
 		[ {
 		"os": null, "arch": null,
 		"dist": ($fresh | repeat_array(3), $dist)[],
@@ -87,10 +88,10 @@ then
 	| [
 		.["test-upgrade"] | to_entries | reduce .[] as $e ({};
 			if $e.key == "upgrade-to-from"
-			then .["data-from"] |= ([ $e.value[$fresh[].os] | arrays[]] | unique)
+			then .["data-from"] |= ([ $e.value[$fresh_or_dist[].os] | arrays[]] | unique)
 			else .[$e.key] |= ( $e.value | objects | keys )
 			end)
-		| .dist |= [((if $fresh | length > 0 then $fresh else $dist end) | .[] | select($upgrade[.os]))],
+		| .dist |= [($fresh_or_dist[] | select($upgrade[.os]))],
 		[ {
 		"os": null, "arch": null,
 		"dist": (($fresh | repeat_array(3), $dist) | .[] | select($upgrade[.os])),
@@ -108,7 +109,7 @@ then
 	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
 	| [
 		.k8s | to_entries | reduce .[] as $e ({}; .[$e.key] |= ( $e.value | objects | keys ))
-		| .dist |= [(if $fresh | length > 0 then $fresh else $dist end)[]],
+		| .dist |= $fresh_or_dist,
 		[ {
 		"os": null, "arch": null,
 		"dist": ($fresh | repeat_array(3), $dist)[],
