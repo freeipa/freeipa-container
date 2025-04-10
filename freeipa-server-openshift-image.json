@@ -26,6 +26,17 @@
                         }
                     },
                     {
+                        "name": "fedora-42",
+                        "annotations": {
+                            "openshift.io/display-name": "FreeIPA Server on Fedora 42",
+                            "tags": "freeipa, identity management"
+                        },
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "quay.io/freeipa/freeipa-server:fedora-42"
+                        }
+                    },
+                    {
                         "name": "fedora-41",
                         "annotations": {
                             "openshift.io/display-name": "FreeIPA Server on Fedora 41",

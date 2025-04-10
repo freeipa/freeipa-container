@@ -38,6 +38,9 @@ test-upgrade:
     "": 1
   upgrade-to-from:
     fedora-rawhide:
+      - fedora-42-4.12.2
+    fedora-42:
+      - fedora-42-4.12.2
       - fedora-41-4.12.2
     fedora-41:
       - fedora-41-4.12.2
@@ -84,6 +87,8 @@ k8s:
 push:
   exclude:
     - os: centos-10-stream
+    - os: fedora-42
+      arch: arm64
     - os: fedora-41
       arch: arm64
 

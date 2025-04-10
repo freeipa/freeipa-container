@@ -12,6 +12,7 @@ on:
         options:
           - all
           - fedora-rawhide
+          - fedora-42
           - fedora-41
           - fedora-40
           - centos-10-stream
