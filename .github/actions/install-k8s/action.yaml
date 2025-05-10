@@ -13,7 +13,7 @@ runs:
             | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
         sudo apt update
-        sudo apt install -y kubelet kubeadm kubectl
+        sudo apt install -y kubelet kubeadm kubectl kubernetes-cni
 
         sudo modprobe br_netfilter
         sudo sysctl -w net.ipv4.ip_forward=1
