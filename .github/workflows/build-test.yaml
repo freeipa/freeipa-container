@@ -312,7 +312,7 @@ jobs:
         if: matrix.runtime == 'docker'
       - uses: ./.github/actions/install-k8s
         env:
-          KUBERNETES_VERSION: v1.32
+          KUBERNETES_VERSION: v1.33
         if: matrix.kubernetes == 'kubeadm init'
       - uses: ./.github/actions/install-k3s
         if: matrix.kubernetes == 'k3s'
