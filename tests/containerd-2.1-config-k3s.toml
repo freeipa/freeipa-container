@@ -1,0 +1,5 @@
+
+[plugins.'io.containerd.cri.v1.runtime'.cni]
+  bin_dirs = [ "/var/lib/rancher/k3s/data/cni" ]
+  conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d"
+

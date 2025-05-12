@@ -74,6 +74,7 @@ k8s:
   runtime:
     cri-o: 1
     docker: 1
+    containerd: 1
   count: 11
   exclude:
     - arch: arm64

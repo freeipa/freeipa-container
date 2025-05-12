@@ -309,6 +309,10 @@ jobs:
         if: matrix.runtime == 'cri-o'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
+      - run: sudo systemctl stop docker && sudo rm -f /var/run/docker.sock
+        if: matrix.runtime != 'docker'
+      - uses: ./.github/actions/install-containerd-2.1
+        if: matrix.runtime == 'containerd'
       - uses: ./.github/actions/install-k8s
         env:
           KUBERNETES_VERSION: v1.33
@@ -322,9 +326,12 @@ jobs:
         if: matrix.runtime == 'cri-o'
       - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
         if: matrix.runtime == 'cri-o'
-      - name: Load image
+      - name: Load image to docker
         run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | docker load
         if: matrix.runtime == 'docker'
+      - name: Load image to containerd
+        run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | sudo ctr -n k8s.io images import -
+        if: matrix.runtime == 'containerd'
       - run: patch tests/freeipa-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
       - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch

@@ -12,6 +12,14 @@ runs:
                   --kube-scheduler-arg feature-gates=UserNamespacesSupport=true"
         elif [ -e /var/run/docker.sock ] ; then
             INSTALL_K3S_EXEC="--docker --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+        elif [ -e /var/run/containerd/containerd.sock ] ; then
+            INSTALL_K3S_EXEC="--container-runtime-endpoint /var/run/containerd/containerd.sock \
+                  --kubelet-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-apiserver-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-controller-manager-arg feature-gates=UserNamespacesSupport=true \
+                  --kube-scheduler-arg feature-gates=UserNamespacesSupport=true"
+            cat tests/containerd-2.1-config-k3s.toml | sudo tee -a /etc/containerd/config.toml
+            sudo systemctl restart containerd
         fi
         curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config
         sudo chown -R $( id -u ):$( id -g ) ~/.kube

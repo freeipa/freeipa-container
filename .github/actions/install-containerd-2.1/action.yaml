@@ -1,0 +1,28 @@
+name: Install and start containerd 2.1
+runs:
+  using: composite
+  steps:
+    - run: |
+        sudo systemctl stop containerd || :
+
+        curl -LO https://github.com/containerd/containerd/releases/download/v2.1.0/containerd-2.1.0-linux-$( dpkg --print-architecture ).tar.gz
+        cat containerd-*.tar.gz | sudo bash -c 'cd /usr/local && tar xvzf -'
+
+        curl -LO https://github.com/opencontainers/runc/releases/download/v1.3.0/runc.$( dpkg --print-architecture )
+        sudo mv runc.* /usr/local/bin/runc
+        sudo chmod a+x /usr/local/bin/runc
+
+        sudo mkdir -p /etc/cni/net.d
+        sudo cp tests/10-bridge.conflist /etc/cni/net.d/
+
+        sudo mkdir -p /etc/containerd
+        sudo cp tests/containerd-2.1-config.toml /etc/containerd/config.toml
+
+        curl -LO https://github.com/containerd/containerd/raw/refs/heads/main/containerd.service
+        sudo mv containerd.service /etc/systemd/system/
+        sudo systemctl daemon-reload
+
+        sudo systemctl start containerd
+        sudo ctr version
+        diff -u <( sudo containerd config default ) <( sudo containerd config dump ) || true
+      shell: bash -euxo pipefail {0}

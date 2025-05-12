@@ -22,6 +22,8 @@ runs:
         CONFIG=tests/k8s-service-subnet-allow-swap.yaml
         if [ -e /var/run/crio/crio.sock ] ; then
             CONFIG="$CONFIG tests/k8s-initconfiguration-crio.yaml"
+        elif [ -e /var/run/containerd/containerd.sock ] ; then
+            CONFIG="$CONFIG tests/k8s-initconfiguration-containerd.yaml"
         fi
 
         if ! cat $CONFIG | sudo kubeadm init --config /dev/stdin ; then
