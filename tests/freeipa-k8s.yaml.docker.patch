@@ -1,5 +1,13 @@
 --- tests/freeipa-k8s.yaml
 +++ tests/freeipa-k8s.yaml
+@@ -74,7 +74,6 @@ metadata:
+     app: freeipa-server
+ spec:
+   restartPolicy: Never
+-  hostUsers: false
+   containers:
+   - name: freeipa-server
+     image: localhost/freeipa-server:latest
 @@ -123,3 +123,7 @@ spec:
    subdomain: dom1
    setHostnameAsFQDN: true
