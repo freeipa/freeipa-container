@@ -336,6 +336,10 @@ jobs:
         if: matrix.runtime == 'docker'
       - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
+      - run: patch tests/freeipa-k8s.yaml < tests/freeipa-k8s.yaml.containerd.patch
+        if: matrix.runtime == 'containerd'
+      - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.containerd.patch
+        if: matrix.runtime == 'containerd'
       - name: Run master and replica in K8s
         run: tests/run-in-k8s.sh localhost/freeipa-server:${{ matrix.os }}
 
