@@ -1,4 +1,4 @@
-# Build on top of base CentOS 10 Stream development image
+# Build on top of base CentOS 10 Stream image
 FROM quay.io/centos/centos:stream10
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
@@ -60,7 +60,7 @@ RUN systemd-tmpfiles --remove --create
 RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
 ADD hostnamectl-wrapper /usr/bin/nisdomainname
 
-### # test: systemd-container-ipa-server-install.sh
+## # test: systemd-container-ipa-server-install.sh
 
 # Move configuration and data to data volume
 COPY patches/ipa-data-fedora-39.patch /root
