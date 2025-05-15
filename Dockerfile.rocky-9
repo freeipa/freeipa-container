@@ -6,13 +6,19 @@ COPY resolv.conf hostname /etc/
 
 RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
 RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
+RUN groupadd -g 285 sssd; useradd -u 285 -g 285 -c 'User for sssd' -r -d /run/sssd/ -s '/sbin/nologin' sssd
+RUN groupadd -g 225 ods; useradd -u 225 -g 225 -c 'opendnssec daemon account' -r -d / -s /sbin/nologin ods
+RUN groupadd -g 207 printadmin
 
 # Workaround 1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN dnf -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ipa-server-trust-ad patch ipa-healthcheck ipa-client-epn && dnf clean all
 
-# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17):" | wc -l ) -eq 4
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|ods:x:225|tss:x:59):" | wc -l ) -eq 8
+# debug: RUN test $( getent group | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|utmp:x:22|wbpriv:x:88|systemd-journal:x:190|ods:x:225|printadmin:x:207|tss:x:59):" | wc -l ) -eq 12
+
+COPY tmpfiles-ownership-fedora-40.conf /usr/lib/tmpfiles.d/ipa-ownership.conf
 
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
 RUN systemctl mask rpc-gssd.service
