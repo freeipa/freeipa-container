@@ -47,7 +47,6 @@ test-upgrade:
       - fedora-40-4.11.1
     almalinux-9:
       - centos-9-stream-4.10.0
-      - rocky-9-4.9.8
     rocky-9:
       - rocky-9-4.12.2
       - almalinux-9-4.10.0
