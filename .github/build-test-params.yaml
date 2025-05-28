@@ -45,11 +45,15 @@ test-upgrade:
     fedora-41:
       - fedora-41-4.12.2
       - fedora-40-4.11.1
+    almalinux-10:
+      - almalinux-10-4.12.2
     almalinux-9:
       - centos-9-stream-4.10.0
     rocky-9:
       - rocky-9-4.12.2
       - almalinux-9-4.10.0
+    centos-10-stream:
+      - almalinux-10-4.12.2
     centos-9-stream:
       - centos-9-stream-4.12.2
     almalinux-8:

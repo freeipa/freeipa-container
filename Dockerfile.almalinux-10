@@ -1,0 +1,106 @@
+# Build on top of base AlmaLinux 10 image
+FROM docker.io/almalinux/10-init
+
+RUN groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -r -d / -s '/sbin/nologin' kdcproxy
+RUN groupadd -g 289 ipaapi; useradd -u 289 -g 289 -c 'IPA Framework User' -r -d / -s '/sbin/nologin' ipaapi
+RUN groupadd -g 285 sssd; useradd -u 285 -g 285 -c 'User for sssd' -r -d /run/sssd/ -s '/sbin/nologin' sssd
+RUN groupadd -g 225 ods; useradd -u 225 -g 225 -c 'opendnssec daemon account' -r -d / -s /sbin/nologin ods
+RUN groupadd -g 207 printadmin
+
+# Workaround 1615948
+RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
+RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
+RUN dnf -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ipa-server-trust-ad patch ipa-healthcheck ipa-client-epn \
+	&& dnf clean all
+
+# debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|ods:x:225|tss:x:59):" | wc -l ) -eq 8
+# debug: RUN test $( getent group | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|utmp:x:22|wbpriv:x:88|systemd-journal:x:190|ods:x:225|printadmin:x:207|tss:x:59):" | wc -l ) -eq 12
+
+COPY tmpfiles-ownership-fedora-41.conf /usr/lib/tmpfiles.d/ipa-ownership.conf
+
+# var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
+RUN systemctl mask rpc-gssd.service
+
+RUN mkdir /usr/lib/systemd/system/sssd.service.d
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=2334087
+RUN ( echo '[Service]' ; sed '/^CapabilityBoundingSet=/!d; s/CAP_DAC_READ_SEARCH/& CAP_DAC_OVERRIDE/' /usr/lib/systemd/system/sssd.service ) > /usr/lib/systemd/system/sssd.service.d/capabilities.conf
+RUN setcap cap_dac_override+ep /usr/libexec/sssd/ldap_child
+
+# Container image which runs systemd
+# debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
+# debug: RUN test -z "$container"
+ENV container oci
+
+# Establish reasonably low open files limit in the container
+COPY DefaultLimitNOFILE.conf /usr/lib/systemd/system.conf.d/DefaultLimitNOFILE.conf
+
+ENTRYPOINT [ "/usr/sbin/init" ]
+STOPSIGNAL RTMIN+3
+# test: systemd-container-failed.sh
+
+# Minimize the systemd setup
+RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l \! -lname /dev/null | xargs rm -v
+RUN systemctl mask systemd-logind.service
+COPY patches/minimal-fedora-42.patch /root/
+RUN patch --verbose -p0 --fuzz=0 < /root/minimal-fedora-42.patch
+# debug: RUN ! find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants /etc/tmpfiles.d -type f | grep .
+
+RUN ln -s /usr/lib/systemd/system/dbus-broker.service /usr/lib/systemd/system/dbus.service
+COPY container-ipa.target /usr/lib/systemd/system/
+RUN systemctl set-default container-ipa.target
+RUN rmdir -v /etc/systemd/system/multi-user.target.wants \
+	&& mkdir /etc/systemd/system/container-ipa.target.wants \
+	&& ln -s /etc/systemd/system/container-ipa.target.wants /etc/systemd/system/multi-user.target.wants
+RUN systemd-sysusers
+# podman in systemd mode mounts /var/log/journal volume which creates
+# the directory anyway and pollutes podman diff, just pre-create it
+RUN mkdir /var/log/journal
+RUN systemd-tmpfiles --remove --create
+# debug: RUN ! test -f /var/lib/systemd/random-seed
+# test-addon: VOLUME [ "/var/tmp" ]
+# test: systemd-container-diff.sh list-dependencies-rhel-9.out /dev/null docker-diff-minimal-fedora-23.out
+
+# Prepare for basic ipa-server-install in container
+# Address failing nis-domainname.service in the ipa-client-install step
+RUN mv /usr/bin/nisdomainname /usr/bin/nisdomainname.orig
+ADD hostnamectl-wrapper /usr/bin/nisdomainname
+
+## # test: systemd-container-ipa-server-install.sh
+
+# Move configuration and data to data volume
+COPY patches/ipa-data-fedora-39.patch /root
+RUN set -o pipefail ; patch --verbose -p0 --fuzz=0 < /root/ipa-data-fedora-39.patch | tee /dev/null | sed -n 's/^patching file //;T;/\.py$/p' | xargs /usr/libexec/platform-python -m compileall
+COPY ipaplatform-rhel.conf /usr/lib/systemd/system.conf.d/ipaplatform-override.conf
+ENV IPAPLATFORM_OVERRIDE=rhel_container
+
+COPY journald-storage.conf /usr/lib/systemd/journald.conf.d/storage.conf
+
+RUN authselect select sssd with-sudo --force
+
+COPY utils/prepare-volume-template utils/populate-volume-from-template utils/extract-rpm-upgrade-scriptlets /usr/local/bin/
+COPY volume-data-list volume-tmp-list volume-data-autoupdate /etc/
+RUN /usr/local/bin/prepare-volume-template /etc/volume-data-list /data
+RUN /usr/local/bin/prepare-volume-template /etc/volume-tmp-list /tmp
+RUN /usr/local/bin/extract-rpm-upgrade-scriptlets
+
+RUN echo 2.0 > /etc/volume-version
+VOLUME [ "/tmp", "/run", "/data" ]
+
+COPY init-data-minimal /usr/local/sbin/init
+ENTRYPOINT [ "/usr/local/sbin/init" ]
+# test: systemd-container-ipa-server-install-data.sh /dev/null
+
+# Configure master/replica upon the first invocation
+COPY init-data /usr/local/sbin/init
+COPY ipa-server-configure-first systemctl-exit-with-status ipa-volume-upgrade-* /usr/sbin/
+COPY ipa-server-configure-first.service ipa-server-upgrade.service ipa-server-update-self-ip-address.service /usr/lib/systemd/system/
+COPY service-success-poweroff.conf /usr/lib/systemd/system/ipa-server-configure-first.service.d/service-success-poweroff.conf.template
+RUN ln -sv /usr/lib/systemd/system/ipa-server-configure-first.service /data-template/etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
+COPY exit-status.conf /usr/lib/systemd/system/systemd-poweroff.service.d/
+
+EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp
+
+RUN uuidgen > /data-template/build-id
+
+LABEL org.opencontainers.image.title="FreeIPA server"
+LABEL org.opencontainers.image.authors="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
