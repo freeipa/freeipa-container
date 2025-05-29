@@ -23,7 +23,8 @@ test-upgrade:
   runs-on:
     ubuntu-24.04: 1
   runtime:
-    podman: 3
+    podman: 2
+    docker rootless: 2
     docker: 1
   volume:
     volume-image: 1
@@ -57,6 +58,8 @@ test-upgrade:
   exclude:
     - volume: volume-image
       runtime: docker
+    - volume: volume-image
+      runtime: docker rootless
 
 k8s:
   runs-on:

@@ -1,0 +1,24 @@
+# https://docs.docker.com/engine/security/rootless/
+name: Install docker in rootless mode
+runs:
+  using: composite
+  steps:
+    - run: |
+        sudo systemctl disable --now docker.service docker.socket
+
+        cat <<EOT | sudo tee "/etc/apparmor.d/home.runner.bin.rootlesskit"
+        # ref: https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
+        abi <abi/4.0>,
+        include <tunables/global>
+        /home/runner/bin/rootlesskit flags=(unconfined) {
+          userns,
+          # Site-specific additions and overrides. See local/README for details.
+          include if exists <local/home.runner.bin.rootlesskit>
+        }
+        EOT
+        sudo systemctl restart apparmor.service
+
+        curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+
+        docker info --format '{{ .ClientInfo.Context }}' | grep rootless
+      shell: bash -euxo pipefail {0}

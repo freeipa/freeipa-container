@@ -209,22 +209,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
-      - run: sudo systemctl disable --now docker.service docker.socket
-        if: matrix.runtime == 'docker rootless'
-      - run: |
-          cat <<EOT | sudo tee "/etc/apparmor.d/home.runner.bin.rootlesskit"
-          # ref: https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
-          abi <abi/4.0>,
-          include <tunables/global>
-          /home/runner/bin/rootlesskit flags=(unconfined) {
-            userns,
-            # Site-specific additions and overrides. See local/README for details.
-            include if exists <local/home.runner.bin.rootlesskit>
-          }
-          EOT
-          sudo systemctl restart apparmor.service
-        if: matrix.runtime == 'docker rootless'
-      - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+      - uses: ./.github/actions/install-docker-rootless
         if: matrix.runtime == 'docker rootless'
       - uses: actions/download-artifact@v4
         with:
@@ -258,6 +243,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
+      - uses: ./.github/actions/install-docker-rootless
+        if: matrix.runtime == 'docker rootless'
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
