@@ -54,7 +54,7 @@ jobs:
         arch: [ x86_64, arm64 ]
         docker: [ docker ]
         exclude:
-          - os: fedora-40
+          - os: fedora-41
             arch: arm64
           - os: centos-10-stream
             arch: x86_64
