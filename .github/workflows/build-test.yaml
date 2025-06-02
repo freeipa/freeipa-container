@@ -14,13 +14,13 @@ on:
           - fedora-rawhide
           - fedora-42
           - fedora-41
-          - centos-10-stream
-          - centos-9-stream
-          - rocky-9
-          - rocky-8
           - almalinux-10
           - almalinux-9
           - almalinux-8
+          - rocky-9
+          - rocky-8
+          - centos-10-stream
+          - centos-9-stream
   schedule:
     - cron: '15 4 * * 1,3,5'
 
