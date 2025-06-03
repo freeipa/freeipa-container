@@ -24,6 +24,7 @@
 /etc/pki/nssdb/
 /etc/pki/pki-tomcat
 /etc/pki/tls/certs/
+/etc/pki/tls/private/
 /etc/pkcs11/modules/
 /etc/rndc.key
 /etc/samba/
@@ -31,6 +32,7 @@
 /etc/sysconfig/
 /etc/systemd/system/
 /etc/tmpfiles.d/
+/etc/unbound/
 /etc/yp.conf
 /root/ca-agent.p12
 /root/cacert.p12
@@ -63,6 +65,7 @@
 /var/lib/sss/pubconf/
 /var/lib/systemd/
 /var/lib/tpm2-tss/
+/var/lib/unbound/
 /var/log/btmp
 /var/log/custodia.audit.log
 /var/log/dirsrv/
