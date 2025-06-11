@@ -307,6 +307,35 @@ Alternatively, the `IPA_SERVER_IP` environment variable can be
 used to force the IPv4 address DNS record to a specific value.
 Using this mechanism will however not update the `ipa-ca` record.
 
+### Running in Kubernetes
+
+An example Pod YAML for running FreeIPA server in Kubernetes is shown
+in [tests/freeipa-k8s.yaml](tests/freeipa-k8s.yaml). It is also used
+by the CI workflows of this repo which you are welcome so check for
+any workarounds that might be needed.
+
+The crucial value is the `spec.hostUsers: false` which ensures the Pod
+runs in its user namespace, with its root (and other uids) isolated
+from the host. For this to work, the `UserNamespacesSupport`
+Kubernetes feature gate needs to be set to `true` in the cluster.
+The feature gate is present starting with Kubernetes 1.28, and it
+is `true` by default since Kubernetes 1.33.
+
+The second prerequisite is the support for user namespaces and writable
+cgroups in runtimes. Runtimes known to work include
+
+- containerd 2.1+, with [writable systemd cgroups configuration](tests/containerd-2.1-config.toml)
+- CRI-O 1.32+
+
+with either of
+
+- runc 1.2+
+- crun 1.9+
+
+When docker is used as a runtime for Kubernetes, the user namespace
+remapping with `userns-remap` described above needs to be used instead
+of `spec.hostUsers`.
+
 ## Debugging
 
 The container scripts provide some options for debugging:
