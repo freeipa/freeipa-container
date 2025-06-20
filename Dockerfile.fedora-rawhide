@@ -19,6 +19,9 @@ RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf clean all
 RUN rm -f /usr/lib/rpm/macros.d/macros.usr-local-bin
 
+# Workaround 2373979
+RUN find /usr/lib*/python3.14/site-packages -name '*.py' | xargs python3 -m compileall
+
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|ods:x:225|tss:x:59):" | wc -l ) -eq 8
 # debug: RUN test $( getent group | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|utmp:x:22|wbpriv:x:88|systemd-journal:x:190|ods:x:225|printadmin:x:207|tss:x:59):" | wc -l ) -eq 12
 
