@@ -1,0 +1,18 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-coredns
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    extraConfig:
+      import:
+        parameters: /etc/coredns/custom/*.server
+    extraVolumes:
+      - name: config-volume-custom
+        configMap:
+          name: coredns-custom
+    extraVolumeMounts:
+      - name: config-volume-custom
+        mountPath: /etc/coredns/custom
+        readOnly: true

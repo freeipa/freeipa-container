@@ -1,0 +1,41 @@
+name: Install and start RKE2
+runs:
+  using: composite
+  steps:
+    - run: |
+        sudo rm -f /etc/cni/net.d/*.conflist
+        sudo mkdir -p /etc/rancher/rke2/config.yaml.d
+        if [ -e /var/run/crio/crio.sock ] ; then
+            echo "container-runtime-endpoint: /var/run/crio/crio.sock" | sudo tee /etc/rancher/rke2/config.yaml.d/70-crio.yaml
+        elif [ -e /var/run/containerd/containerd.sock ] ; then
+            echo "container-runtime-endpoint: /var/run/containerd/containerd.sock" | sudo tee /etc/rancher/rke2/config.yaml.d/70-containerd.yaml
+        fi
+        sudo mkdir -p /var/lib/rancher/rke2/server/manifests
+        sudo cp tests/rke2-helm-coredns-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
+
+        curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_CHANNEL=latest sh -
+        sudo systemctl start rke2-server.service
+        systemctl status rke2-server.service
+        mkdir ~/.kube
+        sudo cat /etc/rancher/rke2/rke2.yaml > ~/.kube/config
+        sudo ln -s /var/lib/rancher/rke2/bin/kubectl /usr/local/bin
+        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
+        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
+        kubectl apply -f tests/freeipa-coredns-custom.yaml
+
+        kubectl get pods --all-namespaces
+        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|Init|No resources found' ; do echo --- ; sleep 5 ; done )
+        kubectl get pods --all-namespaces
+
+        kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+        # Remove the extremely permissive ACLs / mask that GitHub runners have on /opt
+        # which prevents sssd.service from starting due to
+        # [sssd] [access_check_file] (0x0020): Unexpected access to '/etc/sssd/sssd.conf' by other users
+        sudo mkdir /opt/local-path-provisioner
+        sudo setfacl -b /opt/local-path-provisioner
+
+        ( set +x ; for i in $( seq 1 10 ) ; do ip link show flannel.1 > /dev/null && break ; sleep 3 ; done )
+        sudo resolvectl dns flannel.1 $( kubectl get -n kube-system service/rke2-coredns-rke2-coredns -o 'jsonpath={.spec.clusterIP}' )
+        sudo resolvectl domain flannel.1 cluster.local
+        ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
+      shell: bash -euxo pipefail {0}
