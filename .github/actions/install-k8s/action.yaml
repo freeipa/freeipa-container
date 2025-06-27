@@ -59,4 +59,5 @@ runs:
             | kubectl create --dry-run=client -n kube-system configmap coredns --from-file=Corefile=/dev/stdin -o yaml \
             | kubectl apply -n kube-system -f -
         fi
+        ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
       shell: bash -euxo pipefail {0}

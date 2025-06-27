@@ -43,4 +43,5 @@ runs:
         sudo resolvectl domain cni0 cluster.local
 
         kubectl apply -f tests/freeipa-coredns-custom.yaml
+        ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
       shell: bash -euxo pipefail {0}
