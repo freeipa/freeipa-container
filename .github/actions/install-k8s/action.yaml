@@ -39,6 +39,8 @@ runs:
         ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
         ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
         kubectl get pods --all-namespaces
+        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|Init|No resources found' ; do echo --- ; sleep 5 ; done )
+        kubectl get pods --all-namespaces
 
         kubectl taint nodes $( hostname ) node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
