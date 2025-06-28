@@ -320,6 +320,8 @@ jobs:
         if: matrix.kubernetes == 'kubeadm init'
       - uses: ./.github/actions/install-k3s
         if: matrix.kubernetes == 'k3s'
+      - uses: ./.github/actions/install-rke2
+        if: matrix.kubernetes == 'rke2'
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}

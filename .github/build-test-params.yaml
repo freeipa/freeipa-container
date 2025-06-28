@@ -74,6 +74,7 @@ k8s:
   kubernetes:
     k3s: 1
     kubeadm init: 1
+    rke2: 1
   runtime:
     cri-o: 1
     docker: 1
@@ -84,6 +85,10 @@ k8s:
       runs-on: ubuntu-22.04
     - kubernetes: kubeadm init
       runtime: docker
+    - kubernetes: rke2
+      runtime: docker
+    - kubernetes: rke2
+      runs-on: ubuntu-22.04
 
 push:
   exclude:
