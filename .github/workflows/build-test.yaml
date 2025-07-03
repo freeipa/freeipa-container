@@ -19,6 +19,7 @@ on:
           - almalinux-8
           - rocky-9
           - rocky-8
+          - centos-10-stream
           - centos-9-stream
   schedule:
     - cron: '15 4 * * 1,3,5'
