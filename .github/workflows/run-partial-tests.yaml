@@ -38,7 +38,7 @@ jobs:
       - id: default-matrix
         run: |
           (
-          echo -n "matrix={'os': [ 'fedora-rawhide', 'fedora-42', 'fedora-41', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-10', 'almalinux-9', 'almalinux-8' ], \
+          echo -n "matrix={'os': [ 'fedora-42', 'fedora-41', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-10', 'almalinux-9', 'almalinux-8' ], \
           'docker': [ 'docker', 'podman' ] "
           if [ -n "${{ secrets.REDHAT_ORG }}" -a -n "${{ secrets.REDHAT_ACTIVATIONKEY }}" ] ; then
             echo -n ", 'include': [ \
