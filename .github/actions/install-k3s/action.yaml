@@ -21,7 +21,7 @@ runs:
             cat tests/containerd-2.1-config-k3s.toml | sudo tee -a /etc/containerd/config.toml
             sudo systemctl restart containerd
         fi
-        curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config
+        curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config --disable=traefik --disable=metrics-server
         sudo chown -R $( id -u ):$( id -g ) ~/.kube
         if [ -e /var/run/crio/crio.sock ] ; then
             ( echo '[crio.network]' ; echo 'plugin_dirs = [ "/var/lib/rancher/k3s/data/cni" ]' ) | sudo tee /etc/crio/crio.conf.d/20-cni.conf
