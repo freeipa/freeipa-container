@@ -17,7 +17,7 @@ runs:
 
         sudo modprobe br_netfilter
         sudo sysctl -w net.ipv4.ip_forward=1
-        sudo sudo iptables -A FORWARD -o cni0 -j ACCEPT
+        sudo iptables -A FORWARD -o cni0 -j ACCEPT
 
         CONFIG=tests/k8s-service-subnet-allow-swap.yaml
         if [ -e /var/run/crio/crio.sock ] ; then
