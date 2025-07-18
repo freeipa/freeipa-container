@@ -6,8 +6,8 @@ def repeat_array($n):
 def frequency_to_list:
 	. as $in
 	| keys[]
-	| . // 1 as $k
-	| range($in[.])
+	| . as $k
+	| range($in[.] // 1)
 	| $k
 ;
 
