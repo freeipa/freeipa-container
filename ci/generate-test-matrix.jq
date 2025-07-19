@@ -79,8 +79,8 @@ then
 		"volume": $volume | frequency_to_list
 		}
 		| . += .dist
-		| select([. | xcontains(($exclude // [])[])] | any | not)
-		]
+		],
+		$exclude
 	]
 elif $ARGS.named["job"] == "test-upgrade"
 then
@@ -101,8 +101,8 @@ then
 		}
 		| . += .dist
 		| .["data-from"] = $upgrade[.os][]
-		| select([. | xcontains(($exclude // [])[])] | any | not)
-		]
+		],
+		$exclude
 	]
 elif $ARGS.named["job"] == "k8s"
 then
@@ -118,15 +118,19 @@ then
 		"runtime": $runtime | frequency_to_list
 		}
 		| . += .dist
-		| select([. | xcontains(($exclude // [])[])] | any | not)
-		]
+		],
+		$exclude
 	]
 else
 	error("Unknown job")
 end
-| .[0] as $ensure
+
+| ( .[0] | del(..|select(. == [])) ) as $ensure
+| ( .[2] // [] ) as $exclude
+
 | [
-	.[1] | random_select($count; $ensure | del(..|select(. == [])))
+	[ .[1][] | select([xcontains($exclude[])] | any | not) ]
+	| random_select($count; $ensure)
 		| if ( .dist as $d | $fresh | any(. == $d) ) then .["fresh-image"] = true end
 		| if ( .dist as $d | any($d | xcontains($nopush[])) ) then .["nopush"] = true end
 		| del(.dist)
