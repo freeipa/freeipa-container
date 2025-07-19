@@ -67,7 +67,7 @@ else
 then
 	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume, $exclude }
 	| [
-		.run | to_entries | reduce .[] as $e ({}; .[$e.key] |= ( $e.value | objects | keys ))
+		.run | to_entries | reduce .[] as $e ({}; .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)])
 		| .dist |= $fresh_or_dist,
 		[ {
 		"os": null, "arch": null,
@@ -89,7 +89,7 @@ then
 		.["test-upgrade"] | to_entries | reduce .[] as $e ({};
 			if $e.key == "upgrade-to-from"
 			then .["data-from"] |= ([ $e.value[$fresh_or_dist[].os] | arrays[]] | unique)
-			else .[$e.key] |= ( $e.value | objects | keys )
+			else .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)]
 			end)
 		| .dist |= [($fresh_or_dist[] | select($upgrade[.os]))],
 		[ {
@@ -108,7 +108,7 @@ elif $ARGS.named["job"] == "k8s"
 then
 	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
 	| [
-		.k8s | to_entries | reduce .[] as $e ({}; .[$e.key] |= ( $e.value | objects | keys ))
+		.k8s | to_entries | reduce .[] as $e ({}; .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)])
 		| .dist |= $fresh_or_dist,
 		[ {
 		"os": null, "arch": null,
