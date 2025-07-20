@@ -13,7 +13,7 @@ def frequency_to_list:
 
 def xcontains($element):
 	. as $input |
-	[ $element | to_entries | .[] | $input[.key] == .value ] | all
+	$element | to_entries | map($input[.key] == .value) | all
 ;
 
 def random_select($count; $ensure):
@@ -48,6 +48,20 @@ def random_select($count; $ensure):
 								| del(..|select(. == []))))
 
 	end
+;
+
+def xcontains_any($element):
+	. as $input |
+	$element | to_entries | map($input[.key] == .value) | any
+;
+
+def random_repeat($e; $count):
+	map(select(xcontains_any($e))) as $input |
+	($input | length) as $length |
+	[
+		.[],
+		(range($count) | $input[ now * 1000000 % $length ])
+	]
 ;
 
 .["build-dist"] as $dist
@@ -129,7 +143,11 @@ end
 | ( .[2] // [] ) as $exclude
 
 | [
-	[ .[1][] | select([xcontains($exclude[])] | any | not) ]
+	reduce $exclude[] as $e (.[1];
+		map(select(xcontains($e))) as $remove
+		| map(select(xcontains($e) | not))
+		| random_repeat($e; $remove | length)
+	)
 	| random_select($count; $ensure)
 		| if ( .dist as $d | $fresh | any(. == $d) ) then .["fresh-image"] = true end
 		| if ( .dist as $d | any($d | xcontains($nopush[])) ) then .["nopush"] = true end
