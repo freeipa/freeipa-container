@@ -26,7 +26,6 @@ on:
         options:
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - ubuntu-22.04
 
 jobs:
   gen-matrix:
@@ -62,9 +61,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Install podman 4.*
-        uses: ./.github/actions/install-podman-4
-        if: matrix.docker == 'podman' && inputs.runs-on == 'ubuntu-22.04'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.docker == 'docker'
       - name: For RHEL builds, use entitlements

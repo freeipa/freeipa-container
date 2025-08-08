@@ -223,12 +223,9 @@ jobs:
           }
           EOT
           sudo systemctl restart apparmor.service
-        if: startsWith(matrix.runs-on, 'ubuntu-24.04') && matrix.runtime == 'docker rootless'
+        if: matrix.runtime == 'docker rootless'
       - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
         if: matrix.runtime == 'docker rootless'
-      - name: Install podman 4.*
-        uses: ./.github/actions/install-podman-4
-        if: matrix.runs-on == 'ubuntu-22.04' && (matrix.runtime == 'podman' || matrix.runtime == 'sudo podman')
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
@@ -261,9 +258,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
-      - name: Install podman 4.*
-        uses: ./.github/actions/install-podman-4
-        if: matrix.runs-on == 'ubuntu-22.04' && (matrix.runtime == 'podman' || matrix.runtime == 'sudo podman')
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}

@@ -96,9 +96,9 @@ end,
 "  <thead>",
 "    <tr>",
 	(
-	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume", "Runs on Ubuntu" ]
-	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Runs on Ubuntu", "Volume", "Upgrade from" ]
-	elif $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime", "Runs on Ubuntu" ]
+	if $ARGS.named["job"] == "run" then [ "Runtime", "Readonly", "External CA", "Volume" ]
+	elif $ARGS.named["job"] == "test-upgrade" then [ "Runtime", "Volume", "Upgrade from" ]
+	elif $ARGS.named["job"] == "k8s" then [ "Kubernetes", "Runtime" ]
 	else empty end
 	| th(3; 1)
 	),
@@ -117,11 +117,11 @@ end,
 | [ .[] | .status = if .nopush then "nopush" else if .["fresh-image"] then "fresh-image" else false end end ]
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
-	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
+	then .[ $row.runtime ][ $row.readonly ][ $row.ca ][ $row.volume ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "test-upgrade"
-	then .[ $row.runtime ][ $row["runs-on"] ][ $row.volume ][ $row[ "data-from" ] ][ $row.os ][ $row.arch ] = $row.status
+	then .[ $row.runtime ][ $row.volume ][ $row[ "data-from" ] ][ $row.os ][ $row.arch ] = $row.status
 	elif $ARGS.named["job"] == "k8s"
-	then .[ $row.kubernetes ][ $row.runtime ][ $row["runs-on"] ][ $row.os ][ $row.arch ] = $row.status
+	then .[ $row.kubernetes ][ $row.runtime ][ $row.os ][ $row.arch ] = $row.status
 	end
 )
 | walk(if type == "object"

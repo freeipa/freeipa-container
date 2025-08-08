@@ -1,8 +1,7 @@
 
 run:
   runs-on:
-    ubuntu-24.04: 2
-    ubuntu-22.04: 1
+    ubuntu-24.04: 1
   runtime:
     podman: 4
     sudo podman: 1
@@ -17,18 +16,12 @@ run:
   volume:
     freeipa-data: 1
     "": null
-  count: 13
+  count: 11
   exclude:
-    - arch: arm64
-      runs-on: ubuntu-22.04
-    # Workaround https://github.com/freeipa/freeipa-container/issues/660
-    - runtime: sudo podman
-      runs-on: ubuntu-22.04
 
 test-upgrade:
   runs-on:
-    ubuntu-24.04: 2
-    ubuntu-22.04: 1
+    ubuntu-24.04: 1
   runtime:
     podman: 3
     docker: 1
@@ -60,17 +53,14 @@ test-upgrade:
       - centos-8-4.8.7
     rocky-8:
       - centos-8-4.8.7
-  count: 11
+  count: 9
   exclude:
-    - arch: arm64
-      runs-on: ubuntu-22.04
     - volume: volume-image
       runtime: docker
 
 k8s:
   runs-on:
-    ubuntu-24.04: 2
-    ubuntu-22.04: 1
+    ubuntu-24.04: 1
   kubernetes:
     k3s: 1
     kubeadm init: 1
@@ -79,16 +69,12 @@ k8s:
     cri-o: 1
     docker: 1
     containerd: 1
-  count: 11
+  count: 9
   exclude:
-    - arch: arm64
-      runs-on: ubuntu-22.04
     - kubernetes: kubeadm init
       runtime: docker
     - kubernetes: rke2
       runtime: docker
-    - kubernetes: rke2
-      runs-on: ubuntu-22.04
 
 push:
   exclude:
