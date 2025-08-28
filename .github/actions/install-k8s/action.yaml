@@ -11,6 +11,7 @@ runs:
             | gpg --dearmor | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
         echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" \
             | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        if [ -e /etc/apt/sources.list.d/microsoft-prod.list ] ; then sudo mv -f /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.list.disabled ; fi
 
         sudo apt update
         sudo apt install -y kubelet kubeadm kubectl kubernetes-cni
