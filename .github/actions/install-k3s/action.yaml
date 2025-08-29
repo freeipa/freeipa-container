@@ -6,6 +6,8 @@ runs:
         export INSTALL_K3S_EXEC
         if [ -e /var/run/crio/crio.sock ] ; then
             INSTALL_K3S_EXEC="--container-runtime-endpoint /var/run/crio/crio.sock"
+            ( echo '[crio.network]' ; echo 'plugin_dirs = [ "/var/lib/rancher/k3s/data/cni" ]' ) | sudo tee /etc/crio/crio.conf.d/20-cni.conf
+            sudo systemctl restart crio.service
         elif [ -e /var/run/docker.sock ] ; then
             INSTALL_K3S_EXEC="--docker --kubelet-arg=allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
         elif [ -e /var/run/containerd/containerd.sock ] ; then
@@ -15,10 +17,6 @@ runs:
         fi
         curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config --disable=traefik --disable=metrics-server
         sudo chown -R $( id -u ):$( id -g ) ~/.kube
-        if [ -e /var/run/crio/crio.sock ] ; then
-            ( echo '[crio.network]' ; echo 'plugin_dirs = [ "/var/lib/rancher/k3s/data/cni" ]' ) | sudo tee /etc/crio/crio.conf.d/20-cni.conf
-            sudo systemctl restart crio.service
-        fi
         ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
         ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
         kubectl get pods --all-namespaces
