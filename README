@@ -11,6 +11,10 @@ also useful for testing interoperability with latest version of FreeIPA;
 for long term production setups, Fedora might be updating too quickly
 and sometimes be too new, compared to the other systems.
 
+Establish an upgrade plan before putting the FreeIPA containers to
+production or you will find yourself with end-of-life FreeIPA cluster
+with known security issues three years later.
+
 ## Available images
 
 FreeIPA server container images are built from this repository
@@ -222,23 +226,42 @@ way `ipa-server-install-options` works for `ipa-server-install`.
 
 Upon subsequent invocations when `/data` is found already populated
 with FreeIPA server configuration and data, the options are ignored
-and just the necessary services started in the container.
+and just the necessary services get started in the container.
+
+### Upgrades
 
 If you have existing container with data volume, it should be safe
 to shut it down and run new one based on newer image, with the same
 data directory bind-mounted to `/data`. The container logic will detect
 that it is running with data produced by different image and attempt
-to upgrade the configuration and data. Of course, keeping backup
-of the data directory for cases when the upgrade process fails
-is recommended.
+to upgrade the configuration and data.
+
+This in-place upgrade with newer container image only works within
+the same major version of the operating system used in container,
+so for example upgrades from AlmaLinux 9-based container to newer
+AlmaLinux 9-based images are supported but upgrades to AlmaLinux 10
+are not. With Fedoras, upgrades across major versions are known
+to work as well but it is recommended to upgrade along the sequential
+Fedora versions; don't make jumps across multiple Fedora versions.
+
+Of course, keeping backup of the data directory for cases when the
+upgrade process fails is recommended. If in doubt, copy the volume
+content and start another throwaway container in a completely isolated
+testbed environment using the original data and new image and verify
+the upgrade and stability post upgrade.
+
+If the in-place upgrade fails and for upgrades across major
+operating system versions, the easiest way forward is to take
+advantage of FreeIPA's replication — add replica containers to the
+existing FreeIPA cluster and remove the original containers after
+the new ones have been verified stable.
 
 ### Backup and restore
 
-Speaking of backups: the FreeIPA server container stores all
-configuration, data, and logs in one volume mounted at `/data`.
-So instead of using `ipa-backup` and `ipa-restore`, the easiest way
-to backup the container is to stop it and just backup the content of
-the directory mounted to `/data`.
+The FreeIPA server container stores all configuration, data, and logs
+in one volume mounted at `/data`. Instead of using `ipa-backup` and
+`ipa-restore`, the easiest way to backup the container is to stop it
+and just backup the content of the directory mounted to `/data`.
 
 If you transfer that backup to different machine and you've been
 using setup with user namespace remapping (rootless containers),
