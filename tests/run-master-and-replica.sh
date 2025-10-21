@@ -233,6 +233,7 @@ $docker exec freeipa-master id bob$$
 if $fresh_install ; then
 	$docker exec freeipa-master ipa-adtrust-install -a Secret123 --netbios-name=EXAMPLE -U
 	$docker exec freeipa-master ipa-kra-install -p Secret123 -U
+	$docker exec freeipa-master ipa-dns-install -U --dnssec-master --no-forwarders
 fi
 )
 

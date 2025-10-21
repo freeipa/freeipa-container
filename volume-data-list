@@ -19,6 +19,7 @@
 /etc/nsswitch.conf
 /etc/ntp.conf
 /etc/openldap/
+/etc/opendnssec/
 /etc/pam.d/
 /etc/pki/ca-trust/
 /etc/pki/nssdb/
@@ -96,3 +97,4 @@
 /var/log/sssd/
 /var/log/wtmp
 /var/named/
+/var/opendnssec/
