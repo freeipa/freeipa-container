@@ -13,5 +13,10 @@ runs:
         sudo apt install -y cri-o
 
         sudo cp /etc/cni/net.d/10-crio-bridge.conflist.disabled /etc/cni/net.d/10-crio-bridge.conflist
+        # Workaround ImageInspectError of Kubernetes "system" pods caused by
+        #   short name mode is enforcing, but image name ... returns ambiguous list
+        # for images like rancher/local-path-provisioner:v0.0.31 
+        # due to multiple unqualified-search-registries entries in /etc/containers/registries.conf.d/crio.conf
+        echo 'unqualified-search-registries = ["docker.io"]' | sudo tee /etc/containers/registries.conf.d/no-unqualified-quay.conf
         sudo systemctl start crio.service
       shell: bash -euxo pipefail {0}
