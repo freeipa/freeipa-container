@@ -1,26 +1,18 @@
 --- tests/freeipa-k8s.yaml
 +++ tests/freeipa-k8s.yaml
-@@ -82,6 +82,12 @@ spec:
+@@ -82,6 +82,8 @@ spec:
      securityContext:
        readOnlyRootFilesystem: true
      volumeMounts:
-+    - mountPath: /run
-+      name: run-volume
-+    - mountPath: /tmp
-+      name: tmp-volume
 +    - mountPath: /dev/shm
 +      name: dev-shm
      - name: freeipa-server-data
        mountPath: /data
      ports:
-@@ -124,5 +128,12 @@ spec:
+@@ -124,5 +128,8 @@ spec:
    subdomain: dom1
    setHostnameAsFQDN: true
    volumes:
-+  - name: run-volume
-+    emptyDir: {}
-+  - name: tmp-volume
-+    emptyDir: {}
 +  - name: dev-shm
 +    emptyDir:
 +      medium: Memory
