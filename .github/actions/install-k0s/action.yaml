@@ -29,6 +29,7 @@ runs:
         kubectl get pods --all-namespaces
 
         kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+        kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
         # Remove the extremely permissive ACLs / mask that GitHub runners have on /opt
         # which prevents sssd.service from starting due to
         # [sssd] [access_check_file] (0x0020): Unexpected access to '/etc/sssd/sssd.conf' by other users
