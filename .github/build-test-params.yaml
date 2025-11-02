@@ -68,6 +68,7 @@ k8s:
     k3s: 1
     kubeadm init: 1
     rke2: 1
+    k0s: 1
   runtime:
     cri-o: 1
     docker: 1
@@ -77,6 +78,8 @@ k8s:
     - kubernetes: kubeadm init
       runtime: docker
     - kubernetes: rke2
+      runtime: docker
+    - kubernetes: k0s
       runtime: docker
 
 push:
