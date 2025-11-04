@@ -292,7 +292,7 @@ jobs:
         if: matrix.runtime == 'docker'
       - run: sudo systemctl stop docker && sudo rm -f /var/run/docker.sock
         if: matrix.runtime != 'docker'
-      - uses: ./.github/actions/install-containerd-2.1
+      - uses: ./.github/actions/install-containerd-2.2
         if: matrix.runtime == 'containerd'
       - uses: ./.github/actions/install-k8s
         env:
