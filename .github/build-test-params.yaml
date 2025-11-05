@@ -85,6 +85,7 @@ k8s:
 push:
   exclude:
     - os: centos-10-stream
+    - os: fedora-rawhide
     - os: fedora-42
       arch: arm64
     - os: fedora-41

@@ -18,6 +18,13 @@ RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-lang
 RUN dnf upgrade -y --setopt=install_weak_deps=False \
 	&& dnf install -y --setopt=install_weak_deps=False freeipa-server freeipa-server-dns freeipa-server-trust-ad freeipa-healthcheck freeipa-client-epn freeipa-server-encrypted-dns patch \
 	&& dnf clean all
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=2391343
+RUN dnf upgrade -y --setopt=install_weak_deps=False \
+	https://kojipkgs.fedoraproject.org//packages/systemd/258.2/1.fc44/$( uname -m )/systemd-258.2-1.fc44.$( uname -m ).rpm \
+	https://kojipkgs.fedoraproject.org//packages/systemd/258.2/1.fc44/$( uname -m )/systemd-libs-258.2-1.fc44.$( uname -m ).rpm \
+	https://kojipkgs.fedoraproject.org//packages/systemd/258.2/1.fc44/$( uname -m )/systemd-pam-258.2-1.fc44.$( uname -m ).rpm \
+	https://kojipkgs.fedoraproject.org//packages/systemd/258.2/1.fc44/$( uname -m )/systemd-shared-258.2-1.fc44.$( uname -m ).rpm \
+	&& dnf clean all
 RUN rm -f /usr/lib/rpm/macros.d/macros.usr-local-bin
 
 # Workaround 2373979
