@@ -26,7 +26,7 @@ RUN systemctl mask rpc-gssd.service
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
 # debug: RUN test -z "$container"
-ENV container oci
+ENV container=oci
 
 # Establish reasonably low open files limit in the container
 COPY DefaultLimitNOFILE.conf /usr/lib/systemd/system.conf.d/DefaultLimitNOFILE.conf
