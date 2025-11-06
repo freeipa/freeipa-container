@@ -11,7 +11,7 @@ RUN groupadd -g 225 ods; useradd -u 225 -g 225 -c 'opendnssec daemon account' -r
 RUN groupadd -g 207 printadmin
 RUN groupadd -g 325 unbound; useradd -u 325 -g 325 -c 'Unbound DNS resolver' -r -d /var/lib/unbound -s /sbin/nologin unbound
 
-# Workaround 1615948
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1615948
 RUN ln -s /bin/false /usr/local/bin/systemd-machine-id-setup
 RUN rpm --eval '%_install_script_path' | sed 's#^#%_install_script_path /usr/local/bin:# ' > /usr/lib/rpm/macros.d/macros.usr-local-bin
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf

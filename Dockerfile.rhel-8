@@ -7,7 +7,7 @@ RUN groupadd -g 285 sssd; useradd -u 285 -g 285 -c 'User for sssd' -r -d /run/ss
 RUN groupadd -g 225 ods; useradd -u 225 -g 225 -c 'opendnssec daemon account' -r -d / -s /sbin/nologin ods
 RUN groupadd -g 207 printadmin
 
-# Workaround 1615948
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN yum -y module enable idm:DL1 && yum -y module install --setopt=install_weak_deps=False idm:DL1/adtrust idm:DL1/dns && yum -y install patch sudo && yum clean all

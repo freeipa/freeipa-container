@@ -24,7 +24,7 @@
  
  # We support /var, /tmp, /var/tmp, being on NFS, but we don't pull in
 #
-# Workaround 1390191 in read-only container.
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1390191 in read-only container.
 #
 --- /usr/lib/tmpfiles.d/etc.conf	2023-07-24 14:30:45.211688115 +0000
 +++ /usr/lib/tmpfiles.d/etc.conf	2023-07-24 14:30:51.289544192 +0000

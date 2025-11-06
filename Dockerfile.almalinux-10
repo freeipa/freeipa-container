@@ -8,7 +8,7 @@ RUN groupadd -g 225 ods; useradd -u 225 -g 225 -c 'opendnssec daemon account' -r
 RUN groupadd -g 207 printadmin
 RUN groupadd -g 325 unbound; useradd -u 325 -g 325 -c 'Unbound DNS resolver' -r -d /var/lib/unbound -s /sbin/nologin unbound
 
-# Workaround 1615948
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1615948
 RUN ln -s /bin/false /usr/sbin/systemd-machine-id-setup
 RUN sed -i 's!%_install_langs.*!%_install_langs all!' /etc/rpm/macros.image-language-conf
 RUN dnf -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ipa-server-trust-ad patch ipa-healthcheck ipa-client-epn ipa-server-encrypted-dns \
