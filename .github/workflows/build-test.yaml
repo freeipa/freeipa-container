@@ -14,7 +14,6 @@ on:
           - fedora-rawhide
           - fedora-43
           - fedora-42
-          - fedora-41
           - almalinux-10
           - almalinux-9
           - almalinux-8
@@ -55,8 +54,6 @@ jobs:
         arch: [ x86_64, arm64 ]
         docker: [ docker ]
         exclude:
-          - os: fedora-41
-            arch: arm64
           - os: centos-10-stream
             arch: x86_64
           - os: centos-9-stream

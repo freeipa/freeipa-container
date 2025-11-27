@@ -40,9 +40,6 @@ test-upgrade:
     fedora-42:
       - fedora-42-4.12.2
       - fedora-41-4.12.2
-    fedora-41:
-      - fedora-41-4.12.2
-      - fedora-40-4.11.1
     almalinux-10:
       - almalinux-10-4.12.2
     almalinux-9:
@@ -92,7 +89,5 @@ push:
     - os: fedora-43
       arch: arm64
     - os: fedora-42
-      arch: arm64
-    - os: fedora-41
       arch: arm64
 
