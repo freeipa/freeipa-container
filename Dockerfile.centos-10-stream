@@ -17,6 +17,10 @@ RUN dnf -y install --setopt=install_weak_deps=False ipa-server ipa-server-dns ip
 # debug: RUN test $( getent passwd | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|ods:x:225|tss:x:59|unbound:x:325):" | wc -l ) -eq 9
 # debug: RUN test $( getent group | grep -E "^(dirsrv:x:389|ipaapi:x:289|kdcproxy:x:288|pkiuser:x:17|sssd:x:285|named:x:25|utmp:x:22|wbpriv:x:88|systemd-journal:x:190|ods:x:225|printadmin:x:207|tss:x:59|unbound:x:325):" | wc -l ) -eq 13
 
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=2412646
+RUN ln -sf /etc/named.ca /var/named/named.ca && chown -h root:named /var/named/named.ca
+RUN for FILE in named.{localhost,loopback,empty} ; do ln -sf /usr/share/named/$FILE /var/named/$FILE && chown -h root:named /var/named/$FILE; done
+
 COPY tmpfiles-ownership-fedora-41.conf /usr/lib/tmpfiles.d/ipa-ownership.conf
 
 # var-lib-nfs-rpc_pipefs.mount would run (and fail) nondeterministically
