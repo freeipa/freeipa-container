@@ -306,8 +306,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
-      - run: sudo apt install -y skopeo
-        if: matrix.runtime == 'cri-o'
       - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
         if: matrix.runtime == 'cri-o'
       - name: Load image to docker
