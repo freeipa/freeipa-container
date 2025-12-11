@@ -13,7 +13,7 @@ runs:
         sudo mkdir -p /var/lib/rancher/rke2/server/manifests
         sudo cp tests/rke2-helm-coredns-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
 
-        curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_CHANNEL=latest sh -
+        curl -sfL https://get.rke2.io | sudo sh -
         sudo systemctl start rke2-server.service
         systemctl status rke2-server.service
         mkdir ~/.kube
