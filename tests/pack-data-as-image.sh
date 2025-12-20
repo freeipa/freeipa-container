@@ -6,15 +6,16 @@ set -x
 #
 # Example of preparing data image for upgrade testing:
 # check /etc/hosts and /etc/resolv.conf
-# replica=none docker=podman VOLUME=volume-fedora-43-4.12.5 tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:volume-fedora-43-4.12.5
+# VOLUME=volume-fedora-43-4.12.5
+# replica=none docker=podman VOLUME=$VOLUME tests/run-master-and-replica.sh quay.io/freeipa/freeipa-server:fedora-43
 # podman exec -ti freeipa-master bash and check /data/var/lib/ipa/sysrestore/*-resolv.conf
 # podman rm -f freeipa-master
-# tests/pack-data-as-image.sh volume-fedora-43-4.12.5 data-fedora-43-4.12.5
+# tests/pack-data-as-image.sh $VOLUME $VOLUME
 # podman login quay.io
-# TMPDIR=/tmp podman push quay.io/freeipa/freeipa-server:data-fedora-43-4.12.5
+# TMPDIR=/tmp podman push quay.io/freeipa/freeipa-server:$VOLUME
 # podman login index.docker.io
-# podman tag quay.io/freeipa/freeipa-server:data-fedora-43-4.12.5 docker.io/freeipa/freeipa-server:data-fedora-43-4.12.5
-# TMPDIR=/tmp podman push docker.io/freeipa/freeipa-server:data-fedora-43-4.12.5
+# podman tag quay.io/freeipa/freeipa-server:$VOLUME docker.io/freeipa/freeipa-server:$VOLUME
+# TMPDIR=/tmp podman push docker.io/freeipa/freeipa-server:$VOLUME
 #
 
 podman volume export $1 > $1.tar
