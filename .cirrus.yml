@@ -1,0 +1,15 @@
+docker_builder:
+  name: FreeIPA server in docker
+  only_if: $CIRRUS_BRANCH == 'cirrus-ci' || $CIRRUS_CRON != ''
+  env:
+    CIRRUS_ARCH: arm64
+    matrix:
+      - os: rocky-9
+  config_script:
+    - useradd -m -u 200000 -U -G docker testuser
+    - echo dockremap:200000:65536 > /etc/subuid
+    - echo dockremap:200000:65536 > /etc/subgid
+    - echo '{"userns-remap":"default"}' > /etc/docker/daemon.json
+    - systemctl restart docker
+  build_script: runuser -u testuser -- docker build -t localhost/freeipa/freeipa-server:$os -f Dockerfile.$os .
+  test_script: runuser -u testuser -- tests/run-master-and-replica.sh localhost/freeipa/freeipa-server:$os
