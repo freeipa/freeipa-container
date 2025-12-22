@@ -1,0 +1,27 @@
+version: 2.1
+
+jobs:
+  build-and-run-container:
+    machine:
+      image: ubuntu-2404:edge
+    resource_class: arm.medium
+    parameters:
+      os:
+        type: string
+    environment:
+      readonly: --read-only
+    steps:
+      - checkout
+      - run: ( echo "dockremap:$(id -u):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subuid
+      - run: ( echo "dockremap:$(id -g):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subgid
+      - run: echo '{"userns-remap":"default"}' | sudo tee /etc/docker/daemon.json
+      - run: sudo systemctl restart docker
+      - run: docker build -t localhost/freeipa-server:<< parameters.os >> -f Dockerfile.<< parameters.os >> .
+      - run: tests/run-master-and-replica.sh localhost/freeipa-server:<< parameters.os >>
+
+workflows:
+  test-freeipa-container:
+    jobs:
+      - build-and-run-container:
+          name: "FreeIPA AlmaLinux 10 on docker"
+          os: almalinux-10
