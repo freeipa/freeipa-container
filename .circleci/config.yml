@@ -1,5 +1,18 @@
 version: 2.1
 
+commands:
+  configure-docker:
+    steps:
+      - run: ( echo "dockremap:$(id -u):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subuid
+      - run: ( echo "dockremap:$(id -g):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subgid
+      - run: echo '{"userns-remap":"default"}' | sudo tee /etc/docker/daemon.json
+      - run: sudo systemctl restart docker
+  install-podman:
+    steps:
+      - run: sudo apt update
+      - run: sudo apt install -y podman
+      - run: echo "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$( id -u )/bus" >> ~/.circlerc
+
 jobs:
   build-and-run-container:
     machine:
@@ -8,16 +21,25 @@ jobs:
     parameters:
       os:
         type: string
+      docker:
+        type: string
+        default: docker
     environment:
       readonly: --read-only
     steps:
       - checkout
-      - run: ( echo "dockremap:$(id -u):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subuid
-      - run: ( echo "dockremap:$(id -g):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subgid
-      - run: echo '{"userns-remap":"default"}' | sudo tee /etc/docker/daemon.json
-      - run: sudo systemctl restart docker
-      - run: docker build -t localhost/freeipa-server:<< parameters.os >> -f Dockerfile.<< parameters.os >> .
-      - run: tests/run-master-and-replica.sh localhost/freeipa-server:<< parameters.os >>
+      - when:
+          condition:
+            equal: [ << parameters.docker >>, docker ]
+          steps:
+            - configure-docker
+      - when:
+          condition:
+            equal: [ << parameters.docker >>, podman ]
+          steps:
+            - install-podman
+      - run: << parameters.docker >> build -t localhost/freeipa-server:<< parameters.os >> -f Dockerfile.<< parameters.os >> .
+      - run: docker="<< parameters.docker >>" tests/run-master-and-replica.sh localhost/freeipa-server:<< parameters.os >>
 
 workflows:
   test-freeipa-container:
@@ -25,3 +47,7 @@ workflows:
       - build-and-run-container:
           name: "FreeIPA AlmaLinux 10 on docker"
           os: almalinux-10
+      - build-and-run-container:
+          name: "FreeIPA Rocky Linux 9 on podman"
+          os: rocky-9
+          docker: podman
