@@ -3,10 +3,23 @@ version: 2.1
 commands:
   configure-docker:
     steps:
-      - run: ( echo "dockremap:$(id -u):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subuid
-      - run: ( echo "dockremap:$(id -g):1" ; echo dockremap:200001:65535 ) | sudo tee /etc/subgid
-      - run: echo '{"userns-remap":"default"}' | sudo tee /etc/docker/daemon.json
-      - run: sudo systemctl restart docker
+      - run: sudo systemctl disable --now docker.service docker.socket
+      - run: sudo apt update
+      - run: sudo apt install -y uidmap
+      - run: |
+          cat \<<EOT | sudo tee /etc/apparmor.d/home.circleci.bin.rootlesskit
+          # ref: https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
+          abi <abi/4.0>,
+          include <tunables/global>
+          /home/circleci/bin/rootlesskit flags=(unconfined) {
+            userns,
+            # Site-specific additions and overrides. See local/README for details.
+            include if exists <local/home.circleci.bin.rootlesskit>
+          }
+          EOT
+      - run: sudo systemctl restart apparmor.service
+      - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+      - run: docker info --format '{{ .ClientInfo.Context }}' | grep rootless
   install-podman:
     steps:
       - run: sudo apt update
