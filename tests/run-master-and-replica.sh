@@ -245,7 +245,7 @@ if [ "$replica" = 'none' ] ; then
 fi
 
 # Setup replica
-MASTER_IP=$( $docker inspect --format '{{ .NetworkSettings.IPAddress }}' freeipa-master )
+MASTER_IP=$( $docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' freeipa-master )
 DOCKER_RUN_OPTS="--dns=$MASTER_IP"
 if [ "$readonly" == "--read-only" ] ; then
 	DOCKER_RUN_OPTS="$DOCKER_RUN_OPTS --read-only"
