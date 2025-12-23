@@ -13,3 +13,18 @@ docker_builder:
     - systemctl restart docker
   build_script: runuser -u testuser -- docker build -t localhost/freeipa/freeipa-server:$os -f Dockerfile.$os .
   test_script: runuser -u testuser -- tests/run-master-and-replica.sh localhost/freeipa/freeipa-server:$os
+
+docker_builder:
+  name: FreeIPA server in podman
+  env:
+    CIRRUS_ARCH: arm64
+    matrix:
+      - os: almalinux-10
+  install_script:
+    - apt update
+    - apt install -y podman
+    - useradd -m -u 200000 -U testuser
+    - echo testuser:200001:65535 > /etc/subuid
+    - echo testuser:200001:65535 > /etc/subgid
+  build_script: su -l testuser -c "cd $PWD && podman build -t localhost/freeipa/freeipa-server:$os -f Dockerfile.$os ."
+  test_script: su -l testuser -c "cd $PWD && docker=podman tests/run-master-and-replica.sh localhost/freeipa/freeipa-server:$os"
