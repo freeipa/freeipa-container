@@ -6,11 +6,27 @@ docker_builder:
     matrix:
       - os: rocky-9
   config_script:
-    - useradd -m -u 200000 -U -G docker testuser
-    - echo dockremap:200000:65536 > /etc/subuid
-    - echo dockremap:200000:65536 > /etc/subgid
-    - echo '{"userns-remap":"default"}' > /etc/docker/daemon.json
-    - systemctl restart docker
+    - sudo systemctl disable --now docker.service docker.socket
+    - apt update
+    - apt install -y uidmap
+    - useradd -m -u 200000 -U testuser
+    - echo testuser:200001:65536 > /etc/subuid
+    - echo testuser:200001:65536 > /etc/subgid
+    - loginctl enable-linger testuser
+    - |
+      cat <<EOT | sudo tee /etc/apparmor.d/home.testuser.bin.rootlesskit
+      # ref: https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
+      abi <abi/4.0>,
+      include <tunables/global>
+      /home/testuser/bin/rootlesskit flags=(unconfined) {
+        userns,
+        # Site-specific additions and overrides. See local/README for details.
+        include if exists <local/home.testuser.bin.rootlesskit>
+      }
+      EOT
+    - sudo systemctl restart apparmor.service
+    - ( echo FORCE_ROOTLESS_INSTALL=1 ; curl -fsSL https://get.docker.com/rootless ) | systemd-run --machine testuser@ --user --pipe sh
+    - runuser -u testuser -- docker info --format '{{ .ClientInfo.Context }}' | grep rootless
   build_script: runuser -u testuser -- docker build -t localhost/freeipa/freeipa-server:$os -f Dockerfile.$os .
   test_script: runuser -u testuser -- tests/run-master-and-replica.sh localhost/freeipa/freeipa-server:$os
 
