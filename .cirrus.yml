@@ -16,6 +16,7 @@ docker_builder:
 
 docker_builder:
   name: FreeIPA server in podman
+  only_if: $CIRRUS_BRANCH == 'cirrus-ci' || $CIRRUS_CRON != ''
   env:
     CIRRUS_ARCH: arm64
     matrix:
