@@ -41,6 +41,7 @@ jobs:
           'docker': [ 'docker', 'podman' ] "
           if [ -n "${{ secrets.REDHAT_ORG }}" -a -n "${{ secrets.REDHAT_ACTIVATIONKEY }}" ] ; then
             echo -n ", 'include': [ \
+              { 'os': 'rhel-10', 'docker': 'podman' }, \
               { 'os': 'rhel-9', 'docker': 'podman' }, \
               { 'os': 'rhel-8', 'docker': 'podman' } \
               ]"
