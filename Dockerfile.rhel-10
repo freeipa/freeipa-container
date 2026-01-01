@@ -29,8 +29,7 @@ RUN setcap cap_dac_override+ep /usr/libexec/sssd/ldap_child
 
 # Container image which runs systemd
 # debug: RUN test -f /etc/machine-id && ! test -s /etc/machine-id
-# debug: RUN test -z "$container"
-ENV container=oci
+# debug: RUN test "$container" = oci
 
 # Establish reasonably low open files limit in the container
 COPY DefaultLimitNOFILE.conf /usr/lib/systemd/system.conf.d/DefaultLimitNOFILE.conf
