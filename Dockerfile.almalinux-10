@@ -105,3 +105,5 @@ RUN uuidgen > /data-template/build-id
 
 LABEL org.opencontainers.image.title="FreeIPA server"
 LABEL org.opencontainers.image.authors="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
+LABEL org.opencontainers.image.documentation="https://github.com/freeipa/freeipa-container"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
