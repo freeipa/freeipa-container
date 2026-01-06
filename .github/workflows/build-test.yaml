@@ -73,8 +73,12 @@ jobs:
       - name: Build image
         run: ${{ matrix.docker }} build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} ../minimize-for-build
 
+      - name: Create directory for artifacts
+        run: mkdir freeipa-server-${{ matrix.os }}-${{matrix.arch}}
+      - name: Save image
+        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} > freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar
       - name: Label the built image
-        run: docker="${{ matrix.docker }}" ./ci/label-image.sh Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree ) "${{ github.server_url }}/${{ github.repository }}" "actions/runs/${{ github.run_id }}"
+        run: docker="${{ matrix.docker }}" ./ci/label-image.sh freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree ) "${{ github.server_url }}/${{ github.repository }}" "actions/runs/${{ github.run_id }}"
       - name: File issue if building image failed
         if: ${{ failure() && github.event_name == 'schedule' }}
         run: |
@@ -88,10 +92,7 @@ jobs:
               "body": "This issue was automatically created by GitHub Action\n\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.\n",
               "labels": ["image-build-fail" ]
               }'
-      - name: Create directory for artifacts
-        run: mkdir freeipa-server-${{ matrix.os }}-${{matrix.arch}}
-      - name: Save image
-        run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} | gzip > freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz
+      - run: gzip freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar
       - uses: actions/upload-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}

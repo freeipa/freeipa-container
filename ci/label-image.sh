@@ -5,18 +5,20 @@
 set -e
 
 docker=${docker:-docker}
+TMPDIR=${TMPDIR:-/tmp}/freeipa-archive-$$
+mkdir -p $TMPDIR
 
-DOCKERFILE="$1"
-TAG="$2"
-GITTREE="$3"
-REPO_URL="$4"
-JOB_PATH="$5"
+IMAGE_FILE="$1"
+DOCKERFILE="$2"
+TAG="$3"
+GITTREE="$4"
+REPO_URL="$5"
+JOB_PATH="$6"
 
 COMMIT=$( git rev-parse HEAD )
 test -n "$COMMIT"
 FROM=$( awk '/^FROM / { print $2 ; exit }' "$DOCKERFILE" )
 test -n "$FROM"
-CREATED="$( date --utc --rfc-3339=seconds )"
 
 # Sadly we cannot --filter specific image because in that case docker
 # does not show the digest
@@ -44,81 +46,100 @@ if test -z "$GITTREE" ; then
 fi
 test -n "$GITTREE"
 
-declare -a OPTS
-TITLE="$( $docker inspect "$TAG" --format '{{ index .Config.Labels "org.opencontainers.image.title" }}' )"
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.name' > /dev/null ; then
-	OPTS+=(--label "name=$TITLE")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."io.k8s.display-name"' > /dev/null ; then
-	OPTS+=(--label "io.k8s.display-name=$TITLE")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."org.label-schema.name"' > /dev/null ; then
-	OPTS+=(--label "org.label-schema.name=$TITLE")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."summary"' > /dev/null ; then
-	OPTS+=(--label "summary=$TITLE")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.version' > /dev/null ; then
-	OPTS+=(--label version=$IPA_VERSION)
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.release' > /dev/null ; then
-	OPTS+=(--label release=rpms-$RPM_QA_SHA)
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."vcs-ref"' > /dev/null ; then
-	OPTS+=(--label vcs-ref=$COMMIT --label vcs-type=git)
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."build-date"' > /dev/null ; then
-	OPTS+=(--label build-date="$CREATED")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."org.label-schema.build-date"' > /dev/null ; then
-	OPTS+=(--label org.label-schema.build-date="$CREATED")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."com.redhat.component"' > /dev/null ; then
-	OPTS+=(--label com.redhat.component=freeipa-server-container)
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."com.redhat.build-host"' > /dev/null ; then
-	OPTS+=(--label com.redhat.build-host=$( hostname -f ))
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."io.openshift.tags"' > /dev/null ; then
-	OPTS+=(--label "io.openshift.tags=freeipa freeipa-server identity-management $( $docker inspect "$TAG" --format '{{ index .Config.Labels "io.openshift.tags" }}' | sed 's/base //' )")
-fi
-DESCRIPTION="$( $docker inspect "$TAG" | jq -r '.[0].Config.Labels."org.opencontainers.image.description"' )"
-if [ "$DESCRIPTION" == null ] ; then
-	read -d '' DESCRIPTION <<-EOS || :
-		Integrated identity management solution
-		for centrally managed identities, authentication, and authorization,
-		with support for cross realm trusts with Active Directory
-		and with DNS server supporting automatic DNSSEC signing.
-	EOS
-	DESCRIPTION="$( echo $DESCRIPTION )"
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.description' > /dev/null ; then
-	OPTS+=(--label description="$DESCRIPTION")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels."io.k8s.description"' > /dev/null ; then
-	OPTS+=(--label io.k8s.description="$DESCRIPTION")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.maintainer' > /dev/null ; then
-	OPTS+=(--label maintainer="$( $docker inspect "$TAG" --format '{{ index .Config.Labels "org.opencontainers.image.authors" }}' )")
-fi
-if $docker inspect "$TAG" | jq -e '.[0].Config.Labels.usage' > /dev/null ; then
-	OPTS+=(--label usage="https://github.com/freeipa/freeipa-container#running-freeipa-server-container")
-fi
-if test -n "$REPO_URL" ; then
-	OPTS+=(--label org.opencontainers.image.source="$REPO_URL/blob/$COMMIT/$DOCKERFILE")
-fi
-if test -n "$JOB_PATH" ; then
-	OPTS+=(--label org.opencontainers.image.url="$REPO_URL/$JOB_PATH")
-fi
 
+tar x -C $TMPDIR -f $IMAGE_FILE
+test -f $TMPDIR/index.json
+OCI_MANIFEST=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/index.json
+	if .mediaType != "application/vnd.oci.image.index.v1+json"
+		then error("unexpected media type found in " + input_filename)
+		end
+	| .manifests
+	| if length > 1
+		then error("unexpected multiple manifests found in " + input_filename)
+		end
+	| .[0]
+	| if .mediaType != "application/vnd.oci.image.manifest.v1+json"
+		then error("unexpected media type declared for manifest in " + input_filename)
+		end
+	| .digest
+	| sub("^sha256:"; "blobs/sha256/")
+EOS
+)
+test -n "$OCI_MANIFEST"
+test -f $TMPDIR/$OCI_MANIFEST
+OCI_CONFIG=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/$OCI_MANIFEST
+	if .mediaType != "application/vnd.oci.image.manifest.v1+json"
+		then error("unexpected media type found in oci manifest " + input_filename)
+		end
+	| .config
+	| if .mediaType != "application/vnd.oci.image.config.v1+json"
+		then error("unexpected media type declared for config in " + input_filename)
+		end
+	| .digest
+	| sub("^sha256:"; "blobs/sha256/")
+EOS
+)
+test -n "$OCI_CONFIG"
+test -f $TMPDIR/$OCI_CONFIG
 
-# We rerun the build and assume that it will use cached layers all the way,
-# so this build invocation will only add the labels
-set -x
-$docker build -f "$DOCKERFILE" -t "$TAG" \
-	--label org.opencontainers.image.created="$CREATED" \
-	--label org.opencontainers.image.revision=$COMMIT \
-	--label org.opencontainers.image.version="$IPA_VERSION-rpms-$RPM_QA_SHA-gittree-$GITTREE" \
-	--label org.opencontainers.image.base.name=$FROM \
-	--label org.opencontainers.image.base.digest=$BASE_DIGEST \
-	"${OPTS[@]}" .
+test -f $TMPDIR/manifest.json
+DOCKER_CONFIG=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/manifest.json
+	if length > 1
+		then error("unexpected multiple images found in " + input_filename)
+		end
+	| .[0].Config
+EOS
+)
+test -n "$DOCKER_CONFIG"
+test -f $TMPDIR/$DOCKER_CONFIG
+
+test "$OCI_CONFIG" = "$DOCKER_CONFIG"
+
+jq \
+	--arg COMMIT "$COMMIT" \
+	--arg VERSION "$IPA_VERSION-rpms-$RPM_QA_SHA-gittree-$GITTREE" \
+	--arg FROM "$FROM" --arg BASE_DIGEST "$BASE_DIGEST" \
+	--arg SOURCE_URL "$REPO_URL/blob/$COMMIT/$DOCKERFILE" \
+	--arg JOB_URL "$REPO_URL/$JOB_PATH" \
+	-f /dev/stdin <<'EOS' $TMPDIR/$OCI_CONFIG > $TMPDIR/oci-config
+	.config.Labels = {
+		"org.opencontainers.image.created": .created,
+		"org.opencontainers.image.authors": .config.Labels["org.opencontainers.image.authors"],
+		"org.opencontainers.image.url": $JOB_URL,
+		"org.opencontainers.image.documentation": .config.Labels["org.opencontainers.image.documentation"],
+		"org.opencontainers.image.source": $SOURCE_URL,
+		"org.opencontainers.image.version": $VERSION,
+		"org.opencontainers.image.revision": $COMMIT,
+		"org.opencontainers.image.licenses": .config.Labels["org.opencontainers.image.licenses"],
+		"org.opencontainers.image.title": .config.Labels["org.opencontainers.image.title"],
+		"org.opencontainers.image.base.digest": $BASE_DIGEST,
+		"org.opencontainers.image.base.name": $FROM
+	}
+EOS
+CONFIG_SHA=$( sha256sum $TMPDIR/oci-config | sed 's/ .*//' )
+CONFIG_SIZE=$( wc -c < $TMPDIR/oci-config )
+
+jq --arg SHA $CONFIG_SHA --argjson SIZE $CONFIG_SIZE \
+	'.config.digest = "sha256:" + $SHA | .config.size = $SIZE' $TMPDIR/$OCI_MANIFEST > $TMPDIR/oci-manifest
+OCI_MANIFEST_SHA=$( sha256sum $TMPDIR/oci-manifest | sed 's/ .*//' )
+OCI_MANIFEST_SIZE=$( wc -c < $TMPDIR/oci-manifest )
+
+jq --arg SHA $OCI_MANIFEST_SHA --argjson SIZE $OCI_MANIFEST_SIZE -f /dev/stdin <<'EOS' $TMPDIR/index.json > $TMPDIR/index.json.new
+	.manifests[0].digest = "sha256:" + $SHA
+	| .manifests[0].size = $SIZE
+EOS
+
+jq --arg SHA $CONFIG_SHA '.[0].Config = "blobs/sha256/" + $ARGS.named["SHA"]' $TMPDIR/manifest.json > $TMPDIR/manifest.json.new
+
+(
+cd $TMPDIR
+rm -v $OCI_CONFIG
+mv -v oci-config blobs/sha256/$CONFIG_SHA
+rm -v $OCI_MANIFEST
+mv -v oci-manifest blobs/sha256/$OCI_MANIFEST_SHA
+mv -v index.json.new index.json
+mv -v manifest.json.new manifest.json
+)
+
+tar c -C $TMPDIR -f $IMAGE_FILE --owner=0 --group=0 --numeric-owner $( cd $TMPDIR && ls )
+
