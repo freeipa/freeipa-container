@@ -119,14 +119,20 @@ EOS
 CONFIG_SHA=$( sha256sum $TMPDIR/oci-config | sed 's/ .*//' )
 CONFIG_SIZE=$( wc -c < $TMPDIR/oci-config )
 
-jq --arg SHA $CONFIG_SHA --argjson SIZE $CONFIG_SIZE \
-	'.config.digest = "sha256:" + $SHA | .config.size = $SIZE' $TMPDIR/$OCI_MANIFEST > $TMPDIR/oci-manifest
+LABELS=$( jq .config.Labels $TMPDIR/oci-config )
+
+jq --arg SHA $CONFIG_SHA --argjson SIZE $CONFIG_SIZE --argjson LABELS "$LABELS" -f /dev/stdin <<'EOS' $TMPDIR/$OCI_MANIFEST > $TMPDIR/oci-manifest
+	.config.digest = "sha256:" + $SHA
+	| .config.size = $SIZE
+	| .annotations += $LABELS
+EOS
 OCI_MANIFEST_SHA=$( sha256sum $TMPDIR/oci-manifest | sed 's/ .*//' )
 OCI_MANIFEST_SIZE=$( wc -c < $TMPDIR/oci-manifest )
 
-jq --arg SHA $OCI_MANIFEST_SHA --argjson SIZE $OCI_MANIFEST_SIZE -f /dev/stdin <<'EOS' $TMPDIR/index.json > $TMPDIR/index.json.new
+jq --arg SHA $OCI_MANIFEST_SHA --argjson SIZE $OCI_MANIFEST_SIZE --argjson LABELS "$LABELS" -f /dev/stdin <<'EOS' $TMPDIR/index.json > $TMPDIR/index.json.new
 	.manifests[0].digest = "sha256:" + $SHA
 	| .manifests[0].size = $SIZE
+	| .manifests[0].annotations += $LABELS
 EOS
 
 jq --arg SHA $CONFIG_SHA '.[0].Config = "blobs/sha256/" + $ARGS.named["SHA"]' $TMPDIR/manifest.json > $TMPDIR/manifest.json.new

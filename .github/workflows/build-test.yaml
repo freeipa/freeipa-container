@@ -117,6 +117,11 @@ jobs:
             cp build-status/${{ matrix.os }}-${{ matrix.arch }}/build-dist build-status/${{ matrix.os }}-${{ matrix.arch }}/fresh-image
           fi
         shell: bash
+      - name: Check resulting annotations
+        run: |
+          tar xz -O -f freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz index.json | jq '.manifests[].annotations'
+          skopeo inspect --raw oci-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq .annotations
+        shell: bash
       - name: Check for nopush
         run: |
           if yq '.push.exclude[]' .github/build-test-params.yaml -o json \
