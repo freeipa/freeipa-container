@@ -50,7 +50,7 @@ test -n "$GITTREE"
 tar x -C $TMPDIR -f $IMAGE_FILE
 test -f $TMPDIR/index.json
 OCI_MANIFEST=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/index.json
-	if .mediaType != "application/vnd.oci.image.index.v1+json"
+	if has("mediaType") and .mediaType != "application/vnd.oci.image.index.v1+json"
 		then error("unexpected media type found in " + input_filename)
 		end
 	| .manifests
@@ -82,7 +82,9 @@ EOS
 test -n "$OCI_CONFIG"
 test -f $TMPDIR/$OCI_CONFIG
 
-test -f $TMPDIR/manifest.json
+if ! [ -f $TMPDIR/manifest.json ] ; then
+	ci/add-manifest-json.sh $TAG $TMPDIR
+fi
 DOCKER_CONFIG=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/manifest.json
 	if length > 1
 		then error("unexpected multiple images found in " + input_filename)

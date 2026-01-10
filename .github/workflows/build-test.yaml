@@ -77,6 +77,13 @@ jobs:
         run: mkdir freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Save image
         run: ${{ matrix.docker }} save localhost/freeipa-server:${{ matrix.os }} > freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar
+        if: matrix.docker == 'docker'
+      - name: Workaround https://github.com/actions/runner-images/issues/10443
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        if: matrix.docker == 'podman'
+      - name: Get OCI archive from podman
+        run: skopeo copy containers-storage:localhost/freeipa-server:${{ matrix.os }} oci-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar
+        if: matrix.docker == 'podman'
       - name: Label the built image
         run: docker="${{ matrix.docker }}" ./ci/label-image.sh freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar Dockerfile.${{ matrix.os }} localhost/freeipa-server:${{ matrix.os }} $( cd ../minimize-for-build && git write-tree ) "${{ github.server_url }}/${{ github.repository }}" "actions/runs/${{ github.run_id }}"
       - name: File issue if building image failed
