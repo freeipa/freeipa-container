@@ -104,13 +104,13 @@ jobs:
         shell: bash
       - name: Check resulting labels
         run: |
-          skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels'
+          skopeo inspect oci-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels'
           CHECK_REPO=quay.io/freeipa/freeipa-server
-          diff -u <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels' ) || true
+          diff -u <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} | jq '.Labels' ) <( skopeo inspect oci-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz | jq '.Labels' ) || true
           if cmp \
             <( skopeo inspect docker://$CHECK_REPO:${{ matrix.os }} \
               | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) \
-            <( skopeo inspect docker-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz \
+            <( skopeo inspect oci-archive:freeipa-server-${{ matrix.os }}-${{ matrix.arch }}/freeipa-server-${{ matrix.os }}-${{ matrix.arch }}.tar.gz \
               | jq -r '.Labels."org.opencontainers.image.base.digest", .Labels."org.opencontainers.image.version"' ) ; then
             echo Newly built freeipa-server:${{ matrix.os }} is the same as image at $CHECK_REPO.
           else
@@ -309,7 +309,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
-      - run: sudo skopeo copy docker-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
+      - run: sudo skopeo copy oci-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
         if: matrix.runtime == 'cri-o'
       - name: Load image to docker
         run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | docker load
@@ -356,7 +356,7 @@ jobs:
         if: steps.get-arches.outputs.arches_num != 1
       - run: |
           echo '${{ steps.get-arches.outputs.arches }}' \
-          | jq -r '.[] | "docker-archive:freeipa-server-${{ matrix.os }}-" + . + ".tar.gz"' \
+          | jq -r '.[] | "oci-archive:freeipa-server-${{ matrix.os }}-" + . + ".tar.gz"' \
           | xargs podman manifest create freeipa-server:${{ matrix.os }}
         if: steps.get-arches.outputs.arches_num != 1
       - name: Prepare authentication file
@@ -367,7 +367,7 @@ jobs:
       - name: Copy ${{ matrix.os }} to registries
         run: |
           set -e
-          f=docker-archive:freeipa-server-${{ matrix.os }}-${{ steps.get-arches.outputs.arch0 }}.tar.gz
+          f=oci-archive:freeipa-server-${{ matrix.os }}-${{ steps.get-arches.outputs.arch0 }}.tar.gz
           while read r ; do
             echo Copying freeipa-server:${{ matrix.os }} to ${r#docker://}
             if [ "${{ steps.get-arches.outputs.arches_num }}" -eq 1 ] ; then
