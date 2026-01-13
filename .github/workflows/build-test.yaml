@@ -11,6 +11,7 @@ on:
         type: choice
         options:
           - all
+          - fedora-rawhide
           - fedora-43
           - fedora-42
           - almalinux-10
