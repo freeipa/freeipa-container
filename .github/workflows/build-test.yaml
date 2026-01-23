@@ -16,6 +16,7 @@ on:
           - fedora-42
           - almalinux-10
           - almalinux-9
+          - almalinux-8
           - rocky-9
           - centos-10-stream
           - centos-9-stream
