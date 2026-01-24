@@ -18,6 +18,7 @@ on:
           - almalinux-9
           - almalinux-8
           - rocky-9
+          - rocky-8
           - centos-10-stream
           - centos-9-stream
   schedule:
