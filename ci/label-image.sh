@@ -49,11 +49,35 @@ test -n "$GITTREE"
 
 tar x -C $TMPDIR -f $IMAGE_FILE
 test -f $TMPDIR/index.json
-OCI_MANIFEST=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/index.json
+OCI_INNER_INDEX=$( jq -r -f /dev/stdin <<'EOS' $TMPDIR/index.json
 	if has("mediaType") and .mediaType != "application/vnd.oci.image.index.v1+json"
 		then error("unexpected media type found in " + input_filename)
 		end
 	| .manifests
+	| if length > 1
+		then error("unexpected multiple manifests found in " + input_filename)
+		end
+	| .[0]
+	| if .mediaType == "application/vnd.oci.image.manifest.v1+json" then halt end
+	| if .mediaType != "application/vnd.oci.image.index.v1+json"
+		then error("unexpected media type declared for inner index in " + input_filename)
+		end
+	| .digest
+	| sub("^sha256:"; "blobs/sha256/")
+EOS
+)
+if test -z "$OCI_INNER_INDEX" ; then
+	OCI_INNER_INDEX=$TMPDIR/index.json
+else
+	test -f $TMPDIR/$OCI_INNER_INDEX
+	OCI_INNER_INDEX=$TMPDIR/$OCI_INNER_INDEX
+fi
+OCI_MANIFEST=$( jq -r -f /dev/stdin <<'EOS' $OCI_INNER_INDEX
+	if has("mediaType") and .mediaType != "application/vnd.oci.image.index.v1+json"
+		then error("unexpected media type found in " + input_filename)
+		end
+	| .manifests
+	| map(select(getpath(["annotations", "vnd.docker.reference.type"]) != "attestation-manifest"))
 	| if length > 1
 		then error("unexpected multiple manifests found in " + input_filename)
 		end
@@ -132,7 +156,8 @@ OCI_MANIFEST_SHA=$( sha256sum $TMPDIR/oci-manifest | sed 's/ .*//' )
 OCI_MANIFEST_SIZE=$( wc -c < $TMPDIR/oci-manifest )
 
 jq --arg SHA $OCI_MANIFEST_SHA --argjson SIZE $OCI_MANIFEST_SIZE --argjson LABELS "$LABELS" -f /dev/stdin <<'EOS' $TMPDIR/index.json > $TMPDIR/index.json.new
-	.manifests[0].digest = "sha256:" + $SHA
+        .manifests[0].mediaType = "application/vnd.oci.image.manifest.v1+json"
+	| .manifests[0].digest = "sha256:" + $SHA
 	| .manifests[0].size = $SIZE
 	| .manifests[0].annotations += $LABELS
 EOS
