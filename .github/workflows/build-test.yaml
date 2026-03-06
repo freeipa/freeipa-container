@@ -293,7 +293,7 @@ jobs:
         include: ${{ fromJSON(needs.test-plan.outputs.matrix-k8s ) }}
     timeout-minutes: 30
     env:
-      CRIO_VERSION: v1.34
+      CRIO_VERSION: v1.35
     steps:
       - uses: actions/checkout@v4
       - run: test -f /sys/fs/cgroup/cgroup.controllers
