@@ -55,7 +55,6 @@ jobs:
         docker: [ docker ]
         exclude:
           - os: centos-10-stream
-            arch: x86_64
           - os: centos-9-stream
             arch: arm64
           - os: almalinux-8
