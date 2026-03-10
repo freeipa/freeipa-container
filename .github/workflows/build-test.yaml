@@ -35,7 +35,7 @@ jobs:
       - id: generate-os-list-dispatch-one
         if: github.event_name == 'workflow_dispatch' && inputs.os != 'all'
         run: echo 'os=["${{ inputs.os }}"]' | tee $GITHUB_OUTPUT
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: github.event_name != 'workflow_dispatch' || inputs.os == 'all'
       - id: generate-os-list-all
         if: github.event_name != 'workflow_dispatch' || inputs.os == 'all'
@@ -64,7 +64,7 @@ jobs:
             arch: arm64
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Separate git work tree with just the files needed for build
         run: git worktree add --no-checkout ../minimize-for-build
       - name: Populate with the Dockerfile
@@ -103,7 +103,7 @@ jobs:
               "labels": ["image-build-fail" ]
               }'
       - run: gzip freeipa-server-${{ matrix.os }}-${{matrix.arch}}/freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
           path: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
@@ -140,7 +140,7 @@ jobs:
             rm -f build-status/${{ matrix.os }}-${{ matrix.arch }}/fresh-image
           fi
         shell: bash
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: build-status-${{ matrix.os }}-${{ matrix.arch }}
           path: build-status
@@ -158,8 +158,8 @@ jobs:
       matrix-push: ${{ steps.produce-matrix.outputs.matrix-push }}
       matrix-push-data: ${{ steps.produce-matrix.outputs.matrix-push-data }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
         with:
           pattern: build-status-*
           path: build-status
@@ -218,12 +218,12 @@ jobs:
     env:
       runtime: ${{ matrix.runtime == 'docker rootless' && 'docker' || matrix.runtime }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
       - uses: ./.github/actions/install-docker-rootless
         if: matrix.runtime == 'docker rootless'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
@@ -252,12 +252,12 @@ jobs:
     env:
       runtime: ${{ matrix.runtime == 'docker rootless' && 'docker' || matrix.runtime }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
       - uses: ./.github/actions/install-docker-rootless
         if: matrix.runtime == 'docker rootless'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - name: Load image
@@ -296,7 +296,7 @@ jobs:
     env:
       CRIO_VERSION: v1.35
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: test -f /sys/fs/cgroup/cgroup.controllers
       - uses: ./.github/actions/install-crio
         if: matrix.runtime == 'cri-o'
@@ -316,7 +316,7 @@ jobs:
         if: matrix.kubernetes == 'rke2'
       - uses: ./.github/actions/install-k0s
         if: matrix.kubernetes == 'k0s'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
       - run: sudo skopeo copy oci-archive:freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz containers-storage:localhost/freeipa-server:${{ matrix.os }}
@@ -355,11 +355,11 @@ jobs:
           ( echo -n "arches_num=" ; echo "$ARCHES" | jq -r 'length' ) | tee -a $GITHUB_OUTPUT
           ( echo -n "arch0=" ; echo "$ARCHES" | jq -r '.[0]' ) | tee -a $GITHUB_OUTPUT
         id: get-arches
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{ steps.get-arches.outputs.arch0 }}
         if: steps.get-arches.outputs.arches_num == 1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: freeipa-server-${{ matrix.os }}-*
           merge-multiple: true

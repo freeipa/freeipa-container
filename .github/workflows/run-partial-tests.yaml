@@ -61,7 +61,7 @@ jobs:
       matrix: ${{ fromJSON(needs.gen-matrix.outputs.matrix) }}
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.docker == 'docker'
       - name: For RHEL builds, use entitlements
