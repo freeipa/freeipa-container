@@ -41,7 +41,10 @@ runs:
         sudo resolvectl domain cni0 cluster.local
 
         kubectl apply -f tests/freeipa-coredns-custom.yaml
-        if ! kubectl get configmap -n kube-system coredns -o yaml | grep -F 'import /etc/coredns/custom/*.server' ; then
+        if kubectl get configmap -n kube-system coredns -o yaml | grep -F 'import /etc/coredns/custom/*.server' ; then
+            echo "The default coredns configuration has changed." >&2
+            exit 1
+        else
             ( kubectl get configmap -n kube-system coredns -o=jsonpath='{.data.Corefile}' ;
                 kubectl get configmap -n kube-system coredns-custom -o=jsonpath="{.data['freeipa\.server']}" ) \
             | kubectl create --dry-run=client -n kube-system configmap coredns --from-file=Corefile=/dev/stdin -o yaml \
