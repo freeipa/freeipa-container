@@ -12,7 +12,7 @@ runs:
         elif [ -e /var/run/containerd/containerd.sock ] ; then
             CRI_SOCKET='--cri-socket remote:unix:///var/run/containerd/containerd.sock'
         fi
-        sudo k0s install controller --single $CRI_SOCKET -c /etc/k0s/k0s.yaml
+        sudo k0s install controller --single $CRI_SOCKET -c /etc/k0s/k0s.yaml --disable-components=metrics-server
         sudo k0s start
         ( set +x ; while ! sudo k0s status ; do echo --- ; sleep 5 ; done )
 

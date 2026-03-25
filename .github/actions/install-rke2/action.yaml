@@ -10,6 +10,7 @@ runs:
         elif [ -e /var/run/containerd/containerd.sock ] ; then
             echo "container-runtime-endpoint: /var/run/containerd/containerd.sock" | sudo tee /etc/rancher/rke2/config.yaml.d/70-containerd.yaml
         fi
+        ( echo 'disable:' ; echo ' - rke2-metrics-server' ) | sudo tee /etc/rancher/rke2/config.yaml.d/disable-metrics-server.yaml
         sudo mkdir -p /var/lib/rancher/rke2/server/manifests
         sudo cp tests/rke2-helm-coredns-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
 
