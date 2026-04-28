@@ -12,6 +12,7 @@ on:
         options:
           - all
           - fedora-rawhide
+          - fedora-44
           - fedora-43
           - fedora-42
           - almalinux-10
