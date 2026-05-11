@@ -10,6 +10,7 @@ jobs:
     # Workaround https://github.com/actions/runner/issues/1138
     name: Prerequisite for RHEL builds
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     timeout-minutes: 1
     outputs:
       has_rhel_subscriptions: ${{ steps.check.outputs.has_rhel_subscriptions }}

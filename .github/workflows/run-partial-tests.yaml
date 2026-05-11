@@ -31,6 +31,7 @@ jobs:
   gen-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
       matrix: ${{ steps.dispatch-matrix.outputs.matrix }}${{ steps.default-matrix.outputs.matrix }}
     steps:
@@ -59,6 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.gen-matrix.outputs.matrix) }}
+    if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6

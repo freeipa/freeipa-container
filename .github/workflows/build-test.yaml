@@ -30,6 +30,7 @@ jobs:
     name: Process workflow inputs
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
       os: ${{ steps.generate-os-list-dispatch-one.outputs.os }}${{ steps.generate-os-list-all.outputs.os }}
     steps:
@@ -152,6 +153,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ build ]
     timeout-minutes: 1
+    if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
       matrix-run: ${{ steps.produce-matrix.outputs.matrix-run }}
       matrix-test-upgrade: ${{ steps.produce-matrix.outputs.matrix-test-upgrade }}
