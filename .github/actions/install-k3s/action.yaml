@@ -14,6 +14,9 @@ runs:
             INSTALL_K3S_EXEC="--container-runtime-endpoint /var/run/containerd/containerd.sock"
             cat tests/containerd-2.1-config-k3s.toml | sudo tee -a /etc/containerd/config.toml
             sudo systemctl restart containerd
+        else
+            sudo mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d
+            sudo cp tests/containerd-2.1-config.toml /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d/cgroups.toml
         fi
         curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config --disable=traefik --disable=metrics-server
         sudo chown -R $( id -u ):$( id -g ) ~/.kube

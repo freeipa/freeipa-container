@@ -311,7 +311,9 @@ jobs:
       - run: sudo systemctl stop docker && sudo rm -f /var/run/docker.sock
         if: matrix.runtime != 'docker'
       - uses: ./.github/actions/install-containerd-2.3
-        if: matrix.runtime == 'containerd'
+        if: matrix.runtime == 'containerd' && matrix.kubernetes != 'k3s'
+      - run: sudo systemctl stop containerd
+        if: matrix.runtime == 'containerd' && matrix.kubernetes == 'k3s'
       - uses: ./.github/actions/install-k8s
         env:
           KUBERNETES_VERSION: v1.36
@@ -332,7 +334,10 @@ jobs:
         if: matrix.runtime == 'docker'
       - name: Load image to containerd
         run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | sudo ctr -n k8s.io images import -
-        if: matrix.runtime == 'containerd'
+        if: matrix.runtime == 'containerd' && matrix.kubernetes != 'k3s'
+      - name: Load image to containerd in K3s
+        run: gunzip < freeipa-server-${{ matrix.os }}-${{matrix.arch}}.tar.gz | sudo k3s ctr images import -
+        if: matrix.runtime == 'containerd' && matrix.kubernetes == 'k3s'
       - run: patch tests/freeipa-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
         if: matrix.runtime == 'docker'
       - run: patch tests/freeipa-replica-k8s.yaml < tests/freeipa-k8s.yaml.docker.patch
