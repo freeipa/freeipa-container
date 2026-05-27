@@ -90,6 +90,4 @@ push:
       arch: arm64
     - os: fedora-43
       arch: arm64
-    - os: fedora-42
-      arch: arm64
 

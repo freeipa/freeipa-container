@@ -14,7 +14,6 @@ on:
           - fedora-rawhide
           - fedora-44
           - fedora-43
-          - fedora-42
           - almalinux-10
           - almalinux-9
           - almalinux-8
