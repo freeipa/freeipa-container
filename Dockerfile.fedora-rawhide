@@ -110,9 +110,6 @@ EXPOSE 53/udp 53 80 443 389 636 88 464 88/udp 464/udp 123/udp
 
 RUN uuidgen > /data-template/build-id
 
-# Invocation:
-# docker run -ti -v /opt/ipa-data:/data:Z -h ipa.example.test ${NAME} [ options ]
-
 LABEL org.opencontainers.image.title="FreeIPA server"
 LABEL org.opencontainers.image.authors="FreeIPA Developers <freeipa-devel@lists.fedorahosted.org>"
 LABEL org.opencontainers.image.documentation="https://github.com/freeipa/freeipa-container"
