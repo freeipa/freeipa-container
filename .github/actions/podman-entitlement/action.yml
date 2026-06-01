@@ -6,7 +6,7 @@ inputs:
     description: 'Red Hat account activation key'
   image:
     description: 'Container image to use to run subscription-manager register'
-    default: 'registry.access.redhat.com/ubi9'
+    default: 'registry.access.redhat.com/ubi10'
 runs:
   using: 'composite'
   steps:
