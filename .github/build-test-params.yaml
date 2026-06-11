@@ -1,7 +1,7 @@
 
 run:
   runs-on:
-    ubuntu-24.04: 1
+    ubuntu-26.04: 1
   runtime:
     podman: 4
     sudo podman: 1
@@ -21,7 +21,7 @@ run:
 
 test-upgrade:
   runs-on:
-    ubuntu-24.04: 1
+    ubuntu-26.04: 1
   runtime:
     podman: 2
     docker rootless: 2
@@ -64,7 +64,7 @@ test-upgrade:
 
 k8s:
   runs-on:
-    ubuntu-24.04: 1
+    ubuntu-26.04: 1
   kubernetes:
     k3s: 1
     kubeadm init: 1

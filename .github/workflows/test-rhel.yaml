@@ -9,7 +9,7 @@ jobs:
   test-subscription:
     # Workaround https://github.com/actions/runner/issues/1138
     name: Prerequisite for RHEL builds
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     timeout-minutes: 1
     outputs:
@@ -23,7 +23,7 @@ jobs:
 
   build-test-rhel-podman:
     name: Build and test RHEL image
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     needs: [ test-subscription ]
     if: needs.test-subscription.outputs.has_rhel_subscriptions == 1
     strategy:

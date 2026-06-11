@@ -1,5 +1,5 @@
 name: tests/run-partial-tests.sh
-run-name: tests/run-partial-tests.sh${{ github.event_name == 'workflow_dispatch' && ! inputs.full && format(' Dockerfile.{0} with {1}', inputs.os, inputs.docker) || ' all' }} @ ${{ inputs.runs-on == '' && 'ubuntu-24.04' || inputs.runs-on }}
+run-name: tests/run-partial-tests.sh${{ github.event_name == 'workflow_dispatch' && ! inputs.full && format(' Dockerfile.{0} with {1}', inputs.os, inputs.docker) || ' all' }} @ ${{ inputs.runs-on == '' && 'ubuntu-26.04' || inputs.runs-on }}
 
 on:
   schedule:
@@ -24,12 +24,12 @@ on:
         description: Host Ubuntu version
         type: choice
         options:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
+          - ubuntu-26.04
+          - ubuntu-26.04-arm
 
 jobs:
   gen-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
@@ -55,7 +55,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && ! inputs.full
 
   test:
-    runs-on: ${{ inputs.runs-on || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runs-on || 'ubuntu-26.04' }}
     needs: [ gen-matrix ]
     strategy:
       fail-fast: false

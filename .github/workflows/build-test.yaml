@@ -27,7 +27,7 @@ on:
 jobs:
   init:
     name: Process workflow inputs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
@@ -45,7 +45,7 @@ jobs:
             | jq -c . | sed 's/^/os=/' | tee $GITHUB_OUTPUT
   build:
     name: Build image
-    runs-on: ubuntu-24.04${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
+    runs-on: ubuntu-26.04${{ (matrix.arch == 'arm64' && '-arm') || (matrix.arch == 'x86_64' && '') }}
     needs: [ init ]
     if: needs.init.outputs.os != '[]'
     strategy:
@@ -153,7 +153,7 @@ jobs:
 
   test-plan:
     name: FreeIPA test plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [ build ]
     timeout-minutes: 1
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
@@ -351,7 +351,7 @@ jobs:
 
   push-after-success:
     name: Push images to registries
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [ master-and-replica, test-upgrade, test-k8s, test-plan ]
     if: needs.test-plan.outputs.matrix-push != '[]' && github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
