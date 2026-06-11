@@ -66,6 +66,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.docker == 'docker'
+      - run: mkdir -p ~/.config/containers && cp ci/containers-podman-5.conf ~/.config/containers/containers.conf
+        if: matrix.docker == 'podman'
       - name: For RHEL builds, use entitlements
         if: ${{ startsWith(matrix.os, 'rhel-') }}
         uses: ./.github/actions/podman-entitlement
