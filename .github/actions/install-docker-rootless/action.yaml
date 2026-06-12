@@ -18,7 +18,7 @@ runs:
         EOT
         sudo systemctl restart apparmor.service
 
-        curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+        curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 SKIP_IPTABLES=1 sh
 
         docker info --format '{{ .ClientInfo.Context }}' | grep rootless
       shell: bash -euxo pipefail {0}
