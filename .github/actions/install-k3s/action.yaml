@@ -18,8 +18,10 @@ runs:
             sudo mkdir -p /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d
             sudo cp tests/containerd-2.1-config.toml /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d/cgroups.toml
         fi
-        curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig ~/.kube/config --disable=traefik --disable=metrics-server
-        sudo chown -R $( id -u ):$( id -g ) ~/.kube
+        curl -sfL https://get.k3s.io \
+            | sh -s - \
+                --write-kubeconfig ~/.kube/config --write-kubeconfig-mode 640 --write-kubeconfig-group $( id -g ) \
+                --disable=traefik --disable=metrics-server
         ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
         ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
         kubectl get pods --all-namespaces
