@@ -34,6 +34,7 @@ jobs:
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
       matrix: ${{ steps.dispatch-matrix.outputs.matrix }}${{ steps.default-matrix.outputs.matrix }}
+      runs-on: ${{ steps.get-runs-on.outputs.runs-on }}
     steps:
       - id: default-matrix
         run: |
@@ -53,9 +54,14 @@ jobs:
         run: |
           echo "matrix={'os': [ '${{ inputs.os }}' ], 'docker': [ '${{ inputs.docker }}' ]}" | tee -a $GITHUB_OUTPUT
         if: github.event_name == 'workflow_dispatch' && ! inputs.full
+      - id: get-runs-on
+        run: |
+          RUNS_ON='${{ inputs.runs-on }}'
+          RUNS_ON=${RUNS_ON:-ubuntu-26.04}
+          echo "runs-on=$RUNS_ON" | tee -a $GITHUB_OUTPUT
 
   test:
-    runs-on: ${{ inputs.runs-on || 'ubuntu-26.04' }}
+    runs-on: ${{ needs.gen-matrix.outputs.runs-on }}
     needs: [ gen-matrix ]
     strategy:
       fail-fast: false
@@ -68,6 +74,8 @@ jobs:
         if: matrix.docker == 'docker'
       - run: mkdir -p ~/.config/containers && cp ci/containers-podman-5.conf ~/.config/containers/containers.conf
         if: matrix.docker == 'podman'
+      - run: sudo apt update && sudo apt install -y apparmor-utils && sudo aa-complain --profile hostname smbd
+        if: startsWith(needs.gen-matrix.outputs.runs-on, 'ubuntu-26.04') && matrix.docker == 'podman' && endsWith(matrix.os, '-8')
       - name: For RHEL builds, use entitlements
         if: ${{ startsWith(matrix.os, 'rhel-') }}
         uses: ./.github/actions/podman-entitlement
