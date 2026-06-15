@@ -24,6 +24,8 @@ on:
         description: Host Ubuntu version
         type: choice
         options:
+          - ubuntu-26.04
+          - ubuntu-26.04-arm
           - ubuntu-24.04
           - ubuntu-24.04-arm
 
@@ -57,7 +59,7 @@ jobs:
       - id: get-runs-on
         run: |
           RUNS_ON='${{ inputs.runs-on }}'
-          RUNS_ON=${RUNS_ON:-ubuntu-24.04}
+          RUNS_ON=${RUNS_ON:-ubuntu-26.04}
           echo "runs-on=$RUNS_ON" | tee -a $GITHUB_OUTPUT
 
   test:
