@@ -127,6 +127,13 @@ on the host with
 
     setsebool -P container_manage_cgroup 1
 
+Processes in containers run natively on the machine CPU, so the CPU
+has to support the microarchitecture level for which the OS in the
+container image was compiled. Specifically `:almalinux-10` will fail
+on x86_64 CPUs that are not of `x86-64-v3` level with
+
+    Fatal glibc error: CPU does not support x86-64-v3
+
 ### Server configuration and data
 
 The FreeIPA container will store all its configurations, data, and logs
