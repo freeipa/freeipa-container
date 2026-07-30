@@ -10,6 +10,9 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Workaround https://github.com/actions/runner-images/issues/14473
+      run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
+      shell: bash
     - run: mkdir -p /tmp/{etc-pki-entitlement,rhsm}-${{ github.run_id }}
       shell: bash
     - run: |

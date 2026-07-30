@@ -72,6 +72,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+      - name: Workaround https://github.com/actions/runner-images/issues/14473
+        run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
+        if: matrix.docker == 'podman'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.docker == 'docker'
       - run: mkdir -p ~/.config/containers && cp ci/containers-podman-5.conf ~/.config/containers/containers.conf

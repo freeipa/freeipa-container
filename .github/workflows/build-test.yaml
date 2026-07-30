@@ -69,6 +69,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+      - name: Workaround https://github.com/actions/runner-images/issues/14473
+        run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
+        if: matrix.docker == 'podman' || matrix.docker == 'sudo podman'
       - name: Separate git work tree with just the files needed for build
         run: git worktree add --no-checkout ../minimize-for-build
       - name: Populate with the Dockerfile
@@ -224,6 +227,9 @@ jobs:
       runtime: ${{ matrix.runtime == 'docker rootless' && 'docker' || matrix.runtime }}
     steps:
       - uses: actions/checkout@v6
+      - name: Workaround https://github.com/actions/runner-images/issues/14473
+        run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
+        if: matrix.runtime == 'podman' || matrix.runtime == 'sudo podman'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
       - uses: ./.github/actions/install-docker-rootless
@@ -258,6 +264,9 @@ jobs:
       runtime: ${{ matrix.runtime == 'docker rootless' && 'docker' || matrix.runtime }}
     steps:
       - uses: actions/checkout@v6
+      - name: Workaround https://github.com/actions/runner-images/issues/14473
+        run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
+        if: matrix.runtime == 'podman' || matrix.runtime == 'sudo podman'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
         if: matrix.runtime == 'docker'
       - uses: ./.github/actions/install-docker-rootless
