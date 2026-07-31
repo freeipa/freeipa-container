@@ -33,8 +33,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
-      - name: Workaround https://github.com/actions/runner-images/issues/14473
-        run: ( echo '[engine.runtimes]' ; echo 'crun = [ "/usr/local/bin/crun" ]' ) | sudo tee /etc/containers/containers.conf
       - name: For RHEL builds, use entitlements
         uses: redhat-actions/common/podman-entitlement@19c680ff95a52ee905481b54fc08d5c47788600c    # @v2.1.0
         with:
