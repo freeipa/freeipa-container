@@ -31,7 +31,7 @@ on:
 
 jobs:
   gen-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:

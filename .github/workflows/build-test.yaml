@@ -26,7 +26,7 @@ on:
 jobs:
   init:
     name: Process workflow inputs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 1
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
@@ -152,7 +152,7 @@ jobs:
 
   test-plan:
     name: FreeIPA test plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs: [ build ]
     timeout-minutes: 1
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
