@@ -89,6 +89,8 @@ k8s:
       runtime: cri-o
     - runs-on: ubuntu-26.04
       runtime: containerd
+    - runs-on: ubuntu-24.04
+      runtime: cri-o
 
 push:
   exclude:
