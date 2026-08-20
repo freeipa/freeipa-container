@@ -18,5 +18,12 @@ runs:
         # for images like rancher/local-path-provisioner:v0.0.31 
         # due to multiple unqualified-search-registries entries in /etc/containers/registries.conf.d/crio.conf
         echo 'unqualified-search-registries = ["docker.io"]' | sudo tee /etc/containers/registries.conf.d/no-unqualified-quay.conf
+
+        # Workaround https://github.com/cri-o/cri-o/issues/9865 / https://github.com/freeipa/freeipa-container/issues/750
+        if [ -f /etc/containers/storage.conf ] ; then
+            sudo mv -f /etc/containers/storage.conf /etc/containers/storage.conf.dist
+            sudo sudo podman system reset -f
+        fi
+
         sudo systemctl start crio.service
       shell: bash -euxo pipefail {0}
