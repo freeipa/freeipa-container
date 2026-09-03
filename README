@@ -51,10 +51,10 @@ development or debugging, use the `-f` option to `podman build`
 or `docker build` to pick a `Dockerfile` for the specific operating
 system and version.
 
-For example, to build image based on CentOS 9 Stream packages using podman,
+For example, to build image based on AlmaLinux 10 packages using podman,
 use
 
-    podman build -t localhost/freeipa-server -f Dockerfile.centos-9-stream .
+    podman build -t localhost/freeipa-server -f Dockerfile.almalinux-10 .
 
 and to create FreeIPA image based on Fedora rawhide with docker, call
 
