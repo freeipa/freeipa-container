@@ -51,8 +51,8 @@
 # rndc-confgen does not seem to write through the
 # /etc/rndc.key -> /data/etc/rndc.key symlink
 #
---- /usr/libexec/generate-rndc-key.sh
-+++ /usr/libexec/generate-rndc-key.sh
+--- /usr/libexec/bind/generate-rndc-key.sh
++++ /usr/libexec/bind/generate-rndc-key.sh
 @@ -15,18 +15,18 @@
 
  # This script generates /etc/rndc.key if doesn't exist AND if there is no rndc.conf
