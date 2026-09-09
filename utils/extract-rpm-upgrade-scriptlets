@@ -3,7 +3,7 @@
 set -e
 
 j=1
-for i in 389-ds-base pki-server bind-dyndb-ldap certmonger ; do
+for i in 389-ds-base dogtag-pki-base bind-dyndb-ldap certmonger ; do
 	rpm -q $i || continue
 	s=/usr/sbin/ipa-upgrade-rpm-scriptlets-$j-$i
 	rpm -q --qf '#!%{POSTINPROG}\n%{POSTIN}\n' $i | sed 's%#!/bin/sh%#!/bin/sh -x%' > $s
