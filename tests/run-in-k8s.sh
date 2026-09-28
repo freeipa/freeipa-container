@@ -39,6 +39,26 @@ seq 60 -1 0 | while read i ; do dig +short -t srv _ldap._tcp.${IPA_SERVER_HOSTNA
 curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
 curl -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
 echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
+kubectl exec -i pod/freeipa-server -- ipa user-add --first Bob --last Nowak bob$$
+
+kubectl exec -i pod/freeipa-server -- ipa host-del client1.dom1.default.svc.cluster.local || :
+kubectl exec -i pod/freeipa-server -- ipa host-add --password=Secret124 --force client1.dom1.default.svc.cluster.local
+
+if ! podman images localhost/ipa-client | grep '^localhost/ipa-client' ; then
+        podman build -t localhost/ipa-client -f Dockerfile.test-client .
+fi
+podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local --network host localhost/ipa-client
+for i in $( seq 1 10 ) ; do podman exec ipa-client systemctl is-system-running | grep -F running && break ; sleep 1 ; done
+if ! podman exec ipa-client systemctl is-system-running | grep -F running ; then
+	podman logs ipa-client
+	exit 1
+fi
+podman exec ipa-client ipa-client-install -U --password=Secret124 --no-ntp
+podman exec ipa-client id bob$$
+
+podman rm -f ipa-client
+
+kubectl exec -i pod/freeipa-server -- ipa host-del client1.dom1.default.svc.cluster.local
 
 kill $MASTER_LOGS_PID 2> /dev/null || :
 trap - EXIT
@@ -72,6 +92,19 @@ dig +short $IPA_REPLICA_HOSTNAME | tee /dev/stderr | grep -F $IPA_REPLICA_IP > /
 curl -Lk https://$IPA_REPLICA_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
 curl -H "Referer: https://$IPA_REPLICA_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_REPLICA_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
 echo Secret123 | kubectl exec -i pod/freeipa-replica -- kinit admin
+
+kubectl exec -i pod/freeipa-server -- ipa host-add --password=Secret124 --force client1.dom1.default.svc.cluster.local
+
+podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local --network host localhost/ipa-client
+for i in $( seq 1 10 ) ; do podman exec ipa-client systemctl is-system-running | grep -F running && break ; sleep 1 ; done
+if ! podman exec ipa-client systemctl is-system-running | grep -F running ; then
+	podman logs ipa-client
+	exit 1
+fi
+podman exec ipa-client ipa-client-install -U --domain=dom1.default.svc.cluster.local --server=freeipa-replica.dom1.default.svc.cluster.local --password=Secret124 --no-ntp
+podman exec ipa-client id bob$$
+
+podman rm -f ipa-client
 
 kill $REPLICA_LOGS_PID 2> /dev/null || :
 trap - EXIT
