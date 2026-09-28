@@ -1,7 +1,12 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
+
+if [ "$#" -lt 1 ] ; then
+	echo "Usage: $0 container [ list of units that are expected to fail ]" >&2
+	exit 1
+fi
 
 C="$1"
 shift
@@ -15,7 +20,7 @@ if [ "$#" -eq 0 ] ; then
 	exit
 fi
 
-$docker exec $C systemctl is-system-running --no-pager -l | grep -E 'degraded|starting'
+{ $docker exec $C systemctl is-system-running --no-pager -l || true ; } | grep -E 'degraded|starting'
 $docker exec $C journalctl --no-pager -l
 
 FAILED=$( $docker exec $C systemctl list-units --state=failed --no-pager -l --no-legend --plain | tee /dev/stderr | sed 's/ .*//' | sort )

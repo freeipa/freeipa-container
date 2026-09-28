@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 j=1
 for i in 389-ds-base dogtag-pki-base bind-dyndb-ldap certmonger ; do

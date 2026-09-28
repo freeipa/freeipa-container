@@ -2,12 +2,16 @@
 
 # Annotate recently built image with labels about the content of the image
 
-set -e
+set -euo pipefail
 
 docker=${docker:-docker}
 TMPDIR=${TMPDIR:-/tmp}/freeipa-archive-$$
 mkdir -p $TMPDIR
 
+if [ "$#" -lt 6 ] ; then
+	echo "Usage: $0 image_file dockerfile tag gittree repo_url job_path" >&2
+	exit 1
+fi
 IMAGE_FILE="$1"
 DOCKERFILE="$2"
 TAG="$3"
@@ -37,7 +41,7 @@ if [ -z "$BASE_DIGEST" ] ; then
 fi
 test -n "$BASE_DIGEST"
 
-IPA_VERSION=$( $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install /usr/bin/ipa-server-install | grep '^[1-9]' | head -1 )
+IPA_VERSION=$( { $docker run --rm --entrypoint rpm "$TAG" -qf --qf '%{version}\n' /usr/sbin/ipa-server-install /usr/bin/ipa-server-install || true ; } | grep '^[1-9]' | head -1 )
 test -n "$IPA_VERSION"
 RPM_QA_SHA=$( $docker run --rm --entrypoint rpm "$TAG" -qa | LC_COLLATE=C sort | sha256sum | sed 's/ .*//' )
 test -n "$RPM_QA_SHA"

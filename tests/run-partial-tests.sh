@@ -1,25 +1,26 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
 
 DIR=$( dirname $0 )
 
-DOCKERFILE="$1"
-if [ -z "$DOCKERFILE" ] ; then
+if [ "$#" -lt 1 ] || [ -z "$1" ] ; then
 	echo "Usage: $0 Dockerfile-to-process" >&2
 	exit 1
 fi
+DOCKERFILE="$1"
 
 if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
 	echo "We expect to only run on cgroups v2 systems." >&2
 	exit 1
 fi
 
-export docker=${docker:-docker}
+docker=${docker:-docker}
+seccomp=${seccomp:-}
 
 function run_and_wait_for () {
-	(
+	local -
 	set +x
 	local -- IMAGE="$1"
 	local -- NAME="$2"
@@ -40,15 +41,14 @@ function run_and_wait_for () {
 	( set -x ; $docker run --name $NAME -d -h ipa.example.test \
 		$OPTS $IMAGE )
 	for j in $( seq 1 30 ) ; do
-		if $docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -q -E 'running|degraded' ; then
+		if $docker exec $NAME systemctl is-system-running --no-pager -l 2> /dev/null | grep -E 'running|degraded' > /dev/null ; then
 			return
 		fi
-		if ! $docker ps | grep -q "\b$NAME$" ; then
+		if ! $docker ps | grep "\b$NAME$" > /dev/null ; then
 			return
 		fi
 		sleep 2
 	done
-	)
 }
 
 SUFFIX=${DOCKERFILE#Dockerfile.}

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if setpriv --dump | grep -q sys_admin ; then
+set -euo pipefail
+
+if setpriv --dump | grep sys_admin > /dev/null ; then
 	if [[ "$( basename $0 )" =~ "domainname" ]] ; then
 		/usr/bin/hostname -y "$@"
 	else

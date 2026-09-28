@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015--2019 Jan Pazdziora
+# Copyright 2015--2026 Jan Pazdziora
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@
 # Initialization of /data (bind-mounted volume) from /data-template
 # we IPA server was not yet configured.
 
-set -e
+set -euo pipefail
 
 # Turn on tracing of this script
-test -z "$DEBUG_TRACE" || set -x
+test -z "${DEBUG_TRACE:-}" || set -x
 
 cd /
 
-if [ "$1" == /bin/bash -o "$1" == bash ] ; then
+if [ "$#" -ge 1 ] && [ "$1" == /bin/bash -o "$1" == bash ] ; then
 	exec "$@"
 fi
 
@@ -50,8 +50,8 @@ DATA_TEMPLATE=/data-template
 mkdir -p /run/ipa /run/log $DATA/var/log/journal
 ln -s $DATA/var/log/journal /run/log/journal
 
-if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
-	if [ "$1" == 'no-exit' ] ; then
+if [ "${1:-}" == 'no-exit' -o -n "${DEBUG_NO_EXIT:-}" ] ; then
+	if [ "${1:-}" == 'no-exit' ] ; then
 		shift
 	fi
 	# Debugging:  Don't power off if IPA install/upgrade fails
@@ -60,7 +60,7 @@ if [ "$1" == 'no-exit' -o -n "$DEBUG_NO_EXIT" ] ; then
 		mkdir -p /run/systemd/system/$i.d
 		echo -e "[Service]\nFailureAction=none" > /run/systemd/system/$i.d/50-no-poweroff.conf
 	done
-elif [ "$1" == 'exit-on-finished' ] ; then
+elif [ "${1:-}" == 'exit-on-finished' ] ; then
 	for i in ipa-server-configure-first.service ipa-server-upgrade.service; do
 		mkdir -p /run/systemd/system/$i.d
 		ln -s /usr/lib/systemd/system/ipa-server-configure-first.service.d/service-success-poweroff.conf.template /run/systemd/system/$i.d/50-success-poweroff.conf
@@ -69,10 +69,10 @@ elif [ "$1" == 'exit-on-finished' ] ; then
 fi
 
 # Debugging:  Turn on tracing of ipa-server-configure-first script
-test -z "$DEBUG_TRACE" || touch /run/ipa/debug-trace
+test -z "${DEBUG_TRACE:-}" || touch /run/ipa/debug-trace
 
 COMMAND=
-if [ -n "$1" ] ; then
+if [ "$#" -ge 1 ] ; then
 	case "$1" in
 		ipa-server-install)
 			COMMAND="$1"
@@ -99,7 +99,7 @@ if [ -z "$COMMAND" ] ; then
 	fi
 fi
 
-if [ -n "$IPA_SERVER_INSTALL_OPTS" -a "$COMMAND" != 'ipa-server-install' -a "$COMMAND" != 'ipa-replica-install' ] ; then
+if [ -n "${IPA_SERVER_INSTALL_OPTS:-}" -a "$COMMAND" != 'ipa-server-install' -a "$COMMAND" != 'ipa-replica-install' ] ; then
 	echo "Invocation error: IPA_SERVER_INSTALL_OPTS should only be used with ipa-server-install or ipa-replica-install." >&2
 	exit 7
 fi
@@ -113,6 +113,7 @@ for i in "$@" ; do
 	printf '%q\n' "$i" >> $OPTIONS_FILE
 done
 
+IPA_SERVER_HOSTNAME="${IPA_SERVER_HOSTNAME:-}"
 _HOSTNAME_IN_NEXT=false
 for i in $( cat $OPTIONS_FILE ) ; do
 	if $_HOSTNAME_IN_NEXT ; then
@@ -179,7 +180,7 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 		/usr/local/bin/populate-volume-from-template $DATA
 		create_machine_id
 	fi
-	if [ -n "$PASSWORD" ] ; then
+	if [ -n "${PASSWORD:-}" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' ] ; then
 			printf '%q\n' "--admin-password=$PASSWORD" >> $OPTIONS_FILE
 			if ! grep -sq '^--ds-password' $OPTIONS_FILE $DATA_OPTIONS_FILE ; then
@@ -195,14 +196,14 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 			echo "Warning: ignoring environment variable PASSWORD." >&2
 		fi
 	fi
-	if [ -n "$IPA_SERVER_INSTALL_OPTS" ] ; then
+	if [ -n "${IPA_SERVER_INSTALL_OPTS:-}" ] ; then
 		if [ "$COMMAND" == 'ipa-server-install' -o "$COMMAND" = 'ipa-replica-install' ] ; then
 			echo "$IPA_SERVER_INSTALL_OPTS" >> $OPTIONS_FILE
 		else
 			echo "Warning: ignoring environment variable IPA_SERVER_INSTALL_OPTS." >&2
 		fi
 	fi
-	if [ -n "$DEBUG" ] ; then
+	if [ -n "${DEBUG:-}" ] ; then
 		echo "--debug" >> $OPTIONS_FILE
 	fi
 fi
@@ -231,7 +232,7 @@ if [ -f "$DATA/build-id" ] ; then
 		echo "FreeIPA server is already configured but with different version, volume update."
 		/usr/local/bin/populate-volume-from-template $DATA
 		create_machine_id
-		sha256sum -c /etc/volume-data-autoupdate 2> /dev/null | awk -F': ' '/OK$/ { print $1 }' \
+		{ sha256sum -c /etc/volume-data-autoupdate 2> /dev/null || true ; } | awk -F': ' '/OK$/ { print $1 }' \
 			| while read f ; do
 				rm -f "$DATA/$f"
 				if [ -e "$DATA_TEMPLATE/$f" ] ; then
@@ -266,10 +267,10 @@ if [ $SHOW_LOG == 1 ] ; then
 	)
 fi
 
-if [ -n "$IPA_SERVER_IP" ] ; then
+if [ -n "${IPA_SERVER_IP:-}" ] ; then
 	echo "$IPA_SERVER_IP" > /run/ipa/ipa-server-ip
 fi
 
-exec /usr/sbin/init --show-status=false $SYSTEMD_OPTS
+exec /usr/sbin/init --show-status=false ${SYSTEMD_OPTS:-}
 
 exit 10

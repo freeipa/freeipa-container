@@ -1,15 +1,15 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-TAG="$1"
-IMAGE_FILE="$2"
-if [ -z "$TAG" -o -z "$IMAGE_FILE" ] ; then
+if [ "$#" -lt 2 ] || [ -z "$1" -o -z "$2" ] ; then
 	echo "usage: $( basename $0 ) image-tag image-archive.tar-or-directory-with-extracted-content" >&2
 	echo "   eg: $( basename $0 ) localhost/image-name:latest /tmp/image-name.tar" >&2
 	echo "   eg: $( basename $0 ) localhost/image-name:v1.3 /tmp/image-name-v1.3/" >&2
 	exit 1
 fi
+TAG="$1"
+IMAGE_FILE="$2"
 
 if [ -d "$IMAGE_FILE" -a -f "$IMAGE_FILE/manifest.json" ] \
 	|| [ -f "$IMAGE_FILE" ] && tar tf $IMAGE_FILE manifest.json > /dev/null 2>&1 ; then

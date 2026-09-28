@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -euo pipefail
 
 /usr/local/bin/populate-volume-from-template /tmp /data
 touch /data/etc/systemd/system/container-ipa.target.wants/.avoid.removal

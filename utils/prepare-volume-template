@@ -1,14 +1,14 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-LIST="$1"
-VOLUME="$2"
-
-if [ -z "$LIST" -o -z "$VOLUME" ] ; then
+if [ "$#" -lt 2 ] || [ -z "$1" -o -z "$2" ] ; then
 	echo "Usage: $0 volume-list-file /volume-path" >&2
 	exit 1
 fi
+
+LIST="$1"
+VOLUME="$2"
 
 mkdir -p "$VOLUME" "$VOLUME-template"
 while read i ; do

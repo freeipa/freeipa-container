@@ -5,6 +5,10 @@ on:
     - cron: '50 3 1,15 * *'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
 jobs:
   test-subscription:
     # Workaround https://github.com/actions/runner/issues/1138

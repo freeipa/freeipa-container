@@ -1,7 +1,12 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
+
+if [ "$#" -lt 1 ] ; then
+	echo "usage: $0 container" >&2
+	exit 1
+fi
 
 C="$1"
 shift

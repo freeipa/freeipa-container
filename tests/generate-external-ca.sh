@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 set -x
 
 DATA="${1:-/data}"

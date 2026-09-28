@@ -1,4 +1,6 @@
 #!/bin/bash
 
+set -euo pipefail
+
 exit_code=$( cat /run/ipa/exit_code )
 systemctl exit "$exit_code"

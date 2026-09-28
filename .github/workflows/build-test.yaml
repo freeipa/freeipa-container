@@ -24,6 +24,10 @@ on:
   schedule:
     - cron: '15 4 * * 1,3,5'
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
 jobs:
   init:
     name: Process workflow inputs
@@ -144,7 +148,6 @@ jobs:
           else
             cp "build-status/$OS-$ARCH/build-dist" "build-status/$OS-$ARCH/fresh-image"
           fi
-        shell: bash
       - name: Check resulting annotations
         run: |
           tar xz -O -f "freeipa-server-$OS-$ARCH/freeipa-server-$OS-$ARCH.tar.gz" index.json | jq '.manifests[].annotations'
@@ -156,7 +159,6 @@ jobs:
               | grep .  ; then
             rm -f "build-status/$OS-$ARCH/fresh-image"
           fi
-        shell: bash
       - uses: actions/upload-artifact@v6
         with:
           name: build-status-${{ matrix.os }}-${{ matrix.arch }}
@@ -196,7 +198,6 @@ jobs:
               cat build-status/*/fresh-image || :
               cat .github/build-test-params.yaml
           ) | yq . - -o json | tee .github/build-test-data.json
-        shell: bash
       - id: produce-matrix
         run: |
           jq -f ci/generate-test-matrix.jq --arg job run .github/build-test-data.json \
@@ -218,7 +219,6 @@ jobs:
               | tee /dev/stderr \
               | jq -cj '"matrix-push-data=", ., "\n"' >> $GITHUB_OUTPUT
       - run: jq -n -rf ci/test-matrix-to-html.jq --arg job legend >> $GITHUB_STEP_SUMMARY
-        shell: bash
 
   master-and-replica:
     name: Run

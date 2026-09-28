@@ -1,23 +1,7 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 set -x
-
-if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
-	echo "We expect to only run on cgroups v2 systems." >&2
-	exit 1
-fi
-
-umask 0007
-
-docker=${docker:-docker}
-
-sudo=sudo
-
-VOLUME=${VOLUME:-/tmp/freeipa-test-$$/data}
-if test "$VOLUME" != "${VOLUME#/}" ; then
-	mkdir -p "$VOLUME"
-fi
 
 function setup_sudo() {
 	if test "$VOLUME" == "${VOLUME#/}" ; then
@@ -32,12 +16,11 @@ function setup_sudo() {
 		rm -f $VOLUME/.test-permissions || :
 	fi
 }
-setup_sudo
 
 function wait_for_ipa_container() {
+	local -
 	set +x
 	local -- N="$1" ; shift
-	set -e
 	$docker logs -f "$N" &
 	trap "kill $! 2> /dev/null || : ; trap - RETURN EXIT" RETURN EXIT
 	local -- EXIT_STATUS=999
@@ -48,7 +31,7 @@ function wait_for_ipa_container() {
 			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
 			break
-		elif [ "$1" != "exit-on-finished" ] ; then
+		elif [ "${1:-}" != "exit-on-finished" ] ; then
 			# With exit-on-finished, we expect the container to exit, seeing it exited above
 			local -- STATUS=$( $docker exec "$N" systemctl is-system-running 2> /dev/null || : )
 			if [ "$STATUS" == 'running' ] ; then
@@ -94,10 +77,11 @@ function wait_for_ipa_container() {
 }
 
 function run_ipa_container() {
+	local -
 	set +x
 	local -- IMAGE="$1" ; shift
 	local -- N="$1" ; shift
-	set -e
+	local -- VOLUME="$VOLUME"
 	date
 	local -- HOSTNAME=ipa.example.test
 	if [ "$N" == "freeipa-replica" ] ; then
@@ -140,12 +124,31 @@ function run_ipa_container() {
 }
 
 function check_uids_gids() {
+	local -
 	local N="$1" ; shift
 	set -x
 	! $docker exec -w /data "$N" \
 		find . -xdev \( -uid +0 -o -gid +0 \) -exec stat --format="%u %g %n" {} \; 2> /dev/null \
 			| grep -v -E '^(0|65534|389|289|288|17|285|25|225|59|325) (0|65534|389|289|288|17|285|25|22|88|190|225|207|59|325) '
 }
+
+if ! [ -f /sys/fs/cgroup/cgroup.controllers ] ; then
+	echo "We expect to only run on cgroups v2 systems." >&2
+	exit 1
+fi
+
+umask 0007
+
+docker=${docker:-docker}
+readonly="${readonly:-}"
+replica="${replica:-}"
+ca="${ca:-}"
+seccomp="${seccomp:-}"
+
+VOLUME=${VOLUME:-/tmp/freeipa-test-$$/data}
+if test "$VOLUME" != "${VOLUME#/}" ; then
+	mkdir -p "$VOLUME"
+fi
 
 IMAGE="$1"
 
@@ -156,10 +159,12 @@ fi
 
 skip_opts=
 if [ "$docker" == docker ] \
-	&& $docker info --format '{{ .ClientInfo.Context }}' | grep -q rootless ; then
+	&& $docker info --format '{{ .ClientInfo.Context }}' | grep rootless > /dev/null ; then
 	skip_opts=--skip-mem-check
 fi
 
+sudo=sudo
+setup_sudo
 
 fresh_install=true
 if $sudo test -f "$VOLUME/build-id" ; then
@@ -186,7 +191,7 @@ else
 	fi
 fi
 
-while [ -n "$1" ] ; do
+while [ "$#" -ge 1 ] ; do
 	IMAGE="$1"
 	$docker rm -f freeipa-master
 	# Start the already-setup master server, or upgrade to next image
@@ -194,13 +199,10 @@ while [ -n "$1" ] ; do
 	shift
 done
 
-(
-set -x
 date
 $docker stop freeipa-master
 date
 $docker start freeipa-master
-)
 wait_for_ipa_container freeipa-master
 
 $docker rm -f freeipa-master
@@ -220,10 +222,8 @@ for i in $( seq 1 20 ) ; do
 	fi
 	sleep 5
 done
-(
-set -x
-seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep -q '\.*\..*\.' && break ; sleep 5 ; [ $i == 0 ] && false ; done
-seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -Fq '0 100 389 ipa.example.test.' && break ; sleep 5 ; [ $i == 0 ] && false ; done
+seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep '\.*\..*\.' > /dev/null && break ; sleep 5 ; [ $i == 0 ] && false ; done
+seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -F '0 100 389 ipa.example.test.' > /dev/null && break ; sleep 5 ; [ $i == 0 ] && false ; done
 
 $docker exec freeipa-master bash -c 'yes Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
@@ -234,7 +234,6 @@ if $fresh_install ; then
 	$docker exec freeipa-master ipa-kra-install -p Secret123 -U
 	$docker exec freeipa-master ipa-dns-install -U --dnssec-master --no-forwarders
 fi
-)
 
 check_uids_gids freeipa-master
 

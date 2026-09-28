@@ -1,7 +1,12 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
+
+if [ "$#" -lt 2 ] ; then
+	echo "usage: $0 container list-of-expected-diff-lines" >&2
+	exit 1
+fi
 
 C="$1"
 D="$2"
@@ -41,7 +46,7 @@ if [ -e /var/log/journal/$MACHINE_ID ] ; then
 	exit 1
 fi
 
-$docker diff $C | grep -v '^C /etc$' | tee /dev/stderr | sort | ( cd tests && diff $D /dev/stdin )
+$docker diff $C | { grep -v '^C /etc$' || true ; } | tee /dev/stderr | sort | ( cd tests && diff $D /dev/stdin )
 
 echo OK $0.
 

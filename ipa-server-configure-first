@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014--2016 Jan Pazdziora
+# Copyright 2014--2026 Jan Pazdziora
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ mark_exit_code () {
 mkdir -p /run/ipa
 trap mark_exit_code ERR EXIT
 
-set -e
+set -euo pipefail
 
 test ! -f /run/ipa/debug-trace || set -x
 
@@ -87,7 +87,7 @@ function wait_for_dns () {
         return 0
 }
 
-if [ "$1" == update-self-ip-address ] ; then
+if [ "$#" -ge 1 ] && [ "$1" == update-self-ip-address ] ; then
 	exec >> /var/log/ipa-server-run.log 2>&1
 	echo "$(date) $0 $@"
 
@@ -131,7 +131,7 @@ function upgrade_server () {
 	systemctl default
 }
 
-if [ "$1" == upgrade ] ; then
+if [ "$#" -ge 1 ] && [ "$1" == upgrade ] ; then
 	if ! diff /data/volume-version /etc/volume-version ; then
 		echo "The /data volume was created using incompatible image." >&2
 		exit 2
@@ -155,12 +155,10 @@ if [ "$1" == upgrade ] ; then
 	exit
 fi
 
-set -e
-
 cd /
 
 function usage () {
-	if [ -n "$1" ] ; then
+	if [ "$#" -ge 1 ] ; then
 		echo $1 >&2
 	else
 		echo "Start as docker run -h \$FQDN_HOSTNAME -e PASSWORD=\$THE_ADMIN_PASSWORD -v /path:/data:Z image" >&2
@@ -178,9 +176,12 @@ else
 		if [ -f /data/ipa-server-install-options ] ; then
 			usage "Too many install options files."
 		fi
+		(
+		set +o pipefail
 		if [ $(ls /data/ | grep  \\.gpg$ | wc -l) -gt 1 ] ; then
 			usage "Too many .gpg files"
 		fi
+		)
 		COMMAND=ipa-replica-install
 		RUN_CMD="/usr/sbin/ipa-replica-install"
 		if [ -f /data/*.gpg ] ; then

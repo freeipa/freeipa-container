@@ -1,16 +1,19 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
 
-VOLUME="$1"
-shift
-if [ -z "$VOLUME" ] ; then
+if [ "$#" -lt 1 ] || [ -z "$1" ] ; then
 	echo "Usage: $0 /volume-path [ /other-volume-paths ]" >&2
 	exit 1
 fi
 
-while [ -n "$VOLUME" ] ; do
+while [ "$#" -ge 1 ] ; do
+	VOLUME="$1"
+	shift
+	if [ -z "$VOLUME" ] ; then
+		continue
+	fi
 	# echo "Populating $VOLUME ..."
 	OLDEST_BUILD_ID=""
 	if [ -f "$VOLUME/build-id" ] ; then
@@ -105,9 +108,6 @@ while [ -n "$VOLUME" ] ; do
 
 	chown --reference="$VOLUME-template" "$VOLUME"
 	chmod --reference="$VOLUME-template" "$VOLUME"
-
-	VOLUME="$1"
-	shift || :
 done
 
 exit 0

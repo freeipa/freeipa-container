@@ -1,7 +1,12 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 # set -x
+
+if [ "$#" -lt 4 ] ; then
+	echo "Usage: $0 container list-dependencies-output exceptions-file diff-output" >&2
+	exit 1
+fi
 
 C="$1"
 L="$2"

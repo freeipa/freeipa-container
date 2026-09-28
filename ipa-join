@@ -1,3 +1,5 @@
 #!/bin/bash
 
+set -euo pipefail
+
 exec /usr/sbin/ipa-join.orig --keytab /data/etc/krb5.keytab "$@"

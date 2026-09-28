@@ -29,6 +29,10 @@ on:
           - ubuntu-24.04
           - ubuntu-24.04-arm
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
 jobs:
   gen-matrix:
     runs-on: ubuntu-slim
