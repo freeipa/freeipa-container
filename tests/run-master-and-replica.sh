@@ -14,7 +14,6 @@ docker=${docker:-docker}
 
 sudo=sudo
 
-BASE=ipa1
 VOLUME=${VOLUME:-/tmp/freeipa-test-$$/data}
 if test "$VOLUME" != "${VOLUME#/}" ; then
 	mkdir -p "$VOLUME"
