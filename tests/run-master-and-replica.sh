@@ -50,29 +50,33 @@ function wait_for_ipa_container() {
 	date
 	if [ "$EXIT_STATUS" -ne 0 ] ; then
 		set +e
-		if [ "$N" == "freeipa-replica" ] ; then
-			$sudo tail -100 $VOLUME/var/log/ipareplica-install.log
-		else
+		if [ "$N" == "freeipa-master" ] ; then
 			$sudo tail -100 $VOLUME/var/log/ipaserver-install.log
+		elif [ "$N" == "freeipa-replica" ] ; then
+			$sudo tail -100 $VOLUME/var/log/ipareplica-install.log
 		fi
-		echo '---'
-		$sudo tail -100 $VOLUME/var/log/ipa-server-run.log
-		echo '---'
-		$sudo tail -150 $VOLUME/var/log/ipaclient-install.log
+		if [ -n "$VOLUME" ] ; then
+			echo '---'
+			$sudo tail -100 $VOLUME/var/log/ipa-server-run.log
+			echo '---'
+			$sudo tail -150 $VOLUME/var/log/ipaclient-install.log
+		fi
 		exit "$EXIT_STATUS"
 	fi
-	if ! $sudo grep '^2' $VOLUME/volume-version ; then
-		exit 1
-	fi
-	if $docker diff "$N" | tee /dev/stderr | grep . ; then
-		exit 1
-	fi
-	local -- MACHINE_ID=$( $sudo cat $VOLUME/etc/machine-id )
-	# Check that journal landed on volume and not in host's /var/log/journal
-	$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
-	if [ -e /var/log/journal/$MACHINE_ID ] ; then
-		ls -la /var/log/journal/$MACHINE_ID
-		exit 1
+	if [ "$N" != "ipa-client" ] ; then
+		if ! $sudo grep '^2' $VOLUME/volume-version ; then
+			exit 1
+		fi
+		if $docker diff "$N" | tee /dev/stderr | grep . ; then
+			exit 1
+		fi
+		local -- MACHINE_ID=$( $sudo cat $VOLUME/etc/machine-id )
+		# Check that journal landed on volume and not in host's /var/log/journal
+		$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
+		if [ -e /var/log/journal/$MACHINE_ID ] ; then
+			ls -la /var/log/journal/$MACHINE_ID
+			exit 1
+		fi
 	fi
 }
 
@@ -81,44 +85,39 @@ function run_ipa_container() {
 	set +x
 	local -- IMAGE="$1" ; shift
 	local -- N="$1" ; shift
-	local -- VOLUME="$VOLUME"
+	local -- VOLUME="$VOLUME" ; shift
 	date
-	local -- HOSTNAME=ipa.example.test
-	if [ "$N" == "freeipa-replica" ] ; then
-		HOSTNAME=replica.example.test
-		if test "$VOLUME" == "${VOLUME#/}" ; then
-			VOLUME=$VOLUME-$$-replica
-			$docker volume create $VOLUME
-		else
-			VOLUME=/tmp/freeipa-test-$$/data-replica
-			mkdir -p $VOLUME
-		fi
-		setup_sudo
+	local -- OPTS=()
+	if [ "$N" == "freeipa-master" ] ; then
+		OPTS+=( -h ipa.example.test )
+	elif [ "$N" == "freeipa-replica" ] ; then
+		OPTS+=( -h replica.example.test )
+	elif [ "$N" == "ipa-client" ] ; then
+		OPTS+=( -h client1.example.test )
 	fi
-	local -- OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
 		if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
-			OPTS="--cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw"
+			OPTS+=( --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw )
 		else
 			# docker with userns remapping enabled
 			:
 		fi
-		OPTS="$OPTS --sysctl net.ipv6.conf.all.disable_ipv6=0"
+		OPTS+=( --sysctl net.ipv6.conf.all.disable_ipv6=0 )
 	fi
 	if [ -n "$seccomp" ] ; then
-		OPTS="$OPTS --security-opt seccomp=$seccomp"
+		OPTS+=( --security-opt "seccomp=$seccomp" )
 	fi
-	if [ "$(id -u)" != 0 -a "$docker" == podman -a "$replica" != none ] ; then
-		OPTS="$OPTS --network=bridge"
+	if [ "$(id -u)" != 0 -a "$docker" == podman ] ; then
+		OPTS+=( --network=podman )
 	fi
-	OPTS="$OPTS -h $HOSTNAME"
+	if [ -n "$VOLUME" ] ; then
+		OPTS+=( -v "$VOLUME:/data:Z" -e PASSWORD=Secret123 )
+	fi
 	(
 	set -x
 	umask 0
-	$docker run -d --name "$N" $OPTS \
-		-v $VOLUME:/data:Z $DOCKER_RUN_OPTS \
-		-e PASSWORD=Secret123 "$IMAGE" "$@"
+	$docker run -d --name "$N" "${DOCKER_RUN_OPTS[@]}" "${OPTS[@]}" "$IMAGE" "$@"
 	)
 	wait_for_ipa_container "$N" "$@"
 }
@@ -152,9 +151,9 @@ fi
 
 IMAGE="$1"
 
-DOCKER_RUN_OPTS="--dns=127.0.0.1"
+DOCKER_RUN_OPTS=( --dns=127.0.0.1 )
 if [ "$readonly" == "--read-only" ] ; then
-	DOCKER_RUN_OPTS="$DOCKER_RUN_OPTS --read-only"
+	DOCKER_RUN_OPTS+=( --read-only )
 fi
 
 skip_opts=
@@ -170,14 +169,10 @@ fresh_install=true
 if $sudo test -f "$VOLUME/build-id" ; then
 	# If we were given already populated volume, just run the container
 	fresh_install=false
-	run_ipa_container $IMAGE freeipa-master exit-on-finished
+	run_ipa_container $IMAGE freeipa-master "$VOLUME" exit-on-finished
 else
 	# Initial setup of the FreeIPA server
-	dns_opts="--auto-reverse --allow-zone-overlap"
-	if [ "$replica" = 'none' ] ; then
-		dns_opts=""
-	fi
-	run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $dns_opts $skip_opts --no-ntp $ca
+	run_ipa_container $IMAGE freeipa-master "$VOLUME" exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders --auto-reverse --allow-zone-overlap $skip_opts --no-ntp $ca
 
 	if [ -n "$ca" ] ; then
 		$docker rm -f freeipa-master
@@ -186,7 +181,7 @@ else
 		$sudo chmod a+x $VOLUME/generate-external-ca.sh
 		$docker run --rm -v $VOLUME:/data:Z --entrypoint /data/generate-external-ca.sh "$IMAGE"
 		# For external CA, provide the certificate for the second stage
-		run_ipa_container $IMAGE freeipa-master exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $skip_opts --no-ntp \
+		run_ipa_container $IMAGE freeipa-master "$VOLUME" exit-on-finished -U -r EXAMPLE.TEST --setup-dns --no-forwarders $skip_opts --no-ntp \
 			--external-cert-file=/data/ipa.crt --external-cert-file=/data/ca.crt
 	fi
 fi
@@ -195,7 +190,7 @@ while [ "$#" -ge 1 ] ; do
 	IMAGE="$1"
 	$docker rm -f freeipa-master
 	# Start the already-setup master server, or upgrade to next image
-	run_ipa_container $IMAGE freeipa-master exit-on-finished
+	run_ipa_container $IMAGE freeipa-master "$VOLUME" exit-on-finished
 	shift
 done
 
@@ -210,7 +205,7 @@ $docker rm -f freeipa-master
 $sudo mv $VOLUME/build-id $VOLUME/build-id.initial
 uuidgen | $sudo tee $VOLUME/build-id
 $sudo touch -r $VOLUME/build-id.initial $VOLUME/build-id
-run_ipa_container $IMAGE freeipa-master
+run_ipa_container $IMAGE freeipa-master "$VOLUME"
 
 # Wait for the services to start to the point when SSSD is operational
 for i in $( seq 1 20 ) ; do
@@ -235,6 +230,32 @@ if $fresh_install ; then
 	$docker exec freeipa-master ipa-dns-install -U --dnssec-master --no-forwarders
 fi
 
+$docker exec freeipa-master ipa host-del client1.example.test || :
+$docker exec freeipa-master ipa host-add --password=Secret124 --force client1.example.test
+
+MASTER_IP=$( $docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' freeipa-master )
+DOCKER_RUN_OPTS=( "--dns=$MASTER_IP" )
+if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
+	DOCKER_RUN_OPTS+=( --link freeipa-master:ipa.example.test )
+fi
+
+if ! $docker images localhost/ipa-client | grep '^localhost/ipa-client' ; then
+	$docker build -t localhost/ipa-client -f Dockerfile.test-client .
+fi
+run_ipa_container localhost/ipa-client ipa-client ''
+(
+set -x
+date
+if ! $docker exec ipa-client ipa-client-install -U --password=Secret124 --no-ntp ; then
+	$docker exec ipa-client tail -150 /var/log/ipaclient-install.log
+	exit 1
+fi
+)
+$docker exec ipa-client id bob$$
+$docker rm -f ipa-client
+
+$docker exec freeipa-master ipa host-del client1.example.test
+
 check_uids_gids freeipa-master
 
 if [ "$replica" = 'none' ] ; then
@@ -243,19 +264,22 @@ if [ "$replica" = 'none' ] ; then
 fi
 
 # Setup replica
-MASTER_IP=$( $docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' freeipa-master )
-DOCKER_RUN_OPTS="--dns=$MASTER_IP"
 if [ "$readonly" == "--read-only" ] ; then
-	DOCKER_RUN_OPTS="$DOCKER_RUN_OPTS --read-only"
-fi
-if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
-	DOCKER_RUN_OPTS="--link freeipa-master:ipa.example.test $DOCKER_RUN_OPTS"
+	DOCKER_RUN_OPTS+=( --read-only )
 fi
 SETUP_CA=--setup-ca
 if [ $(( $RANDOM % 2 )) == 0 ] ; then
 	SETUP_CA=
 fi
-run_ipa_container $IMAGE freeipa-replica no-exit ipa-replica-install -U --principal admin $SETUP_CA $skip_opts --no-ntp
+if test "$VOLUME" == "${VOLUME#/}" ; then
+	VOLUME=$VOLUME-$$-replica
+	$docker volume create $VOLUME
+else
+	VOLUME=/tmp/freeipa-test-$$/data-replica
+	mkdir -p $VOLUME
+fi
+setup_sudo
+run_ipa_container $IMAGE freeipa-replica "$VOLUME" no-exit ipa-replica-install -U --principal admin $SETUP_CA $skip_opts --no-ntp
 date
 if $docker diff freeipa-master | tee /dev/stderr | grep . ; then
 	exit 1
@@ -264,6 +288,26 @@ if [ -z "$SETUP_CA" ] ; then
 	$docker exec freeipa-replica ipa-ca-install -p Secret123
 	$docker exec freeipa-replica systemctl is-system-running
 fi
+
+$docker exec freeipa-master ipa host-add --password=Secret124 --force client1.example.test
+
+DOCKER_RUN_OPTS=( "--dns=$MASTER_IP" )
+if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
+	DOCKER_RUN_OPTS+=( --link freeipa-replica:replica.example.test )
+fi
+
+run_ipa_container localhost/ipa-client ipa-client ''
+(
+set -x
+date
+if ! $docker exec ipa-client ipa-client-install -U --domain=example.test --server=replica.example.test --password=Secret124 --no-ntp ; then
+	$docker exec ipa-client tail -150 /var/log/ipaclient-install.log
+	exit 1
+fi
+)
+$docker exec ipa-client id bob$$
+$docker rm -f ipa-client
+
 check_uids_gids freeipa-master
 check_uids_gids freeipa-replica
 echo OK $0.

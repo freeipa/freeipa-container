@@ -1,0 +1,20 @@
+FROM docker.io/almalinux/10-init
+RUN dnf -y install --setopt=install_weak_deps=False ipa-client && dnf clean all
+
+# Address failing nis-domainname.service in the ipa-client-install step
+ADD hostnamectl-wrapper /usr/bin/nisdomainname
+
+RUN mkdir /usr/lib/systemd/system/sssd.service.d
+# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=2334087
+RUN ( echo '[Service]' ; sed '/^CapabilityBoundingSet=/!d; s/CAP_DAC_READ_SEARCH/& CAP_DAC_OVERRIDE/' /usr/lib/systemd/system/sssd.service ) > /usr/lib/systemd/system/sssd.service.d/capabilities.conf
+RUN setcap cap_dac_override+ep /usr/libexec/sssd/ldap_child
+
+# Workaround
+# var-lib-nfs-rpc_pipefs.mount: Failed to link user keyring into session keyring: Required key not available
+# var-lib-nfs-rpc_pipefs.mount: Failed to set up kernel keyring: Required key not available
+# var-lib-nfs-rpc_pipefs.mount: Failed at step KEYRING spawning /usr/bin/mount: Required key not available
+RUN rm -f /usr/lib/systemd/system/var-lib-nfs-rpc_pipefs.mount
+
+# Workaround on docker
+# Failed to mount tmpfs (type tmpfs) on /run (MS_NOSUID|MS_NODEV|MS_STRICTATIME "mode=0755,size=20%,nr_inodes=800k"): Operation not permitted
+VOLUME [ "/run" ]
