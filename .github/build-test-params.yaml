@@ -26,6 +26,7 @@ test-upgrade:
     ubuntu-26.04: 1
   runtime:
     podman: 2
+    sudo podman: 1
     docker rootless: 2
     docker: 1
   volume:
