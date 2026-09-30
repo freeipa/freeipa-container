@@ -310,7 +310,7 @@ jobs:
         if: matrix.runtime == 'docker'
       - run: sudo systemctl stop docker && sudo rm -f /var/run/docker.sock
         if: matrix.runtime != 'docker'
-      - uses: ./.github/actions/install-containerd-2.3
+      - uses: ./.github/actions/install-containerd-2.4
         if: matrix.runtime == 'containerd' && matrix.kubernetes != 'k3s'
       - run: sudo systemctl stop containerd
         if: matrix.runtime == 'containerd' && matrix.kubernetes == 'k3s'
