@@ -24,11 +24,9 @@ test -z "$DEBUG_TRACE" || set -x
 
 cd /
 
-case "$1" in
-	/bin/install.sh|/bin/uninstall.sh|/bin/bash|bash)
-		exec "$@"
-	;;
-esac
+if [ "$1" == /bin/bash -o "$1" == bash ] ; then
+	exec "$@"
+fi
 
 for i in /run/* /tmp/var/tmp/* /tmp/* ; do
 	if [ "$i" == '/run/secrets' ] ; then
