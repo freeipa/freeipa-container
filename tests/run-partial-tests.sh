@@ -21,9 +21,9 @@ export docker=${docker:-docker}
 function run_and_wait_for () {
 	(
 	set +x
-	local IMAGE="$1"
-	local NAME="$2"
-	OPTS=
+	local -- IMAGE="$1"
+	local -- NAME="$2"
+	local -- OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
 		OPTS="--tmpfs /run --tmpfs /tmp --sysctl net.ipv6.conf.all.disable_ipv6=0"

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 mark_exit_code () {
-	exit_code=$?
+	local -- exit_code=$?
 	echo $exit_code > /run/ipa/exit_code
 	exit $exit_code
 }
@@ -33,8 +33,8 @@ if [ -f /run/ipa/ipa-server-ip ] ; then
 fi
 
 function update_server_ip_address () {
-	CURRENT_IP=$( dig +short -t A $HOSTNAME )
-	MY_IP=''
+	local -- CURRENT_IP=$( dig +short -t A $HOSTNAME )
+	local -- MY_IP=''
 	if [ -f /run/ipa/ipa-server-ip ] ; then
 		MY_IP=$( cat /run/ipa/ipa-server-ip )
 		if [ "$CURRENT_IP" == "$MY_IP" ] ; then
@@ -66,7 +66,7 @@ function update_server_ip_address () {
 	kdestroy -A
 
 	while true ; do
-		NEW_IP=$( dig +short -t A $HOSTNAME )
+		local -- NEW_IP=$( dig +short -t A $HOSTNAME )
 		if [ "$NEW_IP" == "$MY_IP" ] ; then
 			break
 		fi
@@ -119,7 +119,7 @@ function upgrade_server () {
 	fi
 	for i in /usr/sbin/ipa-upgrade-rpm-scriptlets* ; do $i 2 ; done
 	if [ -f /var/lib/ipa/sysupgrade/sysupgrade.state ] ; then
-		PLATFORM=rhel
+		local -- PLATFORM=rhel
 		if [ -f /etc/fedora-release ] ; then
 			PLATFORM=fedora
 		fi

@@ -36,21 +36,21 @@ setup_sudo
 
 function wait_for_ipa_container() {
 	set +x
-	N="$1" ; shift
+	local -- N="$1" ; shift
 	set -e
 	$docker logs -f "$N" &
 	trap "kill $! 2> /dev/null || : ; trap - RETURN EXIT" RETURN EXIT
-	EXIT_STATUS=999
+	local -- EXIT_STATUS=999
 	while true ; do
 		sleep 10
-		status=$( $docker inspect "$N" --format='{{.State.Status}}' )
+		local -- status=$( $docker inspect "$N" --format='{{.State.Status}}' )
 		if [ "$status" == exited -o "$status" == stopped ] ; then
 			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
 			break
 		elif [ "$1" != "exit-on-finished" ] ; then
 			# With exit-on-finished, we expect the container to exit, seeing it exited above
-			STATUS=$( $docker exec "$N" systemctl is-system-running 2> /dev/null || : )
+			local -- STATUS=$( $docker exec "$N" systemctl is-system-running 2> /dev/null || : )
 			if [ "$STATUS" == 'running' ] ; then
 				echo "The container systemctl is-system-running [$STATUS]."
 				EXIT_STATUS=0
@@ -84,7 +84,7 @@ function wait_for_ipa_container() {
 	if $docker diff "$N" | tee /dev/stderr | grep . ; then
 		exit 1
 	fi
-	MACHINE_ID=$( $sudo cat $VOLUME/etc/machine-id )
+	local -- MACHINE_ID=$( $sudo cat $VOLUME/etc/machine-id )
 	# Check that journal landed on volume and not in host's /var/log/journal
 	$sudo ls -la $VOLUME/var/log/journal/$MACHINE_ID
 	if [ -e /var/log/journal/$MACHINE_ID ] ; then
@@ -95,11 +95,11 @@ function wait_for_ipa_container() {
 
 function run_ipa_container() {
 	set +x
-	IMAGE="$1" ; shift
-	N="$1" ; shift
+	local -- IMAGE="$1" ; shift
+	local -- N="$1" ; shift
 	set -e
 	date
-	HOSTNAME=ipa.example.test
+	local -- HOSTNAME=ipa.example.test
 	if [ "$N" == "freeipa-replica" ] ; then
 		HOSTNAME=replica.example.test
 		if test "$VOLUME" == "${VOLUME#/}" ; then
@@ -111,7 +111,7 @@ function run_ipa_container() {
 		fi
 		setup_sudo
 	fi
-	OPTS=
+	local -- OPTS=
 	if [ "${docker%podman}" = "$docker" ] ; then
 		# if it is not podman, it is docker
 		if $docker info --format '{{ .ClientInfo.Context }}' | grep rootless ; then
