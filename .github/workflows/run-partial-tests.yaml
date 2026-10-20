@@ -35,39 +35,52 @@ jobs:
     timeout-minutes: 5
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     outputs:
-      matrix: ${{ steps.dispatch-matrix.outputs.matrix }}${{ steps.default-matrix.outputs.matrix }}
+      matrix-os: ${{ steps.dispatch-matrix.outputs.os }}${{ steps.default-matrix.outputs.os }}
+      matrix-docker: ${{ steps.dispatch-matrix.outputs.docker }}${{ steps.default-matrix.outputs.docker }}
+      matrix-include: ${{ steps.rhel-include.outputs.include }}
       runs-on: ${{ steps.get-runs-on.outputs.runs-on }}
+    env:
+      HAS_REDHAT_CREDENTIALS: ${{ secrets.REDHAT_ORG != '' && secrets.REDHAT_ACTIVATIONKEY != '' && 'true' || '' }}
     steps:
+      - uses: actions/checkout@v6
       - id: default-matrix
         run: |
-          (
-          echo -n "matrix={'os': [ 'fedora-rawhide', 'fedora-44', 'fedora-43', 'centos-10-stream', 'centos-9-stream', 'rocky-9', 'rocky-8', 'almalinux-10', 'almalinux-9', 'almalinux-8' ], \
-          'docker': [ 'docker', 'podman' ] "
-          if [ -n "${{ secrets.REDHAT_ORG }}" -a -n "${{ secrets.REDHAT_ACTIVATIONKEY }}" ] ; then
-            echo -n ", 'include': [ \
-              { 'os': 'rhel-10', 'docker': 'podman' }, \
-              { 'os': 'rhel-9', 'docker': 'podman' }, \
-              { 'os': 'rhel-8', 'docker': 'podman' } \
-              ]"
-          fi
-          echo "}" ) | tee -a $GITHUB_OUTPUT
+          echo 'os<<EOS' >> $GITHUB_OUTPUT
+          yq -r -o json '[ .on.workflow_dispatch.inputs.os.options[] | select(. != "all") ]' .github/workflows/build-test.yaml | tee -a $GITHUB_OUTPUT
+          echo EOS >> $GITHUB_OUTPUT
+          echo -n 'docker=[ "docker", "podman" ]' >> $GITHUB_OUTPUT
         if: github.event_name != 'workflow_dispatch' || inputs.full
+      - id: rhel-include
+        run: |
+          echo 'include<<EOS' >> $GITHUB_OUTPUT
+          yq -o json '[ .jobs.build-test-rhel-podman.strategy.matrix.os[] | { "os": ., "docker": "podman" } ]' .github/workflows/test-rhel.yaml | tee -a $GITHUB_OUTPUT
+          echo EOS >> $GITHUB_OUTPUT
+        if: env.HAS_REDHAT_CREDENTIALS
       - id: dispatch-matrix
         run: |
-          echo "matrix={'os': [ '${{ inputs.os }}' ], 'docker': [ '${{ inputs.docker }}' ]}" | tee -a $GITHUB_OUTPUT
-        if: github.event_name == 'workflow_dispatch' && ! inputs.full
+          exec > >( tee -a $GITHUB_OUTPUT )
+          echo "os=$OS"
+          echo "docker=$DOCKER"
+        env:
+          OS: ${{ inputs.os }}
+          DOCKER: ${{ inputs.docker }}
+        if: steps.default-matrix.outputs.os == ''
       - id: get-runs-on
         run: |
-          RUNS_ON='${{ inputs.runs-on }}'
           RUNS_ON=${RUNS_ON:-ubuntu-26.04}
           echo "runs-on=$RUNS_ON" | tee -a $GITHUB_OUTPUT
+        env:
+          RUNS_ON: ${{ inputs.runs-on }}
 
   test:
     runs-on: ${{ needs.gen-matrix.outputs.runs-on }}
     needs: [ gen-matrix ]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.gen-matrix.outputs.matrix) }}
+      matrix:
+        os: ${{ fromJSON(needs.gen-matrix.outputs.matrix-os) }}
+        docker: ${{ fromJSON(needs.gen-matrix.outputs.matrix-docker) }}
+        include: ${{ fromJSON(needs.gen-matrix.outputs.matrix-include) }}
     if: github.event_name != 'schedule' || github.repository == 'freeipa/freeipa-container'
     timeout-minutes: 15
     steps:
@@ -86,4 +99,7 @@ jobs:
               org: ${{ secrets.REDHAT_ORG }}
               activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
       - name: Run partial tests
-        run: docker=${{ matrix.docker }} tests/run-partial-tests.sh Dockerfile.${{ matrix.os }}
+        run: tests/run-partial-tests.sh "Dockerfile.$OS"
+        env:
+          docker: ${{ matrix.docker }}
+          OS: ${{ matrix.os }}

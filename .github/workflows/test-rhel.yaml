@@ -14,12 +14,12 @@ jobs:
     timeout-minutes: 1
     outputs:
       has_rhel_subscriptions: ${{ steps.check.outputs.has_rhel_subscriptions }}
+    env:
+      HAS_REDHAT_CREDENTIALS: ${{ secrets.REDHAT_ORG != '' && secrets.REDHAT_ACTIVATIONKEY != '' && 'true' || '' }}
     steps:
       - id: check
-        run: |
-          if [ -n "${{ secrets.REDHAT_ORG }}" -a -n "${{ secrets.REDHAT_ACTIVATIONKEY }}" ] ; then
-            echo "has_rhel_subscriptions=1" >> $GITHUB_OUTPUT
-          fi
+        run: echo 'has_rhel_subscriptions=1' >> $GITHUB_OUTPUT
+        if: env.HAS_REDHAT_CREDENTIALS
 
   build-test-rhel-podman:
     name: Build and test RHEL image
@@ -31,6 +31,8 @@ jobs:
       matrix:
         os: [ rhel-10, rhel-9, rhel-8 ]
     timeout-minutes: 30
+    env:
+      OS: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - name: For RHEL builds, use entitlements
@@ -39,7 +41,7 @@ jobs:
           org: ${{ secrets.REDHAT_ORG }}
           activationkey: ${{ secrets.REDHAT_ACTIVATIONKEY }}
       - name: Build image
-        run: podman build -t localhost/freeipa-server:${{ matrix.os }} -f Dockerfile.${{ matrix.os }} .
+        run: podman build -t "localhost/freeipa-server:$OS" -f "Dockerfile.$OS" .
       - name: Run master
-        run: docker=podman tests/run-master-and-replica.sh localhost/freeipa-server:${{ matrix.os }}
+        run: docker=podman tests/run-master-and-replica.sh "localhost/freeipa-server:$OS"
 
