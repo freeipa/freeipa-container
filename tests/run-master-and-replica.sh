@@ -85,7 +85,7 @@ function run_ipa_container() {
 	set +x
 	local -- IMAGE="$1" ; shift
 	local -- N="$1" ; shift
-	local -- VOLUME="$VOLUME" ; shift
+	local -- VOLUME="$1" ; shift
 	date
 	local -- OPTS=()
 	if [ "$N" == "freeipa-master" ] ; then
