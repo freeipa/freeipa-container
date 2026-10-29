@@ -1,4 +1,4 @@
-FROM docker.io/almalinux/10-init
+FROM docker.io/almalinux/8-init
 RUN dnf -y install --setopt=install_weak_deps=False ipa-client && dnf clean all
 
 # Address failing nis-domainname.service in the ipa-client-install step
