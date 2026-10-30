@@ -116,7 +116,7 @@ jobs:
               -d '@-' \
               "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/issues"
           {
-            "title": ( "Image build for $OS failed on " + ( now | strftime("%F") )),
+            "title": ( "Image build for " + $ENV.OS + " failed on " + ( now | strftime("%F") )),
             "body": ( "This issue was automatically created by GitHub Action\n\n" + $ENV.RUN_URL + "\n" ),
             "labels": [ "image-build-fail" ]
           }
