@@ -49,7 +49,7 @@ kubectl exec -i pod/freeipa-server -- ipa host-add --password=Secret124 --force 
 if ! podman images localhost/ipa-client | grep '^localhost/ipa-client' ; then
         podman build -t localhost/ipa-client -f Dockerfile.test-client .
 fi
-podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local --network host localhost/ipa-client
+podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local localhost/ipa-client
 if ! ( for i in $( seq 10 ) ; do podman exec ipa-client systemctl is-system-running | grep -F running && exit ; set +x ; sleep 1 ; done ; false ) ; then
 	podman logs ipa-client
 	exit 1
@@ -97,7 +97,7 @@ echo Secret123 | kubectl exec -i pod/freeipa-replica -- kinit admin
 
 kubectl exec -i pod/freeipa-server -- ipa host-add --password=Secret124 --force client1.dom1.default.svc.cluster.local
 
-podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local --network host localhost/ipa-client
+podman run -d -t --name ipa-client -h client1.dom1.default.svc.cluster.local localhost/ipa-client
 if ! ( for i in $( seq 10 ) ; do podman exec ipa-client systemctl is-system-running | grep -F running && exit ; set +x ; sleep 1 ; done ; false ) ; then
 	podman logs ipa-client
 	exit 1
