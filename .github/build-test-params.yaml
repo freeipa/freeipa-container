@@ -35,14 +35,14 @@ test-upgrade:
     "": 1
   upgrade-to-from:
     fedora-rawhide:
+      - fedora-45-4.13.4
       - fedora-44-4.13.1
-      - fedora-43-4.12.5
+    fedora-45:
+      - fedora-45-4.13.4
+      - fedora-44-4.13.1
     fedora-44:
       - fedora-44-4.13.1
       - fedora-43-4.12.5
-    fedora-43:
-      - fedora-43-4.12.5
-      - fedora-42-4.12.2
     almalinux-10:
       - almalinux-10-4.12.2
     almalinux-9:
@@ -94,6 +94,8 @@ k8s:
 push:
   exclude:
     - os: centos-10-stream
+    - os: fedora-45
+      arch: arm64
     - os: fedora-44
       arch: arm64
     - os: fedora-43

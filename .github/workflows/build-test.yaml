@@ -12,6 +12,7 @@ on:
         options:
           - all
           - fedora-rawhide
+          - fedora-45
           - fedora-44
           - fedora-43
           - almalinux-10
@@ -61,6 +62,8 @@ jobs:
         arch: [ x86_64, arm64 ]
         docker: [ docker ]
         exclude:
+          - os: fedora-45
+            arch: arm64
           - os: fedora-44
             arch: arm64
           - os: fedora-43
