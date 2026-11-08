@@ -110,7 +110,7 @@ jobs:
       - name: File issue if building image failed
         if: failure() && github.event_name == 'schedule'
         run: |
-          curl -s "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/issues?labels=image-build-fail" | jq -r '.[0].state' | grep open \
+          curl -sSL --fail-with-body "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/issues?labels=image-build-fail" | jq -r '.[0].state' | grep open \
           || jq -n -f /dev/stdin <<'EOS' \
             | tee /dev/stderr \
             | curl -sS --fail-with-body -X POST \

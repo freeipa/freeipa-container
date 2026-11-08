@@ -38,8 +38,8 @@ IPA_SERVER_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-ser
 ( for i in $( seq 60 ) ; do dig +short $IPA_SERVER_HOSTNAME | tee /dev/stderr | grep -F $IPA_SERVER_IP > /dev/null && exit ; set +x ; sleep 5 ; done ; false )
 ( for i in $( seq 60 ) ; do dig +short -t srv _ldap._tcp.${IPA_SERVER_HOSTNAME#*.} | tee /dev/stderr | grep -F "0 100 389 $IPA_SERVER_HOSTNAME." > /dev/null && exit ; set +x ; sleep 5 ; done ; false )
 
-curl -Lk https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
-curl -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
+curl -sSLk --fail-with-body https://$IPA_SERVER_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
+curl -sSk --fail-with-body -H "Referer: https://$IPA_SERVER_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' https://$IPA_SERVER_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
 echo Secret123 | kubectl exec -i pod/freeipa-server -- kinit admin
 kubectl exec -i pod/freeipa-server -- ipa user-add --first Bob --last Nowak bob$$
 
@@ -91,8 +91,8 @@ IPA_REPLICA_HOSTNAME=$( kubectl exec pod/freeipa-replica -- hostname -f )
 IPA_REPLICA_IP=$( kubectl get -o=jsonpath='{.spec.clusterIP}' service freeipa-replica-service )
 dig +short $IPA_REPLICA_HOSTNAME | tee /dev/stderr | grep -F $IPA_REPLICA_IP > /dev/null
 
-curl -Lk https://$IPA_REPLICA_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
-curl -H "Referer: https://$IPA_REPLICA_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' -k https://$IPA_REPLICA_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
+curl -sSLk --fail-with-body https://$IPA_REPLICA_HOSTNAME/ | grep -E 'IPA: Identity Policy Audit|Identity Management'
+curl -sSk --fail-with-body -H "Referer: https://$IPA_REPLICA_HOSTNAME/ipa/ui/" -H 'Accept-Language: fr' -d '{"method":"i18n_messages","params":[[],{}]}' https://$IPA_REPLICA_HOSTNAME/ipa/i18n_messages | grep utilisateur > /dev/null
 echo Secret123 | kubectl exec -i pod/freeipa-replica -- kinit admin
 
 kubectl exec -i pod/freeipa-server -- ipa host-add --password=Secret124 --force client1.dom1.default.svc.cluster.local

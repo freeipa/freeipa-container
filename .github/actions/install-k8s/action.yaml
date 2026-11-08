@@ -7,7 +7,7 @@ runs:
             KUBERNETES_VERSION=$CRIO_VERSION
         fi
         [ -n "$KUBERNETES_VERSION" ] || exit 1
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key \
+        curl -sSL --fail-with-body https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key \
             | gpg --dearmor | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
         echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" \
             | sudo tee /etc/apt/sources.list.d/kubernetes.list

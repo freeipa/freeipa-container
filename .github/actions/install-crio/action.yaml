@@ -4,7 +4,7 @@ runs:
   steps:
     - run: |
         [ -n "$CRIO_VERSION" ] || exit 1
-        curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key \
+        curl -sSL --fail-with-body https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key \
             | gpg --dearmor | sudo tee /etc/apt/keyrings/cri-o-apt-keyring.gpg > /dev/null
         echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/ /" \
             | sudo tee /etc/apt/sources.list.d/cri-o.list

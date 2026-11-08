@@ -31,8 +31,8 @@ runs:
         fi
         echo "version=$version" >> "$GITHUB_OUTPUT"
       shell: bash -euxo pipefail {0}
-    - run: |
-        # curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_VERSION="${{ env.INSTALL_RKE2_VERSION }}" sh -
+    - name: Run curl -sSL --fail-with-body https://get.rke2.io | sudo INSTALL_RKE2_VERSION="${{ env.INSTALL_RKE2_VERSION }}" sh -
+      run: |
         sudo rm -f /etc/cni/net.d/*.conflist
         sudo mkdir -p /etc/rancher/rke2/config.yaml.d
         if [ -e /var/run/crio/crio.sock ] ; then
@@ -44,7 +44,7 @@ runs:
         sudo mkdir -p /var/lib/rancher/rke2/server/manifests
         sudo cp tests/rke2-helm-coredns-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
 
-        curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_VERSION="$INSTALL_RKE2_VERSION" sh -
+        curl -sSL --fail-with-body https://get.rke2.io | sudo INSTALL_RKE2_VERSION="$INSTALL_RKE2_VERSION" sh -
         sudo systemctl start rke2-server.service
         systemctl status rke2-server.service
         mkdir ~/.kube

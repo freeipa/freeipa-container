@@ -18,7 +18,7 @@ commands:
           }
           EOT
       - run: sudo systemctl restart apparmor.service
-      - run: curl -fsSL https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
+      - run: curl -sSL --fail-with-body https://get.docker.com/rootless | FORCE_ROOTLESS_INSTALL=1 sh
       - run: docker info --format '{{ .ClientInfo.Context }}' | grep rootless
   install-podman:
     steps:
