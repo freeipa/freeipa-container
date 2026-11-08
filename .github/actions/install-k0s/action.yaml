@@ -14,8 +14,7 @@ runs:
         fi
         sudo k0s install controller --single $CRI_SOCKET -c /etc/k0s/k0s.yaml --disable-components=metrics-server
         sudo k0s start
-        ( set +x ; while ! sudo k0s status ; do echo --- ; sleep 5 ; done )
-
+        ( for i in $( seq 10 ) ; do sudo k0s status && exit ; set +x ; echo --- ; sleep 5 ; done ; false )
         ( echo '#!/bin/bash' ; echo 'KUBECONFIG=~/.kube/config exec k0s kubectl "$@"' ) | sudo tee /usr/local/bin/kubectl
         sudo chmod a+x /usr/local/bin/kubectl
 
@@ -32,7 +31,7 @@ runs:
         sudo mkdir /opt/local-path-provisioner
         sudo setfacl -b /opt/local-path-provisioner
 
-        ( set +x ; for i in $( seq 1 10 ) ; do ip link show cni0 > /dev/null && break ; sleep 3 ; done )
+        ( for i in $( seq 10 ) ; do ip link show cni0 > /dev/null && exit ; set +x ; sleep 3 ; done ; false )
         sudo resolvectl dns cni0 $( kubectl get -n kube-system service/kube-dns -o 'jsonpath={.spec.clusterIP}' )
         sudo resolvectl domain cni0 cluster.local
 
@@ -46,5 +45,5 @@ runs:
             | kubectl create --dry-run=client -n kube-system configmap coredns --from-file=Corefile=/dev/stdin -o yaml \
             | kubectl apply -n kube-system -f -
         fi
-        ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
+        ( for i in $( seq 10 ) ; do dig +short kubernetes.default.svc.cluster.local | grep . && exit ; set +x ; sleep 5 ; done ; false )
       shell: bash -euxo pipefail {0}

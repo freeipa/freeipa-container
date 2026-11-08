@@ -4,12 +4,13 @@ runs:
   steps:
     - name: Wait for a Ready node and the serviceaccount/default
       run: |
-        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
-        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
-      shell: bash -euxo pipefail {0}
+        ( for i in $( seq 10 ) ; do ( set -x ; kubectl get nodes ) | tee /dev/stderr | grep '\bReady\b' > /dev/null && exit ; sleep 5 ; done ; false )
+        ( for i in $( seq 10 ) ; do ( set -x ; kubectl get serviceaccount/default ) && exit ; sleep 5 ; done ; false )
+      shell: bash -euo pipefail {0}
     - name: Wait for kubectl get pods --all-namespaces
       run: |
+        ( set -x ; kubectl get pods --all-namespaces )
+        ( for i in $( seq 10 ) ; do echo --- ; ! kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|CrashLoopBackOff|Init|No resources found' && exit ; set +x ; sleep 5 ; done ; false )
+        echo ---
         kubectl get pods --all-namespaces
-        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|CrashLoopBackOff|Init|No resources found' ; do echo --- ; sleep 5 ; done )
-        kubectl get pods --all-namespaces
-      shell: bash -euxo pipefail {0}
+      shell: bash -euo pipefail {0}

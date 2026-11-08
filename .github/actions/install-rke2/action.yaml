@@ -64,8 +64,8 @@ runs:
         sudo mkdir /opt/local-path-provisioner
         sudo setfacl -b /opt/local-path-provisioner
 
-        ( set +x ; for i in $( seq 1 10 ) ; do ip link show flannel.1 > /dev/null && break ; sleep 3 ; done )
+        ( for i in $( seq 10 ) ; do ip link show flannel.1 && exit ; set +x ; sleep 3 ; done ; false )
         sudo resolvectl dns flannel.1 $( kubectl get -n kube-system service/rke2-coredns-rke2-coredns -o 'jsonpath={.spec.clusterIP}' )
         sudo resolvectl domain flannel.1 cluster.local
-        ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
+        ( for i in $( seq 10 ) ; do dig +short kubernetes.default.svc.cluster.local | grep . && exit ; set +x ; sleep 5 ; done ; false )
       shell: bash -euxo pipefail {0}

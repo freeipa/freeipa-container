@@ -207,18 +207,11 @@ uuidgen | $sudo tee $VOLUME/build-id
 $sudo touch -r $VOLUME/build-id.initial $VOLUME/build-id
 run_ipa_container $IMAGE freeipa-master "$VOLUME"
 
-# Wait for the services to start to the point when SSSD is operational
-for i in $( seq 1 20 ) ; do
-	if $docker exec freeipa-master id admin 2> /dev/null ; then
-		break
-	fi
-	if [ "$((i % 5))" == 1 ] ; then
-		echo "Waiting for SSSD in the container to start ..."
-	fi
-	sleep 5
-done
-seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep '\.*\..*\.' > /dev/null && break ; sleep 5 ; [ $i == 0 ] && false ; done
-seq 60 -1 0 | while read i ; do $docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -F '0 100 389 ipa.example.test.' > /dev/null && break ; sleep 5 ; [ $i == 0 ] && false ; done
+echo "Waiting for SSSD operational in the container ..."
+( for i in $( seq 20 ) ; do $docker exec freeipa-master id admin && exit ; set +x ; echo --- ; sleep 5 ; done ; false )
+echo "Waiting for DNS records to show up ..."
+( for i in $( seq 60 ) ; do $docker exec freeipa-master dig +short ipa.example.test | tee /dev/stderr | grep '\.*\..*\.' > /dev/null && exit ; set +x ; echo --- ; sleep 5 ; done ; false )
+( for i in $( seq 60 ) ; do $docker exec freeipa-master dig +short -t srv _ldap._tcp.example.test | tee /dev/stderr | grep -F '0 100 389 ipa.example.test.' > /dev/null && exit ; set +x ; echo --- ; sleep 5 ; done ; false )
 
 $docker exec freeipa-master bash -c 'yes Secret123 | kinit admin'
 $docker exec freeipa-master ipa user-add --first Bob --last Nowak bob$$
