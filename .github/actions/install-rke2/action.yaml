@@ -2,7 +2,37 @@ name: Install and start RKE2
 runs:
   using: composite
   steps:
+    - id: rke2-date
+      run: date '+date=%F' >> "$GITHUB_OUTPUT"
+      shell: bash -euxo pipefail {0}
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/rke2-stable-release
+        key: rke2-stable-release-seen-${{ steps.rke2-date.outputs.date }}
+        restore-keys: rke2-stable-release-seen-
+    - id: rke2-version
+      name: Get latest stable RKE2 version
+      run: |
+        d=~/.cache/rke2-stable-release
+        mkdir -p "$d"
+        rke2_version() { sed -n '/^location:/I { s|.*/||; s/%2B/+/; s/\r$//; p }' "$1" 2>/dev/null || true ; }
+        version=
+        if curl -sSi --fail-with-body -o "$d/response.in" https://update.rke2.io/v1-release/channels/stable ; then
+            version=$( rke2_version "$d/response.in" )
+            [ -z "$version" ] || mv "$d/response.in" "$d/response"
+        fi
+        if [ -z "$version" ] ; then
+            echo "::warning::update.rke2.io did not return a stable release location"
+            if [ -f "$d/response" ] ; then
+                echo "using cached response"
+                cat "$d/response"
+                version=$( rke2_version "$d/response" )
+            fi
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+      shell: bash -euxo pipefail {0}
     - run: |
+        # curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_VERSION="${{ env.INSTALL_RKE2_VERSION }}" sh -
         sudo rm -f /etc/cni/net.d/*.conflist
         sudo mkdir -p /etc/rancher/rke2/config.yaml.d
         if [ -e /var/run/crio/crio.sock ] ; then
@@ -14,7 +44,7 @@ runs:
         sudo mkdir -p /var/lib/rancher/rke2/server/manifests
         sudo cp tests/rke2-helm-coredns-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
 
-        curl -sfL https://get.rke2.io | sudo sh -
+        curl -sfL https://get.rke2.io | sudo INSTALL_RKE2_VERSION="$INSTALL_RKE2_VERSION" sh -
         sudo systemctl start rke2-server.service
         systemctl status rke2-server.service
         mkdir ~/.kube
@@ -40,4 +70,6 @@ runs:
         sudo resolvectl dns flannel.1 $( kubectl get -n kube-system service/rke2-coredns-rke2-coredns -o 'jsonpath={.spec.clusterIP}' )
         sudo resolvectl domain flannel.1 cluster.local
         ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
+      env:
+        INSTALL_RKE2_VERSION: ${{ steps.rke2-version.outputs.version }}
       shell: bash -euxo pipefail {0}
