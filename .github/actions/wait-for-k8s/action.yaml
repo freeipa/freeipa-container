@@ -10,6 +10,6 @@ runs:
     - name: Wait for kubectl get pods --all-namespaces
       run: |
         kubectl get pods --all-namespaces
-        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|Init|No resources found' ; do echo --- ; sleep 5 ; done )
+        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|CrashLoopBackOff|Init|No resources found' ; do echo --- ; sleep 5 ; done )
         kubectl get pods --all-namespaces
       shell: bash -euxo pipefail {0}
