@@ -50,14 +50,12 @@ runs:
         mkdir ~/.kube
         sudo cat /etc/rancher/rke2/rke2.yaml > ~/.kube/config
         sudo ln -s /var/lib/rancher/rke2/bin/kubectl /usr/local/bin
-        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
-        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
         kubectl apply -f tests/freeipa-coredns-custom.yaml
-
-        kubectl get pods --all-namespaces
-        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|Init|No resources found' ; do echo --- ; sleep 5 ; done )
-        kubectl get pods --all-namespaces
-
+      env:
+        INSTALL_RKE2_VERSION: ${{ steps.rke2-version.outputs.version }}
+      shell: bash -euxo pipefail {0}
+    - uses: ./.github/actions/wait-for-k8s
+    - run: |
         kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
         kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
         # Remove the extremely permissive ACLs / mask that GitHub runners have on /opt
@@ -70,6 +68,4 @@ runs:
         sudo resolvectl dns flannel.1 $( kubectl get -n kube-system service/rke2-coredns-rke2-coredns -o 'jsonpath={.spec.clusterIP}' )
         sudo resolvectl domain flannel.1 cluster.local
         ( set +x ; for i in $( seq 1 30 ) ; do dig +short kubernetes.default.svc.cluster.local && break ; sleep 3 ; done )
-      env:
-        INSTALL_RKE2_VERSION: ${{ steps.rke2-version.outputs.version }}
       shell: bash -euxo pipefail {0}

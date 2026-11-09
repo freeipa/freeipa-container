@@ -22,12 +22,9 @@ runs:
             | sh -s - \
                 --write-kubeconfig ~/.kube/config --write-kubeconfig-mode 640 --write-kubeconfig-group $( id -g ) \
                 --disable=traefik --disable=metrics-server
-        ( set +x ; while true ; do if kubectl get nodes | tee /dev/stderr | grep -q '\bReady\b' ; then break ; else sleep 5 ; fi ; done )
-        ( set +x ; while ! kubectl get serviceaccount/default ; do sleep 5 ; done )
-        kubectl get pods --all-namespaces
-        ( set +x ; while kubectl get pods -A 2>&1 | grep -E 'Pending|ContainerCreating|Init|No resources found' ; do echo --- ; sleep 5 ; done )
-        kubectl get pods --all-namespaces
-
+      shell: bash -euxo pipefail {0}
+    - uses: ./.github/actions/wait-for-k8s
+    - run: |
         # Make local-path provisioner on userns remapped docker setup on cgroups v2 work
         # -- the pods of the cluster run remapped as well
         sudo mkdir -p /var/lib/rancher/k3s/storage
