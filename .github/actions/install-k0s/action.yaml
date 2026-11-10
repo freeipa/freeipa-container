@@ -5,14 +5,15 @@ runs:
     - run: |
         curl -sSL --fail-with-body https://get.k0s.sh | sudo sh
         sudo mkdir /etc/k0s
-        sudo cp tests/k0s-service-subnet.yaml /etc/k0s/k0s.yaml
+        sudo cp tests/k0s-service-subnet-minimize.yaml /etc/k0s/k0s.yaml
 
         if [ -e /var/run/crio/crio.sock ] ; then
             CRI_SOCKET='--cri-socket remote:unix:///var/run/crio/crio.sock'
         elif [ -e /var/run/containerd/containerd.sock ] ; then
             CRI_SOCKET='--cri-socket remote:unix:///var/run/containerd/containerd.sock'
         fi
-        sudo k0s install controller --single $CRI_SOCKET -c /etc/k0s/k0s.yaml --disable-components=metrics-server
+        sudo k0s install controller --single $CRI_SOCKET -c /etc/k0s/k0s.yaml \
+            --disable-components=autopilot,helm,konnectivity-server,metrics-server,update-prober,windows-node
         sudo k0s start
         ( for i in $( seq 10 ) ; do sudo k0s status && exit ; set +x ; echo --- ; sleep 5 ; done ; false )
         ( echo '#!/bin/bash' ; echo 'KUBECONFIG=~/.kube/config exec k0s kubectl "$@"' ) | sudo tee /usr/local/bin/kubectl

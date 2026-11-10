@@ -6,3 +6,5 @@ metadata:
 spec:
   network:
     serviceCIDR: 10.43.0.0/16
+  telemetry:
+    enabled: false

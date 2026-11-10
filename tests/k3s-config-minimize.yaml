@@ -1,0 +1,7 @@
+disable+:
+  - traefik
+  - servicelb
+  - metrics-server
+disable-helm-controller: true
+disable-cloud-controller: true
+disable-network-policy: true

@@ -1,0 +1,9 @@
+disable+:
+  - rke2-metrics-server
+  - rke2-snapshot-controller
+  - rke2-snapshot-controller-crd
+  - rke2-snapshot-validation-webhook
+  - rke2-security-responder
+  - rke2-gateway-api-crd
+ingress-controller: none
+disable-cloud-controller: true
