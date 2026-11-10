@@ -5,7 +5,7 @@ runs:
     - id: rke2-date
       run: date '+date=%F' >> "$GITHUB_OUTPUT"
       shell: bash -euxo pipefail {0}
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       with:
         path: ~/.cache/rke2-stable-release
         key: rke2-stable-release-seen-${{ steps.rke2-date.outputs.date }}
