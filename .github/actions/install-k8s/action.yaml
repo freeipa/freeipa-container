@@ -40,7 +40,6 @@ runs:
       shell: bash -euxo pipefail {0}
     - uses: ./.github/actions/wait-for-k8s
     - run: |
-        kubectl taint nodes $( hostname ) node-role.kubernetes.io/control-plane:NoSchedule-
         kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
         kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
         # Remove the extremely permissive ACLs / mask that GitHub runners have on /opt
