@@ -1,73 +1,20 @@
 
-def repeat_array($n):
-	. as $v | range($n) | $v
-;
-
-def frequency_to_list:
-	. as $in
-	| keys[]
-	| . as $k
-	| range($in[.] // 1)
-	| $k
-;
-
 def xcontains($element):
 	. as $input |
 	$element | to_entries | map($input[.key] == .value) | all
 ;
 
-def random_select($count; $ensure):
-	if $count <= 0 or length <= 0 then empty
-	else
-		. as $in
-		|
-		[ foreach ($ensure | keys[]) as $k ({};
-			( $ensure[$k] | .[ now * 1000000 % length ] ) as $kk
-			| .[$k] = $kk;
-			.
-			),
-			[]
-		]
-		| (if length > 1 then .[0] else {} end) as $always_remove
-		| reverse
-		| until((. | length < 2) or (.[0] | length > 0);
-			[ . as $dot
-			| [ $in[] | select(xcontains($dot[1])) ]
-			,
-			$dot[2:][]])
-		| if .[0] | length > 0 then .[0] else $in end
-		| .[ now * 1000000 % length ]
-		| . as $row
-		| $row,
-			($in - [ $row ]
-				| random_select($count - 1;
-					($row + $always_remove)
-						| to_entries
-						| reduce .[] as $e ($ensure;
-							if .[$e.key] then .[$e.key] -= [ $e.value ] end)
-								| del(..|select(. == []))))
-
-	end
+def unseen:
+	[ (.singles | length), (.pairs | length) ]
 ;
 
-def xcontains_any($element):
-	. as $input |
-	$element | to_entries | map($input[.key] == .value) | any
-;
-
-def random_repeat($e; $count):
-	map(select(xcontains_any($e))) as $input |
-	($input | length) as $length |
-	[
-		.[],
-		(range($count) | $input[ now * 1000000 % $length ])
-	]
+def multiply:
+	reduce .[] as $i (1; . * $i)
 ;
 
 .["build-dist"] as $dist
 | (.push.exclude // []) as $nopush
 | [(.["fresh-dist"] // []) | .[] | select([ xcontains($nopush[]) ] | any | not)] as $fresh
-| (if $fresh | length > 0 then $fresh else $dist end) as $fresh_or_dist
 | if $ARGS.named["job"] == "push-data"
 then
 	[ [ $fresh[].os ] | unique[] | . as $os
@@ -76,84 +23,58 @@ elif $ARGS.named["job"] == "push"
 then
 	[ $fresh[].os ] | unique
 else
-(if $ARGS.named["count"] != null then $ARGS.named["count"] | tonumber else .[ $ARGS.named["job"] ].count end) as $count
-| if $ARGS.named["job"] == "run"
-then
-	.run as { "runs-on": $runson, $runtime, $readonly, $ca, $volume, $exclude }
-	| [
-		.run | to_entries | reduce .[] as $e ({}; .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)])
-		| .dist |= $fresh_or_dist,
-		[ {
-		"os": null, "arch": null,
-		"dist": ($fresh | repeat_array(3), $dist)[],
-		"runtime": $runtime | frequency_to_list,
-		"readonly": $readonly | frequency_to_list,
-		"ca": $ca | frequency_to_list,
-		"volume": $volume | frequency_to_list,
-		"runs-on": $runson | frequency_to_list
-		}
-		| . += .dist
-		],
-		$exclude
-	]
-elif $ARGS.named["job"] == "test-upgrade"
-then
-	.["test-upgrade"] as { "runs-on": $runson, $runtime, $volume, "upgrade-to-from": $upgrade, $exclude }
-	| [
-		.["test-upgrade"] | to_entries | reduce .[] as $e ({};
-			if $e.key == "upgrade-to-from"
-			then .["data-from"] |= ([ $e.value[$fresh_or_dist[].os] | arrays[]] | unique)
-			else .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)]
-			end)
-		| .dist |= [($fresh_or_dist[] | select($upgrade[.os]))],
-		[ {
-		"os": null, "arch": null,
-		"dist": (($fresh | repeat_array(3), $dist) | .[] | select($upgrade[.os])),
-		"runtime": $runtime | frequency_to_list,
-		"volume": $volume | frequency_to_list,
-		"runs-on": $runson | frequency_to_list
-		}
-		| . += .dist
-		| .["data-from"] = $upgrade[.os][]
-		],
-		$exclude
-	]
-elif $ARGS.named["job"] == "k8s"
-then
-	.k8s as { "runs-on": $runson, $kubernetes, $runtime, $exclude }
-	| [
-		.k8s | to_entries | reduce .[] as $e ({}; .[$e.key] |= [ $e.value | objects | . as $o | keys[] | select($o[.] != null)])
-		| .dist |= $fresh_or_dist,
-		[ {
-		"os": null, "arch": null,
-		"dist": ($fresh | repeat_array(3), $dist)[],
-		"kubernetes": $kubernetes | frequency_to_list,
-		"runtime": $runtime | frequency_to_list,
-		"runs-on": $runson | frequency_to_list
-		}
-		| . += .dist
-		],
-		$exclude
-	]
-else
-	error("Unknown job")
-end
+.[$ARGS.named.job]
+| if . == null then error("Unknown job") end
+| ($ARGS.named.count // .count | tonumber) as $count
+| (.exclude // []) as $exclude
+| .["upgrade-to-from"] as $upgrades
 
-| ( .[0] | del(..|select(. == [])) ) as $ensure
-| ( .[2] // [] ) as $exclude
+| del(.count, .exclude, .["upgrade-to-from"])
+| . as $def
 
 | [
-	reduce $exclude[] as $e (.[1];
-		map(select(xcontains($e))) as $remove
-		| map(select(xcontains($e) | not))
-		| random_repeat($e; $remove | length)
-	)
-	| random_select($count; $ensure)
-		| if ( .dist as $d | $fresh | any(. == $d) ) then .["fresh-image"] = true end
-		| if ( .dist as $d | any($d | xcontains($nopush[])) ) then .["nopush"] = true end
-		| del(.dist)
+	[ $dist | map(select($upgrades == null or $upgrades[.os])) | map({ dist: . }) ]
+		+ [ keys_unsorted[] as $k | [ { $k: .[$k] | keys_unsorted[] } ] ]
+	| combinations
+	| add
+	| { os: .dist.os, arch: .dist.arch } + .
+	| if $upgrades then .["data-from"] = $upgrades[.os][] end
 ]
-| sort_by(.os, .arch, .["runs-on"], .kubernetes, .runtime, .readonly, .ca, .volume, .["data-from"])
+| map(select([$exclude[] as $e | xcontains($e)] | any | not))
+
+| [ .[]
+	| .dist as $d
+	| ( [ to_entries[] | [.] | from_entries ] ) as $singles
+	| ( [ to_entries[] | $def[ .key ][ .value ] // 1 ] | multiply ) as $multiply
+	| if ( $fresh | any(xcontains($d)) ) then .["fresh-image"] = true end
+	| if ( [ $nopush[] as $np | $d | xcontains($np) ] | any ) then .nopush = true end
+	| {
+		r: .,
+		m: $multiply,
+		singles: ( if ( $fresh | length ) > 0 and ( .["fresh-image"] | not ) then [] else $singles end ),
+		pairs: [ $singles | range(0; length) as $i | range($i + 1; length) as $j | [.[$i], .[$j]] ],
+		pairs_m: ( if .["fresh-image"] then 2 else 1 end )
+	}
+]
+
+| if $count > length then debug("There are only \(length) input records, not \($count)") end
+| reduce range([ $count, length ] | min) as $n (.;
+	( .[$n:] | map(unseen) | max ) as $max
+	| [ range($n; length) as $i | .[$i] as $r | select(($r | unseen | [.[0], .[1] * $r.pairs_m ]) >= $max) | range($r.m) | $i ] as $list
+
+	| $list[ now * 1000000 % ($list | length) ] as $selected_index
+	| .[$selected_index] as $selected
+	| .[$selected_index] = .[$n]
+	| .[$n] = $selected
+	| del(.[$n].r.dist)
+
+	| reduce range($n + 1; length) as $i (.;
+		.[$i].singles -= $selected.singles
+		| .[$i].pairs -= $selected.pairs
+	)
+)
+| .[:$count]
+| map(.r)
+| sort_by(.[])
 
 end
-
