@@ -2,35 +2,41 @@ name: Install and start RKE2
 runs:
   using: composite
   steps:
-    - id: rke2-date
-      run: date '+date=%F' >> "$GITHUB_OUTPUT"
-      shell: bash -euxo pipefail {0}
-    - uses: actions/cache@v6
-      with:
-        path: ~/.cache/rke2-stable-release
-        key: rke2-stable-release-seen-${{ steps.rke2-date.outputs.date }}
-        restore-keys: rke2-stable-release-seen-
-    - id: rke2-version
-      name: Get latest stable RKE2 version
+    - id: rke2-version-live
+      name: Get current stable RKE2 version
       run: |
-        d=~/.cache/rke2-stable-release
-        mkdir -p "$d"
-        rke2_version() { sed -n '/^location:/I { s|.*/||; s/%2B/+/; s/\r$//; p }' "$1" 2>/dev/null || true ; }
-        version=
-        if curl -sSi --fail-with-body -o "$d/response.in" https://update.rke2.io/v1-release/channels/stable ; then
-            version=$( rke2_version "$d/response.in" )
-            [ -z "$version" ] || mv "$d/response.in" "$d/response"
-        fi
-        if [ -z "$version" ] ; then
-            echo "::warning::update.rke2.io did not return a stable release location"
-            if [ -f "$d/response" ] ; then
-                echo "using cached response"
-                cat "$d/response"
-                version=$( rke2_version "$d/response" )
+        out=~/.cache/rke2-stable-release/response
+        mkdir -p "${out%/*}"
+        if curl -sSi --fail-with-body -o "$out" https://update.rke2.io/v1-release/channels/stable ; then
+            version=$( sed -n '/^location:/I { s|.*/||; s/%2B/+/; s/\r$//; p ; x }' "$out" )
+            if [ -n "$version" ] ; then
+                echo "version=$version" | tee -a "$GITHUB_OUTPUT"
+                exit
             fi
         fi
-        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "::warning::update.rke2.io did not return a stable release location"
+        cat "$out" || true
       shell: bash -euxo pipefail {0}
+    - id: rke2-version-cached
+      name: Look at the last seen stable RKE2 version in cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/.cache/rke2-stable-release
+        key: rke2-stable-release-unknown
+        restore-keys: rke2-stable-release-
+        fail-on-cache-miss: ${{ steps.rke2-version-live.outputs.version == '' }}
+        lookup-only: ${{ steps.rke2-version-live.outputs.version != '' }}
+    - id: rke2-version
+      name: Use RKE2 version from cached result
+      run: |
+        version="${RKE2_VERSION_CACHED#rke2-stable-release-}"
+        echo "::notice::Using RKE2 version $version found in cache"
+        cat ~/.cache/rke2-stable-release/response
+        echo "version=$version" | tee -a "$GITHUB_OUTPUT"
+      env:
+        RKE2_VERSION_CACHED: ${{ steps.rke2-version-cached.outputs.cache-matched-key }}
+      shell: bash -euxo pipefail {0}
+      if: steps.rke2-version-live.outputs.version == ''
     - name: Run curl -sSL --fail-with-body https://get.rke2.io | sudo INSTALL_RKE2_VERSION="${{ env.INSTALL_RKE2_VERSION }}" sh -
       run: |
         sudo rm -f /etc/cni/net.d/*.conflist
@@ -52,7 +58,7 @@ runs:
         sudo ln -s /var/lib/rancher/rke2/bin/kubectl /usr/local/bin
         kubectl apply -f tests/freeipa-coredns-custom.yaml
       env:
-        INSTALL_RKE2_VERSION: ${{ steps.rke2-version.outputs.version }}
+        INSTALL_RKE2_VERSION: ${{ steps.rke2-version-live.outputs.version }}${{ steps.rke2-version.outputs.version }}
       shell: bash -euxo pipefail {0}
     - uses: ./.github/actions/wait-for-k8s
     - run: |
@@ -69,3 +75,11 @@ runs:
         sudo resolvectl domain flannel.1 cluster.local
         ( for i in $( seq 10 ) ; do dig +short kubernetes.default.svc.cluster.local | grep . && exit ; set +x ; sleep 5 ; done ; false )
       shell: bash -euxo pipefail {0}
+    - name: Cache ${{ steps.rke2-version-live.outputs.version }} as the current stable RKE2 version
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/rke2-stable-release
+        key: rke2-stable-release-${{ steps.rke2-version-live.outputs.version }}
+      if: |
+        steps.rke2-version-live.outputs.version != ''
+          && steps.rke2-version-cached.outputs.cache-matched-key != format('rke2-stable-release-{0}', steps.rke2-version-live.outputs.version)
