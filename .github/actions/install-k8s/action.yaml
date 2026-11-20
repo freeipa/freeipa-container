@@ -3,7 +3,7 @@ runs:
   using: composite
   steps:
     - run: |
-        if [ -z "${KUBERNETES_VERSION-}" -a -e /var/run/crio/crio.sock -a -n "$CRIO_VERSION" ] ; then
+        if [ -z "${KUBERNETES_VERSION-}" ] && [ -e /var/run/crio/crio.sock ] && [ -n "$CRIO_VERSION" ] ; then
             KUBERNETES_VERSION=$CRIO_VERSION
         fi
         [ -n "$KUBERNETES_VERSION" ] || exit 1

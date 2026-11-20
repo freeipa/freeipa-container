@@ -27,7 +27,7 @@ function wait_for_ipa_container() {
 	while true ; do
 		sleep 10
 		local -- status=$( $docker inspect "$N" --format='{{.State.Status}}' )
-		if [ "$status" == exited -o "$status" == stopped ] ; then
+		if [ "$status" == exited ] || [ "$status" == stopped ] ; then
 			EXIT_STATUS=$( $docker inspect "$N" --format='{{.State.ExitCode}}' )
 			echo "The container has exited with .State.ExitCode [$EXIT_STATUS]."
 			break
@@ -108,7 +108,7 @@ function run_ipa_container() {
 	if [ -n "$seccomp" ] ; then
 		OPTS+=( --security-opt "seccomp=$seccomp" )
 	fi
-	if [ "$(id -u)" != 0 -a "$docker" == podman ] ; then
+	if [ "$(id -u)" != 0 ] && [ "$docker" == podman ] ; then
 		OPTS+=( --network=podman )
 	fi
 	if [ -n "$VOLUME" ] ; then
@@ -228,7 +228,7 @@ $docker exec freeipa-master ipa host-add --password=Secret124 --force client1.ex
 
 MASTER_IP=$( $docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' freeipa-master )
 DOCKER_RUN_OPTS=( "--dns=$MASTER_IP" )
-if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
+if [ "$docker" != "sudo podman" ] && [ "$docker" != "podman" ] ; then
 	DOCKER_RUN_OPTS+=( --link freeipa-master:ipa.example.test )
 fi
 
@@ -285,7 +285,7 @@ fi
 $docker exec freeipa-master ipa host-add --password=Secret124 --force client1.example.test
 
 DOCKER_RUN_OPTS=( "--dns=$MASTER_IP" )
-if [ "$docker" != "sudo podman" -a "$docker" != "podman" ] ; then
+if [ "$docker" != "sudo podman" ] && [ "$docker" != "podman" ] ; then
 	DOCKER_RUN_OPTS+=( --link freeipa-replica:replica.example.test )
 fi
 

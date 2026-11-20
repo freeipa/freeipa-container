@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-if [ "$#" -lt 2 ] || [ -z "$1" -o -z "$2" ] ; then
+if [ "$#" -lt 2 ] || [ -z "$1" ] || [ -z "$2" ] ; then
 	echo "Usage: $0 volume-list-file /volume-path" >&2
 	exit 1
 fi
@@ -13,7 +13,7 @@ VOLUME="$2"
 mkdir -p "$VOLUME" "$VOLUME-template"
 while read i ; do
 	parent=$( dirname "$i" )
-	if [ -e "$i" -o -L "$i" ] ; then
+	if [ -e "$i" ] || [ -L "$i" ] ; then
 		tar cf - ".$i" | ( cd "$VOLUME-template" && tar xf - )
 	elif [ -z "${i/*\//}" ] ; then
 		mkdir -p "$VOLUME-template"/"$i"

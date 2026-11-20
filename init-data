@@ -24,14 +24,16 @@ test -z "${DEBUG_TRACE:-}" || set -x
 
 cd /
 
-if [ "$#" -ge 1 ] && [ "$1" == /bin/bash -o "$1" == bash ] ; then
-	exec "$@"
+if [ "$#" -ge 1 ] ; then
+	if [ "$1" == /bin/bash ] || [ "$1" == bash ] ; then
+		exec "$@"
+	fi
 fi
 
 for i in /run/* /tmp/var/tmp/* /tmp/* ; do
 	if [ "$i" == '/run/secrets' ] ; then
 		:
-	elif [ -L "$i" -o -f "$i" ] ; then
+	elif [ -L "$i" ] || [ -f "$i" ] ; then
 		rm -f "$i"
 	else
 		for j in "$i"/* ; do
@@ -50,7 +52,7 @@ DATA_TEMPLATE=/data-template
 mkdir -p /run/ipa /run/log $DATA/var/log/journal
 ln -s $DATA/var/log/journal /run/log/journal
 
-if [ "${1:-}" == 'no-exit' -o -n "${DEBUG_NO_EXIT:-}" ] ; then
+if [ "${1:-}" == 'no-exit' ] || [ -n "${DEBUG_NO_EXIT:-}" ] ; then
 	if [ "${1:-}" == 'no-exit' ] ; then
 		shift
 	fi
@@ -99,7 +101,7 @@ if [ -z "$COMMAND" ] ; then
 	fi
 fi
 
-if [ -n "${IPA_SERVER_INSTALL_OPTS:-}" -a "$COMMAND" != 'ipa-server-install' -a "$COMMAND" != 'ipa-replica-install' ] ; then
+if [ -n "${IPA_SERVER_INSTALL_OPTS:-}" ] && [ "$COMMAND" != 'ipa-server-install' ] && [ "$COMMAND" != 'ipa-replica-install' ] ; then
 	echo "Invocation error: IPA_SERVER_INSTALL_OPTS should only be used with ipa-server-install or ipa-replica-install." >&2
 	exit 7
 fi
@@ -168,7 +170,7 @@ fi
 function create_machine_id () {
 	# only triggers when /etc/machine-id is a symlink and not bind-mounted into
 	# the container by a container runtime.
-	if [ -L /etc/machine-id -a ! -f $DATA/etc/machine-id ] ; then
+	if [ -L /etc/machine-id ] && [ ! -f $DATA/etc/machine-id ] ; then
 		dbus-uuidgen --ensure=$DATA/etc/machine-id
 		chmod 444 $DATA/etc/machine-id
 	fi
@@ -197,7 +199,7 @@ if ! [ -f /etc/ipa/ca.crt ] ; then
 		fi
 	fi
 	if [ -n "${IPA_SERVER_INSTALL_OPTS:-}" ] ; then
-		if [ "$COMMAND" == 'ipa-server-install' -o "$COMMAND" = 'ipa-replica-install' ] ; then
+		if [ "$COMMAND" == 'ipa-server-install' ] || [ "$COMMAND" = 'ipa-replica-install' ] ; then
 			echo "$IPA_SERVER_INSTALL_OPTS" >> $OPTIONS_FILE
 		else
 			echo "Warning: ignoring environment variable IPA_SERVER_INSTALL_OPTS." >&2
@@ -240,7 +242,7 @@ if [ -f "$DATA/build-id" ] ; then
 				fi
 			done
 		cat /etc/volume-data-list | while read i ; do
-			if [ -e $DATA_TEMPLATE$i -a -e $DATA$i ] ; then
+			if [ -e $DATA_TEMPLATE$i ] && [ -e $DATA$i ] ; then
 				chown --reference=$DATA_TEMPLATE$i $DATA$i
 				chmod --reference=$DATA_TEMPLATE$i $DATA$i
 			fi
