@@ -203,15 +203,17 @@ jobs:
           ) | yq . - -o json | tee .github/build-test-data.json
       - id: produce-matrix
         run: |
-          jq -f ci/generate-test-matrix.jq --arg job run .github/build-test-data.json \
+          SEED="$( date +%N )"
+          echo "seed=$SEED"
+          jq -f ci/generate-test-matrix.jq --arg job run --arg seed "$SEED" .github/build-test-data.json \
               | tee /dev/stderr \
               | tee >( jq -cj '"matrix-run=", ., "\n"' >> $GITHUB_OUTPUT ) \
               | jq -rf ci/test-matrix-to-html.jq --arg job run --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
-          jq -f ci/generate-test-matrix.jq --arg job test-upgrade .github/build-test-data.json \
+          jq -f ci/generate-test-matrix.jq --arg job test-upgrade --arg seed "$SEED" .github/build-test-data.json \
               | tee /dev/stderr \
               | tee >( jq -cj '"matrix-test-upgrade=", ., "\n"' >> $GITHUB_OUTPUT ) \
               | jq -rf ci/test-matrix-to-html.jq --arg job test-upgrade --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY
-          jq -f ci/generate-test-matrix.jq --arg job k8s .github/build-test-data.json \
+          jq -f ci/generate-test-matrix.jq --arg job k8s --arg seed "$SEED" .github/build-test-data.json \
               | tee /dev/stderr \
               | tee >( jq -cj '"matrix-k8s=", ., "\n"' >> $GITHUB_OUTPUT ) \
               | jq -rf ci/test-matrix-to-html.jq --arg job k8s --argjson build-dist "$( jq -c '.["build-dist"]' .github/build-test-data.json )" >> $GITHUB_STEP_SUMMARY

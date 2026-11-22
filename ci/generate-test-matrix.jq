@@ -28,6 +28,8 @@ else
 | ($ARGS.named.count // .count | tonumber) as $count
 | (.exclude // []) as $exclude
 | .["upgrade-to-from"] as $upgrades
+| ( $ARGS.named.seed // 42 | tonumber ) as $seed
+| [ limit($count + 1; $seed % 2147483646 + 1 | recurse(. * 48271 % 2147483647)) ][1:] as $random
 
 | del(.count, .exclude, .["upgrade-to-from"])
 | . as $def
@@ -62,7 +64,7 @@ else
 	( .[$n:] | map(unseen) | max ) as $max
 	| [ range($n; length) as $i | .[$i] as $r | select(($r | unseen | [.[0], .[1] * $r.pairs_m ]) >= $max) | range($r.m) | $i ] as $list
 
-	| $list[ now * 1000000 % ($list | length) ] as $selected_index
+	| $list[ $random[$n] % ($list | length) ] as $selected_index
 	| .[$selected_index] as $selected
 	| .[$selected_index] = .[$n]
 	| .[$n] = $selected
