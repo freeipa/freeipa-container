@@ -262,12 +262,12 @@ jobs:
       OS: ${{ matrix.os }}
       ARCH: ${{ matrix.arch }}
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
         id: download-image
         background: true
-      - uses: actions/checkout@v6
       - run: date '+MONTH=%Y-%m' | tee -a $GITHUB_ENV
       - uses: actions/cache@v6
         with:
@@ -321,12 +321,12 @@ jobs:
     env:
       runtime: ${{ matrix.runtime == 'docker rootless' && 'docker' || matrix.runtime }}
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
         id: download-image
         background: true
-      - uses: actions/checkout@v6
       - run: date '+MONTH=%Y-%m' | tee -a $GITHUB_ENV
       - uses: actions/cache@v6
         with:
@@ -399,13 +399,13 @@ jobs:
       OS: ${{ matrix.os }}
       ARCH: ${{ matrix.arch }}
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v8
         with:
           name: freeipa-server-${{ matrix.os }}-${{matrix.arch}}
         id: download-image
         background: true
       - run: test -f /sys/fs/cgroup/cgroup.controllers
-      - uses: actions/checkout@v6
       - uses: ./.github/actions/install-crio
         if: matrix.runtime == 'cri-o'
       - uses: ./.github/actions/docker-cgroups-ubuntu-22
