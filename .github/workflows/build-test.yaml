@@ -470,6 +470,9 @@ jobs:
   push-after-success:
     name: Push images to registries
     runs-on: ubuntu-24.04
+    environment:
+      name: registry-prod
+      deployment: false
     needs: [ master-and-replica, test-upgrade, test-k8s, test-plan ]
     if: needs.test-plan.outputs.matrix-push != '[]' && github.event_name != 'pull_request' && github.repository == 'freeipa/freeipa-container' && github.ref == 'refs/heads/master'
     strategy:
@@ -524,5 +527,5 @@ jobs:
           $REGISTRY_TARGET_LIST
           EOF
         env:
-          REGISTRY_TARGET_LIST: ${{ secrets.REGISTRY_TARGET_LIST }}
+          REGISTRY_TARGET_LIST: ${{ vars.REGISTRY_TARGET_LIST }}
 
