@@ -41,7 +41,7 @@ jobs:
     outputs:
       matrix-os: ${{ steps.dispatch-matrix.outputs.os }}${{ steps.default-matrix.outputs.os }}
       matrix-docker: ${{ steps.dispatch-matrix.outputs.docker }}${{ steps.default-matrix.outputs.docker }}
-      matrix-include: ${{ steps.rhel-include.outputs.include }}
+      matrix-include: ${{ steps.rhel-include.outputs.include == '' && '[]' || steps.rhel-include.outputs.include }}
       runs-on: ${{ steps.get-runs-on.outputs.runs-on }}
     env:
       HAS_REDHAT_CREDENTIALS: ${{ secrets.REDHAT_ORG != '' && secrets.REDHAT_ACTIVATIONKEY != '' && 'true' || '' }}
