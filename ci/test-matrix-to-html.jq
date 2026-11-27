@@ -113,7 +113,7 @@ end,
 | .[].readonly? |= if . == null then empty else if . == "--read-only" then "yes (ro)" else "rw" end end
 | .[].ca? |= if . == null then empty else if . == "--external-ca" then "external" else "no" end end
 | .[].volume? |= if . == null then empty else if . == "freeipa-data" then "volume" elif . == "" then "dir" end end
-| sort_by(.kubernetes, .runtime, .readonly, .ca, .volume, -(.["runs-on"] // 0 | tonumber), .["data-from"])
+| sort_by(-(.["runs-on"] // 0 | tonumber), .kubernetes, .runtime, .readonly, .ca, .volume, .["data-from"])
 | [ .[] | .status = if .nopush then "nopush" else if .["fresh-image"] then "fresh-image" else false end end ]
 | reduce .[] as $row ({};
 	if $ARGS.named["job"] == "run"
